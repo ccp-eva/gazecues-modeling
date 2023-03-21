@@ -1,0 +1,145 @@
+---
+title             : "Variation in gaze understanding across the life span: A process-level perspective"
+shorttitle        : "modeling variation in gaze understanding"
+author: 
+  
+  - name          : "Julia Prein"
+    affiliation   : "1"
+    corresponding : yes    # Define only one corresponding author
+    address       : "Max Planck Institute for Evolutionary Anthropology, Deutscher Platz 6, 04103 Leipzig, Germany"
+    email         : "julia_prein@eva.mpg.de"
+    
+  - name          : "Manuel Bohn"
+    affiliation   : "1"
+  - name          : "Luke Maurits"
+    affiliation   : "1"
+  - name          : "Annika Werwach"
+    affiliation   : "1"
+  - name          : "Daniel B. M. Haun"
+    affiliation   : "1"
+    
+affiliation:
+  - id            : "1"
+    institution   : "Department of Comparative Cultural Psychology, Max Planck Institute for Evolutionary Anthropology, Leipzig, Germany"
+authornote: |
+abstract: |
+  Abstract
+  
+keywords          : "social cognition, individual differences, gaze cues, cognitive modeling"
+wordcount         : "xxx"
+bibliography      : ["../../references.bib"]
+floatsintext      : yes
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+linenumbers       : yes
+mask              : no
+draft             : no
+documentclass     : "apa7"
+classoption       : "man"
+output            : papaja::apa6_word
+header-includes:
+  - \usepackage{setspace}
+  - \captionsetup[figure]{font={stretch=1}}
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include = FALSE}
+library("papaja")
+library("ggplot2")
+library("ggpubr")
+library("tidyverse")
+library("brms")
+theme_set(theme_classic())
+```
+
+```{r analysis-preferences}
+# Seed for random number generation
+set.seed(42)
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+```{r load_data}
+# testtrials <- readRDS(file = "../data/tango-testtrials.rds") %>% 
+#   # determine order of factors
+#   mutate(
+#     targetPosition = factor(targetPosition, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "box1", "box2", "box3", "box4", "box5")), 
+#     studyversion = factor(studyversion, levels = c("hedge", "box")), 
+#     datacollection = factor(datacollection, levels = c("in-person - supervised", "remote - unsupervised")),
+#     sample = factor(sample, levels = c("kids", "adults")), 
+#     studytype = factor(studytype, levels = c("vali", "vali2", "reli"))
+#   )
+```
+
+# Introduction
+- why do we care about developmental trajectory? ref to stat learning paper
+- variation 
+
+# Lifespan 
+- development & individual differences in gaze understanding
+- verweis methods paper reliable differences kinder & adults. 
+- kontinuerliche, systematische variation, wodrin? => model
+
+# Computational cognitive model
+- model auch für warum ältere Erwachsene schlecht? anders schlecht als kinder?
+- entwicklungsperspektive basierend auf model
+- dann prozess-ebene => magnet
+
+# Non-social vector following
+
+## Analysis
+All test trials without voice-over descriptions were included in our analyses.
+We ran all analyses in `r R.version$version.string` [@rcoreteam2022language].
+Regression models were fit as Bayesian generalized linear mixed models (GLMMs) with default priors for all analyses, using the function `brm` from the package `brms` [@burkner2017brms; @burkner2018advanced].
+
+
+```{r fig1, include = T, out.width = "100%", fig.align = "center", fig.cap = "(ref:figlab1)"}
+# knitr::include_graphics("../figures/screenshot.png")
+```
+
+\newpage
+
+# Declarations
+
+## Open practices statement
+
+The web application (<https://ccp-odc.eva.mpg.de/tango-demo/>) described here is open source (<https://github.com/ccp-eva/tango-demo>).
+The data sets generated during and/or analysed during the current study are available in the [gazecues-modeling] repository (<https://github.com/ccp-eva/gazecues-modeling>).
+All experiments were pre-registered (<https://osf.io/zjhsc/>).
+
+## Funding
+
+This study was funded by the Max Planck Society for the Advancement of Science, a noncommercial, publicly financed scientific organization (no grant number).
+We thank all the children, caregivers, and adults who participated in the study.
+We thank Jana Jurkat for her help with data collection.
+
+## Conflicts of interest
+
+The authors declare that they have no conflict of interest.
+
+## Consent to participate
+
+Informed consent was obtained from all individual participants included in the study or their legal guardians.
+
+## Authors' contributions
+
+The authors made the following contributions:
+### TODO
+
+\newpage
+
+# References
+
+```{=tex}
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+```
+::: {#refs custom-style="Bibliography"}
+:::
+
+```{=tex}
+\endgroup
+```

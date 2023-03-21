@@ -1,0 +1,53 @@
+---
+title: "Stats"
+author: "Julia Prein"
+date: "03/21/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse) # data handling etc.
+library(viridis) # col scales, plotting...
+library(ggpubr)
+library(ggthemes)
+library(tidyboot) # for bootstrap CIs
+library(brms) # modeling
+library(tidybayes) # for stat_halfeye
+
+options(scipen = 999)
+theme_set(theme_classic())
+# Seed for random number generation
+set.seed(42)
+```
+
+```{r load_data}
+# testtrials <- readRDS(file = "../data/tango-testtrials.rds") %>% 
+#   # determine order of factors
+#   mutate(
+#     targetPosition = factor(targetPosition, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "box1", "box2", "box3", "box4", "box5")), 
+#     studyversion = factor(studyversion, levels = c("hedge", "box")), 
+#     datacollection = factor(datacollection, levels = c("in-person - supervised", "remote - unsupervised")),
+#     sample = factor(sample, levels = c("kids", "adults")), 
+#     studytype = factor(studytype, levels = c("vali", "vali2", "reli")),
+#     
+#     # for models, summarize targetPositions in a way that it's symmetrical for left/ right side
+#     # the smaller the value, the more central the position
+#     symmetricPosition = ifelse(studyversion == "box", 
+#                                # for box version
+#                                case_when(
+#                                   targetPosition == "box3" ~ 0, 
+#                                   targetPosition == "box2" | targetPosition == "box4" ~ 1,
+#                                   targetPosition == "box1" | targetPosition == "box5" ~ 2), 
+#                                # for hedge version
+#                                targetCentralityX
+#                        ), 
+#     
+#     # distance between target and click in balloon widths (balloon width is 160 SVG units)
+#     clickDistInBalloons = abs(clickDistFromTargetCenterX)/160,
+#   )
+```
+

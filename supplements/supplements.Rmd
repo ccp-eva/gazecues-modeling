@@ -1,0 +1,70 @@
+---
+title             : "Supplements for the manuscript  'Variation in gaze understanding across the life span: A process-level perspective'"
+shorttitle        : "Supplements"
+author: 
+  
+  - name          : "Julia Prein"
+    affiliation   : "1"
+    corresponding : yes    # Define only one corresponding author
+    address       : "Max Planck Institute for Evolutionary Anthropology, Deutscher Platz 6, 04103 Leipzig, Germany"
+    email         : "julia_prein@eva.mpg.de"
+    
+  - name          : "Manuel Bohn"
+    affiliation   : "1"
+  - name          : "Luke Maurits"
+    affiliation   : "1"
+  - name          : "Annika Werwach"
+    affiliation   : "1"
+  - name          : "Daniel B. M. Haun"
+    affiliation   : "1"
+affiliation:
+  - id            : "1"
+    institution   : "Department of Comparative Cultural Psychology, Max Planck Institute for Evolutionary Anthropology, Leipzig, Germany"
+floatsintext      : yes
+bibliography      : ["../../references.bib"]
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+linenumbers       : yes
+mask              : no
+draft             : no
+documentclass     : "apa7"
+classoption       : "man"
+output            : papaja::apa6_word
+header-includes:
+  - \usepackage{setspace}
+  - \captionsetup[figure]{font={stretch=1}}
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include = FALSE}
+library("papaja")
+library("tidyverse")
+library("ggpubr")
+library("kableExtra")
+theme_set(theme_classic())
+```
+
+```{r analysis-preferences}
+# Seed for random number generation
+set.seed(42)
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+\newpage
+
+# References
+
+```{=tex}
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+```
+::: {#refs custom-style="Bibliography"}
+:::
+
+```{=tex}
+\endgroup
+```

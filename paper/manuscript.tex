@@ -1,0 +1,1107 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+  man,floatsintext]{apa7}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% Make \paragraph and \subparagraph free-standing
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newlength{\cslentryspacingunit} % times entry-spacing
+\setlength{\cslentryspacingunit}{\parskip}
+\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
+ {% don't indent paragraphs
+  \setlength{\parindent}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+  \let\oldpar\par
+  \def\par{\hangindent=\cslhangindent\oldpar}
+  \fi
+  % set entry spacing
+  \setlength{\parskip}{#2\cslentryspacingunit}
+ }%
+ {}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+\ifLuaTeX
+\usepackage[bidi=basic]{babel}
+\else
+\usepackage[bidi=default]{babel}
+\fi
+\babelprovide[main,import]{english}
+% get rid of language-specific shorthands (see #6817):
+\let\LanguageShortHands\languageshorthands
+\def\languageshorthands#1{}
+% Manuscript styling
+\usepackage{upgreek}
+\captionsetup{font=singlespacing,justification=justified}
+
+% Table formatting
+\usepackage{longtable}
+\usepackage{lscape}
+% \usepackage[counterclockwise]{rotating}   % Landscape page setup for large tables
+\usepackage{multirow}		% Table styling
+\usepackage{tabularx}		% Control Column width
+\usepackage[flushleft]{threeparttable}	% Allows for three part tables with a specified notes section
+\usepackage{threeparttablex}            % Lets threeparttable work with longtable
+
+% Create new environments so endfloat can handle them
+% \newenvironment{ltable}
+%   {\begin{landscape}\centering\begin{threeparttable}}
+%   {\end{threeparttable}\end{landscape}}
+\newenvironment{lltable}{\begin{landscape}\centering\begin{ThreePartTable}}{\end{ThreePartTable}\end{landscape}}
+
+% Enables adjusting longtable caption width to table width
+% Solution found at http://golatex.de/longtable-mit-caption-so-breit-wie-die-tabelle-t15767.html
+\makeatletter
+\newcommand\LastLTentrywidth{1em}
+\newlength\longtablewidth
+\setlength{\longtablewidth}{1in}
+\newcommand{\getlongtablewidth}{\begingroup \ifcsname LT@\roman{LT@tables}\endcsname \global\longtablewidth=0pt \renewcommand{\LT@entry}[2]{\global\advance\longtablewidth by ##2\relax\gdef\LastLTentrywidth{##2}}\@nameuse{LT@\roman{LT@tables}} \fi \endgroup}
+
+% \setlength{\parindent}{0.5in}
+% \setlength{\parskip}{0pt plus 0pt minus 0pt}
+
+% Overwrite redefinition of paragraph and subparagraph by the default LaTeX template
+% See https://github.com/crsh/papaja/issues/292
+\makeatletter
+\renewcommand{\paragraph}{\@startsection{paragraph}{4}{\parindent}%
+  {0\baselineskip \@plus 0.2ex \@minus 0.2ex}%
+  {-1em}%
+  {\normalfont\normalsize\bfseries\itshape\typesectitle}}
+
+\renewcommand{\subparagraph}[1]{\@startsection{subparagraph}{5}{1em}%
+  {0\baselineskip \@plus 0.2ex \@minus 0.2ex}%
+  {-\z@\relax}%
+  {\normalfont\normalsize\itshape\hspace{\parindent}{#1}\textit{\addperi}}{\relax}}
+\makeatother
+
+% \usepackage{etoolbox}
+\makeatletter
+\patchcmd{\HyOrg@maketitle}
+  {\section{\normalfont\normalsize\abstractname}}
+  {\section*{\normalfont\normalsize\abstractname}}
+  {}{\typeout{Failed to patch abstract.}}
+\patchcmd{\HyOrg@maketitle}
+  {\section{\protect\normalfont{\@title}}}
+  {\section*{\protect\normalfont{\@title}}}
+  {}{\typeout{Failed to patch title.}}
+\makeatother
+
+\usepackage{xpatch}
+\makeatletter
+\xapptocmd\appendix
+  {\xapptocmd\section
+    {\addcontentsline{toc}{section}{\appendixname\ifoneappendix\else~\theappendix\fi\\: #1}}
+    {}{\InnerPatchFailed}%
+  }
+{}{\PatchFailed}
+\keywords{social cognition, individual differences, gaze cues, cognitive development\newline\indent Word count: 6856}
+\usepackage{lineno}
+
+\linenumbers
+\usepackage{csquotes}
+\usepackage{setspace}
+\captionsetup[figure]{font={stretch=1}}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={TANGO: A reliable, open-source, browser-based task to assess individual differences in gaze understanding in 3 to 5-year-old children and adults},
+  pdfauthor={Julia Prein1, Manuel Bohn1, Steven Kalinke1, \& Daniel B. M. Haun1},
+  pdflang={en-EN},
+  pdfkeywords={social cognition, individual differences, gaze cues, cognitive development},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{TANGO: A reliable, open-source, browser-based task to assess individual differences in gaze understanding in 3 to 5-year-old children and adults}
+\author{Julia Prein\textsuperscript{1}, Manuel Bohn\textsuperscript{1}, Steven Kalinke\textsuperscript{1}, \& Daniel B. M. Haun\textsuperscript{1}}
+\date{}
+
+
+\shorttitle{assessing individual differences in gaze understanding}
+
+\authornote{
+
+Correspondence concerning this article should be addressed to Julia Prein, Max Planck Institute for Evolutionary Anthropology, Deutscher Platz 6, 04103 Leipzig, Germany. E-mail: \href{mailto:julia_prein@eva.mpg.de}{\nolinkurl{julia\_prein@eva.mpg.de}}
+
+}
+
+\affiliation{\vspace{0.5cm}\textsuperscript{1} Department of Comparative Cultural Psychology, Max Planck Institute for Evolutionary Anthropology, Leipzig, Germany}
+
+\abstract{%
+Traditional measures of social cognition used in developmental research often lack satisfactory psychometric properties and are not designed to capture variation \emph{between} individuals.
+Here we present TANGO (Task for Assessing iNdividual differences in Gaze understanding - Open); a brief (approx. 5--10min), reliable, open-source task to quantify individual differences in the understanding of gaze cues. Localizing the attentional focus of an agent is crucial in inferring their mental states, building common ground, and thus, supporting cooperation.
+Our interactive browser-based task works across devices and enables in-person and remote testing. The implemented spatial layout allows for discrete and continuous measures of participants' click imprecision and is easily adaptable to different study requirements.
+Our task measures inter-individual differences in a child (N = 387) and an adult (N = 236) sample. Our two study versions and data collection modes yield comparable results that show substantial developmental gains: the older children are, the more accurately they locate the target. High internal consistency and test--retest reliability estimates underline that the captured variation is systematic. This work shows a promising way forward in studying individual differences in social cognition and will help us explore the structure and development of our core social-cognitive processes in greater detail.
+}
+
+
+
+\begin{document}
+\maketitle
+
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
+
+Social cognition -- representing and reasoning about an agent's perspectives, knowledge states, intentions, beliefs, and preferences to explain and predict their behavior -- is among the most-studied phenomena in developmental research.
+In recent decades, much progress has been made in determining the average age at which a specific social-cognitive ability emerges in development (Gopnik \& Slaughter, 1991; Peterson, Wellman, \& Slaughter, 2012; Rakoczy, 2022; Wellman, Cross, \& Watson, 2001; Wellman \& Liu, 2004).
+Yet, there are always individual differences.
+Identifying variability in social-cognitive abilities and factors influencing their development is vital in theory building (e.g., to test causal predictions) and designing interventions (Happé, Cook, \& Bird, 2017; Kidd, Donnelly, \& Christiansen, 2018; Lecce, Bianco, Devine, Hughes, \& Banerjee, 2014; Mundy et al., 2007; Underwood, 1975).
+
+Numerous studies have already examined individual differences in social cognition (for an overview, see Hughes \& Devine, 2015; Slaughter, 2015).
+The most common, recurring research questions are concerned with the developmental sequence of social-cognitive abilities (e.g., Wellman \& Liu, 2004), and which factors drive the development of social cognition (Devine \& Hughes, 2018; e.g., Gola, 2012).
+For example, Okumura and colleagues asked how early gaze-following and object processing relate to later language development (Okumura, Kanakogi, Kobayashi, \& Itakura, 2017).
+In general, individual differences studies often focus on the relationship between social-cognitive abilities and: (1) family influences, (2) other cognitive constructs, and (3) social behavioral outcomes (for an overview, see Repacholi, 2003).
+Studies on social-cognitive abilities and family influences include the effect of parenting practices (for a review, see Pavarini, de Hollanda Souza, \& Hawk, 2013), attachment quality (e.g., Astor et al., 2020), mental state talk (Gola, 2012; Hughes, Ensor, \& Marks, 2011; Lecce et al., 2014), and family background as parental education, occupation, sibling interaction and childcare (Bulgarelli \& Molina, 2016; Cutting \& Dunn, 1999; Dunn, Brown, Slomkowski, Tesla, \& Youngblade, 1991).
+Another group of individual differences studies focuses on the interplay of social and physical cognition (Herrmann, Hernández-Lloreda, Call, Hare, \& Tomasello, 2010), executive functions (Benson, Sabbagh, Carlson, \& Zelazo, 2012; Buttelmann, Kühn, \& Zmyj, 2021; Carlson \& Moses, 2001; Carlson, Moses, \& Claxton, 2004; Hughes \& Ensor, 2007), and language abilities (McEwen et al., 2007; Milligan, Astington, \& Dack, 2007; Okumura et al., 2017).
+Studies on social behavioral outcomes measured the interplay of social cognition and prosociality (for a review, see Imuta, Henry, Slaughter, Selcuk, \& Ruffman, 2016; Walker, 2005), stereotypes, and resource allocations (Rizzo \& Killen, 2018), and moral intentions (Sodian et al., 2016).
+
+However, developmental psychologists are frequently surprised to find minor or no association between measures of social cognition that are thought to be theoretically related -- cross-sectionally and/or longitudinally (e.g., Poulin-Dubois, Goldman, Meltzer, \& Psaradellis, 2023; Sodian, 2023; Sodian et al., 2016).
+This might be because traditional measures of social cognition are not designed to capture variation between children: they often rely on low trial numbers, small sample sizes, and dichotomous measures.
+A recent review showed that many studies on social cognition measures failed to report relevant psychometric properties at all (Beaudoin, Leblanc, Gagner, \& Beauchamp, 2020) or -- when they did -- showed mixed results on test-retest reliability (Hughes et al., 2000; Mayes, Klin, Tercyak, Cicchetti, \& Cohen, 1996).
+
+To give an example: the most commonly applied prototypical measure for social cognition is the change-of-location false belief task (Baron-Cohen, Leslie, \& Frith, 1985; Wimmer \& Perner, 1983).
+Here, children watch a short sequence of events (often acted out or narrated by the experimenters).
+A doll called Sally puts her marble into a basket.
+After Sally leaves the scene, a second doll named Anne takes the marble and moves it into a box.
+Participants then get asked where Sally will look for her marble once she returns.
+The outcome measures false belief understanding in a dichotomous way: children pass the task if they take the protagonist's epistemic state into account and answer that she will look into the basket.
+Many years of research utilizing these verbal change-of-location tasks suggest that children develop belief-representing abilities at four to five years of age (for a review, see Wellman et al., 2001).
+Several cross-cultural studies supported this evidence (Barrett et al., 2013; Callaghan et al., 2005; cf. Mayer \& Träuble, 2015).
+
+However, from this age onwards, the change-of-location task shows ceiling effects and has very limited diagnostic value (Repacholi, 2003).
+Thus, this task seems well suited to track a particular group-level developmental transition, yet it fails to capture individual differences (cf.~``reliability paradox,'' Hedge, Powell, \& Sumner, 2018).
+As Wellman (2012) put it, ``it's really only passing/failing one sort of understanding averaged across age'' (p.~317).
+This has profound implications for what studies on individual differences using this task (or others) can show.
+Poor measurement of social cognition on an individual level is likely to conceal relations between different aspects of cognition and may obscure developmental change.
+For example, Sodian et al. (2016) neither found a correlation between two moral Theory of mind False Belief and Intention tasks at 60 months, nor a relationship between these two factors and implicit False Belief understanding at 18 months.
+
+The ``Sandbox task'' is one of the few tasks that attempt to overcome these methodological challenges (Begeer, Bernstein, van Wijhe, Scheeren, \& Koot, 2012; Bernstein, Thornton, \& Sommerville, 2011; Coburn, Bernstein, \& Begeer, 2015; Mahy, Bernstein, Gerrard, \& Atance, 2017; Sommerville, Bernstein, \& Meltzoff, 2013).
+This continuous FB task measures the degree to which the estimate of another's belief is biased by one's own knowledge.
+Recent work questions the interpretation of this measure (Samuel, Legg, Lurz, \& Clayton, 2018a; Samuel, Legg, Lurz, \& Clayton, 2018b): it is unclear whether a smaller egocentric bias can be directly translated into a better mental state reasoning ability.
+Another evaluation criterion should, therefore, be whether a task captures meaningful variability in performance; that is, differences in test scores should correspond to differences in the social-cognitive ability in question.
+
+Thus, developmental psychology faces a dilemma: many research questions rely on measuring individuals' development, yet, there is a lack of tasks to measure these individual differences reliably.
+To capture the emergence of social-cognitive abilities and their relation to social factors in greater precision and detail, we must consequently address the methodological limitations of existing study designs (Hughes et al., 2011; Hughes \& Leekam, 2004).
+
+Schaafsma, Pfaff, Spunt, and Adolphs (2015) compiled a ``wish list'' for new social-cognitive paradigms.
+They advocated for parametric -- instead of dichotomous -- measures covering proficiency as a range, avoiding floor and ceiling effects, and showing satisfactory test-retest reliability estimates (see also Beaudoin et al., 2020; Hughes \& Devine, 2015).
+New tasks should capture variation across age groups, including older children and adults (Repacholi, 2003).
+Another goal in creating new tasks should be to focus on the ``face value'': measures should probe the underlying social-cognitive ability as straight-forward and directly as possible.
+Keeping task demands minimal is also beneficial for using the paradigm in a variety of different cultural, clinical, and demographic contexts (Molleman, Kurvers, \& van den Bos, 2019).
+The task should serve as a proxy for behavior as it appears in the real world and should be validated in relation to real-world experiences (Repacholi, 2003).
+
+\hypertarget{a-new-measure-of-gaze-understanding}{%
+\section{A new measure of gaze understanding}\label{a-new-measure-of-gaze-understanding}}
+
+Our goal was to design a new measure of social cognition that captures individual differences across age groups in a systematic and reliable way.
+We focused on a fundamental ability implicated in many social-cognitive reasoning processes: gaze understanding -- the ability to locate and use the attentional focus of an agent.
+The first component of this ability is often termed gaze following -- turning one's eyes in the same direction as the gaze of another agent -- and has been studied intensively (Astor, Thiele, \& Gredebäck, 2021; Byers-Heinlein et al., 2021; Coelho, George, Conty, Hugueville, \& Tijus, 2006; Del Bianco, Falck-Ytter, Thorup, \& Gredebäck, 2019; Frischen, Bayliss, \& Tipper, 2007; Hernik \& Broesch, 2019; Itakura \& Tanaka, 1998; Lee, Eskritt, Symons, \& Muir, 1998; Moore, 2008; Shepherd, 2010; Tomasello, Hare, Lehmann, \& Call, 2007).
+In our definition, gaze understanding goes one step further by including the \emph{acting on the gaze-cued location} -- therefore, using the available social information to guide one's behavior as needed in real-life conditions.
+
+Following an agent's gaze provides insights into their intentions, thoughts, and feelings by acting as a ``front end ability'' (Brooks \& Meltzoff, 2005, p. 535).
+Gaze is integral for many more sophisticated social-cognitive abilities, for example, inferences about knowledge states.
+As such, the eyes have been regarded as a ``window into the mind'' (Shepherd, 2010).
+Monitoring another's attention also supports building a common ground, which is important for action coordination and cooperative social interactions (Bohn \& Köymen, 2018; Tomasello et al., 2007).
+In addition, gaze and language development seem to be related (Brooks \& Meltzoff, 2005).
+Gaze facilitates word learning by helping to identify the referent of a new word and has been regarded as a crucial signal of nonverbal communication (Hernik \& Broesch, 2019; Macdonald \& Tatler, 2013).
+While the emergence of gaze following has been well established, less is known about the developmental trajectory throughout childhood and adolescence.
+One possibility is that our social-cognitive ability in question is fully developed once emerged in infancy.
+However, many cognitive abilities continue to develop beyond early childhood (e.g., Gathercole, Pickering, Ambridge, \& Wearing, 2004 for working memory; Raviv \& Arnon, 2018 for visual statistical learning).
+Therefore, children could potentially improve in understanding gaze, fine-tuning the performance of the already existing skill.
+Consequently, we aimed to assess the differentiation of the ability to understand gaze.
+Our goal was not to establish the youngest age at which children understand gaze cues.
+Rather, we wanted to examine how that ability changes with age.
+To accurately measure developmental change, we were interested in capturing individual variability.
+
+To address the psychometric shortcoming of earlier work, we implemented the following design features: First, we used a continuous measure which allowed us to capture fine-grained individual differences at different ages.
+Second, we designed short trials that facilitate more than a dozen replicates per subject.
+The result is more precise individual-level estimates.
+Third, we systematically investigated the psychometric properties of the new task.
+
+Designing this task required a new testing infrastructure.
+We designed the task as an interactive web application.
+Previous research has successfully used online study implementations that compare well to in-person data collection (Bohn, Le, Peloquin, Köymen, \& Frank, 2021; Bohn, Tessler, Merrick, \& Frank, 2021; Frank, Sugarman, Horowitz, Lewis, \& Yurovsky, 2016).
+This greatly increased the flexibility with which we could modify the stimuli on a trial-by-trial basis.
+Furthermore, because the task is largely self-contained, it is much more controlled and standardized.
+Most importantly, it makes the task portable: testing is possible in-person using tablets but also remotely via the internet (no installation needed).
+As such, it provides a solid basis to study individual differences in gaze understanding across ages at scale.
+We make the task and its source code openly accessible for other researchers to use and modify.
+
+\hypertarget{task-design}{%
+\section{Task design}\label{task-design}}
+
+\hypertarget{implementation}{%
+\subsection{Implementation}\label{implementation}}
+
+The code is open-source (\url{https://github.com/ccp-eva/tango-demo}), and a live demo version can be found under: \url{https://ccp-odc.eva.mpg.de/tango-demo/}.
+
+The web app was developed using \texttt{JavaScript}, \texttt{HTML5}, \texttt{CSS,} and \texttt{PHP}.
+For stimulus presentation, a scalable vector graphic (SVG) composition was parsed.
+This way, the composition scales according to the user's viewport without loss of quality while keeping the aspect ratio and relative object positions constant.
+Furthermore, SVGs allow us to define all composite parts of the scene (e.g., pupil of the agent) individually.
+This is needed for precisely calculating the exact pupil and target locations and sizes.
+Additionally, it makes it easy to adjust the stimuli and, for example, add another agent to the scene.
+The web app generates two file types: (1) a text file (.json) containing metadata, trial specifications, and participants' click responses, and (2) a video file (.webm) of the participant's webcam recording.
+These files can either be sent to a server or downloaded to the local device.
+Personalized links can be created by passing on URL parameters.
+
+\hypertarget{stimuli}{%
+\subsection{Stimuli}\label{stimuli}}
+
+Our newly implemented task asks children and adults to search for a balloon.
+The events proceed as follows (see Figure \ref{fig:fig1}B and C).
+An animated agent (a sheep, monkey, or pig) looks out of a window of a house.
+A balloon (i.e., target; blue, green, yellow, or red) is located in front of them.
+The target then falls to the ground.
+At all times, the agent's gaze tracks the movement of the target: the pupils and iris move so that their center aligns with the center of the target.
+While the distance of the target's flight depends on the final location, the target moves at a constant speed.
+Participants are then asked to locate the target: they respond by touching or clicking on the screen.
+Visual access to the target's true location is manipulated by a hedge.
+Participants either have full, partial, or no visual access to the true target location.
+When partial or no information about the target location is accessible, participants are expected to use the agent's gaze as a cue.
+
+To keep participants engaged and interested, the presentation of events is accompanied by cartoon-like effects.
+Each trial starts with an attention-getter: an eye-blinking sound plays while the pupils and iris of the agent enlarge (increase to 130\%) and change in opacity (decrease to 75\%) for 0.3 sec.
+The landing of the target is accompanied by a tapping sound.
+Once the target landed, the instructor's voice asked ``Where is the balloon?''.
+To confirm the participant's click, a short plop sound plays, and a small orange circle appears at the location of choice.
+Participants do not receive differential feedback so that learning effects are reduced, and trials stay comparable across the sample.
+If no response is registered within 5 secs after the target landed, an audio prompt reminds the participant to respond.
+
+\hypertarget{trials}{%
+\subsection{Trials}\label{trials}}
+
+Trials differ in the amount of visual access that participants have to the final target position.
+Before the test trials start, participants complete four training trials during which they familiarize themselves with touching the screen.
+In the first training trial, participants have full visual access to the target flight and the target's end location and are simply asked to click on the visible balloon.
+In the second and third training trials, participants have partial access: they witness the target flight but cannot see the target's end location.
+They are then asked to click on the hidden balloon, i.e., the location where they saw the target land.
+In test trials, participants have no visual access to the target flight or the end location.
+Participants are expected to use the agent's gaze as a cue to locate the target.
+The first trial of each type comprises a voice-over description of the presented events.
+The audio descriptions explicitly state that the agent is always looking at the target (see Supplements for audio script).
+After the four training trials, participants receive 15 test trials.
+The complete sequence of four training trials and 15 test trials can be easily completed within 5-10 minutes.
+
+\hypertarget{study-versions}{%
+\subsection{Study versions}\label{study-versions}}
+
+We designed two study versions that differ in the target's final hiding place and, consequently, in the outcome measure: a \emph{hedge version} (continuous) and a \emph{box version} (discrete).
+Both versions use the same first training trial and then differ in the consecutive training and test trials.
+In the hedge version, participants have to indicate their estimated target location directly on a hedge.
+Here, the dependent variable is imprecision, which is defined as the absolute difference between the target center and the x coordinate of the participant's click.
+In the box version, the target lands in a box, and participants are asked to click on the box that hides the target.
+Researchers can choose how many boxes are shown: one up to eight boxes can be displayed as potential hiding locations.
+Here, we use a categorical outcome (i.e., which box was clicked) to calculate the proportion of correct responses.
+Note that in the test trials of both versions, the target flight is covered by a hedge.
+In the hedge version, the hedge then shrinks to a minimum height required to cover the target's end location.
+In the box version, the hedge shrinks completely.
+The boxes then hide the target's final destination (see Figure \ref{fig:fig1}B and C).
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{../figures/tango_procedure} 
+
+}
+
+\caption{\textbf{Study setup}. (A) Infrastructure for online testing. (i) Subjects aged 3 to 99+ can participate. Data collection can take place anywhere: online, in kindergartens, or in research labs. (ii) The task is presented as a website that works across devices. (iii) The scripts for the website and the recorded data are stored on secure in-house servers. (B) Hedge version (continuous) of the TANGO. (i) The agent stands in a window with the target in front of them. (ii) A hedge grows and covers the target. (iii) The target falls to a random location on the ground. The agent's eyes track the movement of the target. Three exemplary target locations are shown to depict how indicative the agent's gaze cues are in determining the target's location. The transparent target is only shown for an illustrative purpose (not visible during the test). (C) Box version (discrete) of the TANGO. Number of boxes (min. 1; max. 8) as potential hiding locations can be set according to the researcher's need.}\label{fig:fig1}
+\end{figure}
+
+\hypertarget{randomization}{%
+\subsection{Randomization}\label{randomization}}
+
+All agents and target colors appear equally often and are not repeated in more than two consecutive trials.
+The randomization of the target end location depends on the study version.
+In the hedge version, the full width of the screen is divided into ten bins.
+Exact coordinates within each bin are then randomly generated.
+In the box version, the target randomly lands in one of the boxes.
+As with agent and color choice, each bin/box occurs equally often and can only occur twice in a row.
+
+\hypertarget{individual-differences}{%
+\section{Individual differences}\label{individual-differences}}
+
+Our first aim was to assess whether the TANGO captures inter-individual variation in a child and adult sample.
+Furthermore, we were interested in how the data collection mode (in-person vs.~remote) influences responses.
+
+Task design, data collection, and sample sizes were pre-registered: \url{https://osf.io/snju6} (child sample) and \url{https://osf.io/r3bhn} (adult sample).
+The analyses reported here were not pre-registered but followed the structure of the ones specified in the above pre-registrations (see Footnotes for deviations).
+The additional analyses mentioned in the pre-registrations (e.g., computational model) will be reported elsewhere.
+
+The study design and procedure obtained ethical clearance by the MPG Ethics commission Munich, Germany, falling under a packaged ethics application (Appl. No.~2021\_45), and was approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology.
+The research adheres to the legal requirements of psychological research with children in Germany.
+
+Participants were equally distributed across the two study versions.
+Data were collected between May and October 2021.
+
+\hypertarget{participants}{%
+\subsection{Participants}\label{participants}}
+
+We collected data from an in-person child sample, a remote child sample, and a remote adult sample.
+In-person testing with children took place in kindergartens in Leipzig, Germany.
+The in-person child sample consisted of 120 children, including 40 3-year-olds (mean = 41.45 months, SD = 3.85, range = 36 - 47, 22 girls), 40 4-year-olds (mean = 54.60 months, SD = 3.10, range = 48 - 59, 19 girls), and 40 5-year-olds (mean = 66.95 months, SD = 3.39, range = 60 - 71, 22 girls).
+
+We pre-registered the replacement for participants that finished fewer than four test trials.
+This was not the case for any participant.
+One child stopped participation after 12 test trials but was included in the sample due to the pre-registered replacement rule.
+Two additional participants were recruited but not included in the study because the participant did not feel comfortable interacting with the tablet alone (n = 1), or due to an originally miscalculated age of the child (n = 1).
+
+For our remote child sample, we recruited families via an internal database of children living in Leipzig, Germany, whose parents volunteered to participate in child development studies and who indicated an interest in online studies.
+Families received an email with a short study description and a personalized link.
+If they had not participated in the study within two weeks, they received a reminder via email.
+The response rate to invitations after the reminder was \textasciitilde50\%.
+
+The remote child sample included 147 children, including 45 3-year-olds (mean = 42.62 months, SD = 3.35, range = 36 - 47, 14 girls), 47 4-year-olds (mean = 52.64 months, SD = 3.40, range = 48 - 59, 25 girls), and 55 5-year-olds (mean = 65.11 months, SD = 3.77, range = 60 - 71, 27 girls).
+Of these, three families participated twice.
+In these cases, we only kept the data sets from the first participation.
+
+Four additional participants were recruited but not included in the study because they were already part of the in-person kindergarten sample (n=3), or because of unknown age (n = 1).
+
+Children in our sample grow up in an industrialized, urban Central-European context in a city with approximately 600,000 inhabitants.
+They often live in nuclear two-generational families with few household members.
+Information on socioeconomic status was not formally recorded, although the majority of families come from mixed, mainly mid to high socioeconomic backgrounds with high levels of parental education.
+The median individual monthly net income in the year 2021 was \textasciitilde{} 1,600€ for the city of Leipzig.
+
+Adults were recruited via \emph{Prolific} (Palan \& Schitter, 2018).
+\emph{Prolific} is an online participant recruitment service with a predominantly European and US-American subject pool.
+100 English-speakers with an average age of 31.34 years (SD = 10.77, range = 18 - 63, 64 females) were included.
+Participants live in a variety of different countries: the UK, Italy, Spain, Poland, Netherlands, Canada, Australia, Ireland, South Africa, Norway, Portugal, France, Austria, Finland, Greece, Germany, the U.S., Mexico, Chile, Iceland, New Zealand, Czech Republic, Hungary, Latvia, and Switzerland.
+In this sample, most participants resided in the United Kingdom (n = 47), South Africa (n = 8), and Portugal (n = 6).
+Additional, detailed information can be found in the data set online.
+For completing the study, subjects were paid above the fixed minimum wage (on average £10.00 per hour; see Supplements for further detail).
+
+\hypertarget{procedure}{%
+\subsection{Procedure}\label{procedure}}
+
+Children in our in-person sample were tested on a tablet in a quiet room in their kindergarten.
+An experimenter guided the child through the study.
+
+Children in the remote sample received a personalized link to the study website, and families could participate at any time or location.
+At the beginning of the online study, families were invited to enter our ``virtual institute''.
+We welcomed them with a short introductory video of the study leader, describing the research background and further procedure.
+Then, caregivers were informed about data security and were asked for their informed consent.
+They were asked to enable the sound and seat their child centrally in front of their device.
+Before the study started, families were instructed on how to set up their webcam and enable the recording permissions.
+We stressed that caregivers should not help their children.
+Study participation was video recorded whenever possible in order to ensure that the children themselves generated the answers.
+Depending on the participant's device, the website automatically presented the hedge or box version of the study.
+For families that used a tablet with a touchscreen, the hedge version was shown.
+Here, children could directly click on the touchscreen to indicate where the target is.
+For families that used a computer without a touchscreen, the website presented the box version of the task.
+We assumed that younger children in our sample would not be acquainted with using a computer mouse.
+Therefore, we asked children to point to the screen, while caregivers were asked to act as the ``digital finger'' of their children and click on the indicated box.
+
+All participants received 15 test trials.
+In the box version, we decided to adjust the task difficulty according to the sample: children were presented with five boxes, while adults were presented with eight boxes as possible target locations.
+
+\hypertarget{analysis}{%
+\subsection{Analysis}\label{analysis}}
+
+All test trials without voice-over descriptions were included in our analyses.
+We ran all analyses in R version 4.2.2 (2022-10-31) (R Core Team, 2022).
+Regression models were fit as Bayesian generalized linear mixed models (GLMMs) with default priors for all analyses, using the function \texttt{brm} from the package \texttt{brms} (Bürkner, 2017, 2018).
+
+To estimate the developmental trajectory of gaze understanding and the effect of data collection mode, we fit a GLMM predicting the task performance in each trial by age (in months, z-transformed) and data collection mode (reference category: in-person supervised).
+The model included random intercepts for each participant and each target position, and a random slope for symmetric target position within participants (model notation in \texttt{R:\ performance\ \textasciitilde{}\ age\ +\ datacollection\ +\ symmetricPosition\ +\ trialNr\ +\ (1\ +\ symmetricPosition\ +\ trialNr\ \textbar{}\ subjID)}).\footnote{In the pre-registration (\url{https://osf.io/snju6}), we specified the following model structure: ``All models will include a fixed effect of target centrality and age, a random intercept for ID and a random slope for trial number by ID. For both study versions, we will compare the above specified null models with a model including data source (live vs.~online) as a fixed effect.'' Or, in R model formula: \texttt{R:\ performance\ \textasciitilde{}\ target\_centrality\ +\ age\ +\ (1\ \textbar{}\ ID)\ +\ (1\ +\ trial\ \textbar{}\ ID)}.
+  In this paper, we added symmetricPosition (synonymous to target\_centrality) as a random slope because we expected that this item effect could vary between participants.
+  To be better able to interpret trial number effects, we decided to include it as a fixed effect.
+  Data collection mode (formerly named ``data source'') proved as a meaningful predictor and was accordingly added to the model.}
+
+Here, \texttt{symmetricPosition} refers to the absolute distance from the stimulus center (i.e., smaller value meaning more central target position).
+We expected that trials could differ in their difficulty depending on the target centrality and that these item effects could vary between participants.
+
+For the hedge version, performance was defined as the absolute click distance between the target center and the click x coordinate, scaled according to target widths, and modeled by a \texttt{lognormal} distribution.
+For the box version, the model predicted correct responses (0/1) using a \texttt{Bernoulli} distribution with a logit link function.
+We inspected the posterior distribution (mean and 95\% Confidence Interval (CI)) for the age and data collection estimates.
+
+\hypertarget{results}{%
+\subsection{Results}\label{results}}
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{../figures/tango_arrangedplot} 
+
+}
+
+\caption{\textbf{Measuring inter-individual variation}. (A) Developmental trajectory in the continuous hedge version. Performance is measured as imprecision, i.e., the absolute distance between the target's center and the participant's click (averaged across trials). The unit of imprecision is counted in the width of the target, i.e., a participant with imprecision of 1 clicked on average one target width to the left or right of the true target center. (B) Internal consistency (odd-even split) in hedge child sample. (C) Internal consistency in hedge adult sample. (D) Test-retest reliability in hedge child sample. (E) Test-retest reliability in hedge adult sample. (F) Developmental trajectory in the discrete box version. Performance is measured as the proportion of correct responses, i.e., how many times the participant clicked on the box that contained the target. The dotted black line shows the level of performance expected by chance (for child sample 20\%, i.e., 1 out of 5 boxes; for adult sample 12.5\%, i.e., 1 out of 8 boxes). (G) Internal consistency (odd-even split) in box child sample. (H) Internal consistency in box adult sample. (I) Test-retest reliability in box child sample. (J) Test-retest reliability in box adult sample. For (A) and (F), regression lines show the predicted developmental trajectories (with 95\% CrI) based on GLMMs, with the line type indicating the data collection mode. For (B-E) and (G-J), regression lines with 95\% CI show smooth conditional mean based on a linear model (generalized linear model for box version), with \emph{Pearson}'s correlation coefficient \emph{r}. Large points with 95\% CI (based on non-parametric bootstrap) represent performance means by age group (binned by year). Small points show the mean performance for each subject averaged across trials. The shape of data points represents data collection mode: opaque circles for in-person supervised data collection and translucent diamonds for remote unsupervised data collection. The color of data points denotes age group.}\label{fig:fig2}
+\end{figure}
+
+Children showed nearly perfect precision in the first training trial.
+As visual access to the target location decreased in the subsequent training trials, imprecision levels increased (see Supplements).
+Within test trials, children's imprecision levels did not vary as a function of trial number.
+We take this as evidence that (A) children were comfortable touching the screen, (B) children understood the task instructions insofar as they aimed at locating the target, and (C) our experimental design successfully manipulated task difficulty.
+
+We found a strong developmental effect: with increasing age, participants got more accurate in locating the target.
+In the hedge version, children's click imprecision decreased with age, while in the box version, the proportion of correct responses increased (see Figure \ref{fig:fig2}A and F).
+Most participants in the box version performed above chance level.
+By the end of their sixth year of life, children came close to the adult's proficiency level.
+Most importantly, however, we found substantial inter-individual variation across study versions and age groups.
+For example, some three-year-olds were more precise in their responses than some five-year-olds.
+Even though variation is smaller, we could even find inter-individual differences in the adult sample.
+
+As Figure \ref{fig:fig2}A and F show, our remotely collected child data resembled the data from the kindergarten sample.
+We found evidence that responses of children participating remotely were slightly more precise.
+This difference was mainly driven by the younger participants and was especially prominent in the box version of the task.
+It is conceivable that caregivers were especially prone to influence the behavior of younger children.
+In the box version, caregivers might have had more opportunities to interfere since they carried out the clicking for their children.\footnote{In an exploratory analysis, we coded parental behavior and environmental factors during remote unsupervised testing.
+  We focused on the subsample with the greatest performance difference between data collection modes: the three-year-olds in the box version of the task (n = 16).
+  We reasoned that if parental interference cannot explain the greatest performance difference in our sample, the effects would be negligible in the remaining sample.
+  Based on our model comparison, we conclude that there is no clear evidence of a stable effect of parental interference.
+  See Supplements for further detail.}
+
+Our GLMM analysis corroborated the visual inspection of the data: in the hedge version, the estimates for age (\(\beta\) = -0.33; 95\% CrI {[}-0.42; -0.24{]}) and data collection mode -0.31 (95\% CrI {[}-0.49; -0.13{]}) were negative and reliably different from zero.
+In the box version, the estimate of age (\(\beta\) =0.69 (95\% CrI {[}0.45; 0.98{]}) and the estimate of data collection mode (\(\beta\) = 1.10 (95\% CrI {[}0.66; 1.56{]}) were positive and reliably different from zero.
+Note that even though confidence intervals from the data collection estimates were wide, the effect was positive and reliably different from zero in that our remote sample performed more accurately than our in-person sample.
+
+There was no effect of trial number (hedge version: \(\beta\) = 0.00; 95\% CrI {[}-0.02; 0.01{]}; box version: \(\beta\) = -0.02; 95\% CrI {[}-0.05; 0.01).
+However, trials differed in difficulty depending on where the target landed (hedge version: \(\beta\) = 0.32; 95\% CrI {[}0.27; 0.37{]}; box version: \(\beta\) = -1.58; 95\% CrI {[}-1.87; -1.31).
+When the target landed closer to the center of the screen, participants were more accurate in locating it.
+
+\hypertarget{discussion}{%
+\subsection{Discussion}\label{discussion}}
+
+Our task measured inter-individual differences in both children and adults; that is, we found substantial variation in individuals across age groups.
+For example, some three-year-olds showed greater precision levels than some five-year-olds.
+This holds across both study versions.
+However, due to the continuous study design, the hedge version was able to capture more fine-grained differences in individual performance.
+We see substantial developmental gains: with increasing age, participants became on average more and more precise in locating the target.
+The five-year-olds reached a proficiency level close to the adults' level.
+For neither study version nor age group did we find any floor or ceiling effects.
+The presentation as a web app with cartoon-like features kept children interested and motivated throughout the 15 test trials.
+Furthermore, we found a comparable developmental trajectory for an unsupervised remote child sample.
+This illustrates the flexibility of the task design.
+
+\hypertarget{internal-consistency-and-test-retest-reliability}{%
+\section{Internal consistency and test-retest reliability}\label{internal-consistency-and-test-retest-reliability}}
+
+As a next step, we aimed to investigate whether the variation that we captured with the TANGO is reliable.
+We assessed internal consistency (as split-half reliability) and test-retest reliability.
+Task procedure, data collection, and sample sizes were pre-registered (\url{https://osf.io/xqm73} for the child sample and \url{https://osf.io/nu62m} for the adult sample).
+Participants were equally distributed across the two study versions.
+Data was collected between July 2021 and June 2022.
+
+The study design and procedure obtained ethical clearance by the MPG Ethics commission Munich, Germany, falling under a packaged ethics application (Appl. No.~2021\_45), and was approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology.
+The research adheres to the legal requirements of psychological research with children in Germany.
+
+\hypertarget{participants-1}{%
+\subsection{Participants}\label{participants-1}}
+
+Participants were recruited in the same way as in the previous study.
+The child sample consisted of 120 children, including 41 3-year-olds (mean = 42.34 months, SD = 3.10, range = 37 - 47, 20 girls), 41 4-year-olds (mean = 53.76 months, SD = 3.15, range = 48 - 59, 21 girls), and 38 5-year-olds (mean = 66.05 months, SD = 3.40, range = 60 - 71, 19 girls).
+
+Additional 65 children were recruited but not included in the analysis due to absence on the second test day (n = 49), canceled testing because of Covid cases in the kindergarten (n = 7), children did not want to participate a second time (n = 5), children already participated in the first data collection round and were included in the above-mentioned \emph{Individual Differences} sample (n = 3), or children did not understand the task instructions (n = 1; manifested in too early clicking in the training trials while the instructions were still playing, and no clicking by themselves in the test trials).
+Two additional children were recruited for the first day (as backup) in case another child would be absent on the second test day.
+
+The adult sample included 136 English speakers with an average age of 25.73 years (SD = 8.09, range = 18 - 71, 87 females; see Supplements for further details).
+Most participants resided in South Africa (n = 48), the United Kingdom (n = 19), and the United States (n = 14).
+
+\hypertarget{procedure-1}{%
+\subsection{Procedure}\label{procedure-1}}
+
+We applied the same procedure as in the first study, with the following differences.
+Participants completed the study twice, with a delay of 14 ± 3 days.
+The target locations, as well as the succession of agents and target colors, were randomized once and then held constant across participants.
+The child sample received 15 test trials.
+In the hedge version, each bin occurred once, making up ten of the test trials.
+For the remaining five test trials, we repeated one out of two adjacent bins (i.e., randomly chose between bins 1 \& 2, bins 3 \& 4, etc.).
+In the box version, we ensured that each of the five boxes occurred exactly three times during test trials.
+Adults in the hedge version received 30 test trials, each of the ten bins occurring exactly three times.
+Adults in the box version received 32 test trials, with each of the eight boxes occurring exactly four times.
+For the four training trials, we repeated a fixed order of random bins/boxes.
+For the adult sample, we decided to increase the number of trials in order to get more accurate reliability estimates.
+Trial numbers were multipliers of the possible target locations and therefore differed between hedge and box versions.
+For the child sample, we stuck to the same number of trials to not risk higher attrition rates.
+
+\hypertarget{analysis-1}{%
+\subsection{Analysis}\label{analysis-1}}
+
+We assessed reliability in two ways.
+First, we focused on internal consistency by calculating split-half reliability coefficients.\footnote{The assessment of internal consistency was not pre-registered and was included as an additional measure of reliability.}
+For each subject, trials were split into odd and even trials.
+Performance was aggregated and then correlated using \emph{Pearson} coefficients.
+For this, we used the data of the first test day.
+Performance was defined according to each study version: in the hedge version, performance referred to the mean absolute difference between the target center and the click coordinate, scaled according to target widths; in the box version, we computed the mean proportion of correct choices.
+
+Pronk, Molenaar, Wiers, and Murre (2021) recently compared various methods for computing split-half reliability that differ in how the trials are split into parts and whether they are combined with stratification by task design.
+To compare our traditional approach of a simple odd-even split, we additionally calculated split-half reliability estimates using first-second, odd-even, permutated, and Monte Carlo splits without and with stratification by target position.
+First-second and odd-even splits belong to single sample methods since each participant has a single pair of performance scores, while permutated (without replacement) and Monte Carlo (with replacement) splits make use of resampling.
+Analyses were run using the function \texttt{by\_split} from the \texttt{splithalfr} package (Pronk et al., 2021).
+
+Second, we assessed test-retest reliability.
+We calculated performance scores (depending on the study version as described above) for each participant in each test session and correlated them using \emph{Pearson} correlation coefficients.
+Furthermore, for our child sample, we report an age-corrected correlation between the two test days using a GLMM-based approach (Rouder \& Haaf, 2019).
+We fit trial-by-trial data with a fixed effect of age, a random intercept for each subject, and a random slope for test day (model notation in \texttt{R:\ performance\ \textasciitilde{}\ age\ +\ (0\ +\ reliday\ \textbar{}\ subjID)}).
+For the hedge version, performance was modeled by a lognormal distribution, while the model for the box version used a Bernoulli distribution with a logit link function.
+The model computes a correlation between the participant-specific estimates for each test day.
+This can be interpreted as the test-retest reliability.
+By using this approach, we do not need to compromise on data aggregation and, therefore, loss of information.
+Since the model uses hierarchical shrinkage, we obtain regularized, more accurate person-specific estimates.
+Most importantly, the model includes age as a fixed effect.
+The correlation between the two person-specific estimates is consequently the age-independent estimate for test-retest reliability.
+This rules out the possibility that a high correlation between test days arises from domain-general cognitive development instead of study-specific inter-individual differences.
+A high correlation between our participant-specific model estimates would indicate a high association between test days.
+
+\hypertarget{results-1}{%
+\subsection{Results}\label{results-1}}
+
+We found that the TANGO measured systematic variation: split-half and test-retest reliability was medium to high.
+For internal consistency, we show traditional odd-even splits on our data and the corresponding \emph{Pearson} correlation coefficients in Figure \ref{fig:fig2}B, C, G, and H.
+
+Figure \ref{fig:fig3} compares split-half reliability coefficients by splitting and stratification method (Pronk et al., 2021).
+In the hedge version, the split-half reliability coefficients ranged from 0.65 to 0.93.
+In the box version, split-half reliability coefficients ranged from 0.48 to 0.86.
+Similar to the results of Pronk et al. (2021), we found that more robust splitting methods that are less prone to task design or time confounds yielded higher reliability coefficients.
+In most cases, stratifying by target position led to similar or even higher estimates compared to no stratification.
+As expected, we found higher coefficients for the samples with higher variation, i.e., for our continuous hedge version of the task.
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{../figures/tango_splithalf} 
+
+}
+
+\caption{\textbf{Internal Consistency}. Reliability coefficients per splitting method, stratification level, study version, and age group. Error bars show the 95\% confidence intervals of the coefficient estimates, calculated with the function \texttt{by\_split} from the \texttt{splithalfr} package (Pronk et al., 2021).}\label{fig:fig3}
+\end{figure}
+
+For test-retest reliability, we show the association between raw performance scores of the two test days and corresponding \emph{Pearson} correlation coefficients in Figure \ref{fig:fig2}D, E, I and J.\footnote{In the hedge version, we excluded one 3-year-old, one 5-year-old, and two adults from the test-retest analysis.
+  The performance of the mentioned participants was 3 standard deviations above/below the mean of each sample.
+  Including the two children yielded a \emph{Pearson} correlation coefficient of \emph{r} = 0.88.
+  Including the two adults yielded a \emph{Pearson} correlation coefficient of \emph{r} = 0.73.}
+See Supplements for reliability estimates by age group.
+
+The age-corrected, GLMM-based retest reliabilities for children yielded similar results.
+In the hedge version, the correlation between test days was 0.89 (95\% CrI {[}0.66;1.00{]}).
+In the box version, the correlation between test days was 0.91 (95\% CrI {[}0.69;1.00{]}).
+
+For both study versions, reliability estimates based on the GLMM approach were higher than the \emph{Pearson} correlations.
+The GLMM-based estimates are less noisy due to the fact that the model uses all available information (e.g., participant age) and does not rely on data aggregation across trials.
+
+\hypertarget{discussion-1}{%
+\subsection{Discussion}\label{discussion-1}}
+
+Our results indicated that the measured variation was systematic.
+As expected, the continuous measure of the hedge version yielded higher reliability estimates than the discrete box version.
+For children, the model-based reliability estimates showed that the task did capture individual differences even when correcting for age.
+This corroborates what we already see in Figure \ref{fig:fig2}: there was a clear overlap between age groups, indicating that age is predictive of performance for the mean but is not the main source of individual differences.
+
+\hypertarget{validity}{%
+\section{Validity}\label{validity}}
+
+After having probed our new testing infrastructure and the psychometric properties of the TANGO task, we aimed at establishing its validity.
+One way to assess validity is to correlate the social-cognitive ability in question to concepts that are thought to be theoretically related.
+Social cognition is often described as developing in response to social interaction(Devine \& Hughes, 2018; Hughes \& Leekam, 2004).
+It is assumed that opportunities to play, communicate and argue with peers help children to understand the human mind.
+Therefore, many studies link social cognition to opportunities for social interaction captured in demographic variables such as parent-child interaction quality and quantity, mental state talk, and center-based childcare (Bulgarelli \& Molina, 2016; Dunn et al., 1991; Pavarini et al., 2013).
+In particular, family constellation, the number and age of siblings, and their interaction have been linked to social cognition (Cassidy, Fineberg, Brown, \& Perkins, 2005; Dunn et al., 1991; Perner, Ruffman, \& Leekam, 1994; Peterson, 2000; Zhang, Yu, Long, \& Li, 2021).
+
+To assess such external validity for out TANGO task, we handed out a brief demographic questionnaire to families of our kindergarten and online child sample and asked for (1) the total number of household members, (2) the number of children, (3) age of the other children, (4) whether the child was in day care, and if yes, (5) since when and (6) for how long on an average day.
+109 families filled out the questionnaire and were included in the analysis.
+We used parent's responses to construct different scores suggested in the literature (Cassidy et al., 2005; Peterson, 2000), capturing different aspects of children's opportunity for social interaction with adults and peers.
+Figure \ref{fig:fig4}A shows that all predictor scores are positively linked to gaze understanding. Only the \texttt{predictor\ age\ of\ childcare\ entry} improved the model fit compared to the null model (for model comparisons, see Supplements). Albeit the effects are weak, they are consistent with the literature.
+
+In addition, children's sensitivity to gaze has been linked to language acquisition (Brooks \& Meltzoff, 2005; Del Bianco et al., 2019; Okumura et al., 2017).
+Discovering the attentional focus of your counterpart is thought to facilitate word learning, for example by identifying the referent of a new word (Tomasello, 2003).
+For 117 children, we also collected data on a receptive vocabulary test (Bohn, Prein, Delikaya, Haun, \& Gagarina, 2022) approximately six months (mean = 0.52 years, sd = 0.08, range = 0.06 - 0.80)after their participation in the TANGO task.
+We found a substantial relation between gaze understanding six month prior and receptive vocabulary, even when correcting for age (see Figure \ref{fig:fig4}B and C).
+Taken together, our newly developed task shows connections to external variables and psychological constructs that are characteristic for measures of social cognition.
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{../figures/tango_vali_arrangedplot} 
+
+}
+
+\caption{\textbf{Validity of the TANGO task.} (A) Influence of age of childcare entry on gaze understanding. The older the children were when entering childcare, the less likely they are to respond correctly. (B) Influence of social-environmental factors on gaze understanding. Adding the predictors to the null model did not improve model fit. (B) Influence of gaze understanding on receptive vocabulary. (C) Influence of gaze understanding on receptive vocabulary by age. The regression line with 95\% CI shows a smooth conditional mean based on a linear model, with a \emph{Pearson}'s correlation coefficient \emph{r}. Dots show the mean performance for each subject averaged across trials. The color of dots denotes age group. For (A), (B), and (C), the graphs show the posterior distributions for the respective predictor of each model. Black dots represent means, thicker black lines 80\% CI and thinner black lines 95\% CI.}\label{fig:fig4}
+\end{figure}
+
+\hypertarget{general-discussion}{%
+\section{General Discussion}\label{general-discussion}}
+
+We have presented a new experimental paradigm to study gaze understanding across the lifespan.
+This paper contributes to methodological advances in developmental psychology in the following ways: first, we captured fine-grained individual differences in gaze understanding at different ages -- from early childhood until adulthood.
+Individuals behaved consistently differently from one another (i.e., we find substantial variation between individuals across age groups).
+Second, our task showed satisfactory psychometric properties with respect to internal consistency and retest reliability estimates.
+Third, our new browser-based testing infrastructure ensures standardized, portable data collection at scale, both remotely as well as in person.
+In sum, the TANGO provides a step toward more robust and reliable research methods, especially with regard to measuring a developmental change in fundamental social-cognitive abilities.
+The web app (\url{https://ccp-odc.eva.mpg.de/tango-demo/}) and its source code (\url{https://github.com/ccp-eva/tango-demo}) are freely accessible for use and modification.
+
+Our continuous measure of children's gaze understanding moves away from treating a social-cognitive ability as an all-or-nothing matter (e.g., dichotomous measures in pass/fail situations) toward an ability on a continuum (Beaudoin et al., 2020; Hughes \& Devine, 2015).
+Identifying variability in social-cognitive abilities is vital for accurately quantifying developmental change, revealing relations between different aspects of cognition and children's real-life social surroundings, and for meaningful comparisons across human cultures and across animal species.
+Dedicated measures of individual differences will help us to design meaningful interventions and progress in psychological theory building (Hedge et al., 2018).
+
+Our continuous hedge version yields higher internal consistency estimates than the categorical box version.
+Both study versions exhibit high retest reliability, also when controlling for age.
+Therefore, when a sufficient number of trials is presented, the box version of the task can also yield reliable individual estimates (cf. Hughes et al. (2000); improved reliability through aggregation).
+When testing time is limited (and the number of trials might be low), we recommend using the continuous study version for higher internal consistency.
+However, the categorical box version demonstrates design features that might be preferable in some research contexts: for example, researchers could induce different levels of salience for each box.
+Our task could consequently be used to study bias, preferences, and diverse desires (e.g., matching the box appearance to some feature/behavioral characteristic of the agent).
+
+In the split-half reliability calculations, the more accurately the statistical method represents the task structure, the higher the reliability estimates are.
+Therefore, we argue that future research should aim at implementing statistical analyses that mirror the complexity of the experimental design.
+Theoretically informed, computational cognitive models are a promising approach forward (Haines et al., 2020).
+Computational models take advantage of all available information and model variation between and within individuals in an even more fine-grained and psychologically interpretable manner.
+Computational frameworks could also be used to model performance and their underlying cognitive processes across tasks.
+With nested hierarchical models, we could assess the systematic relation between various social-cognitive abilities and recover potentially shared structures between cognitive processes (Bohn, Tessler, Kordt, Hausmann, \& Frank, 2022).
+
+The TANGO fulfills several demands that were proposed by Schaafsma et al. (2015)'s wish list: it measures proficiency on a continuum, avoids floor and ceiling effects, measures variation across age ranges, shows satisfactory reliability estimates, and has a high face value.
+
+In addition to the new task design itself, we designed a new testing infrastructure.
+The TANGO is presented as an interactive web app.
+This enables presentation across devices without any prior installation.
+Stimuli presentation is achieved through the use of SVGs.
+This has several advantages: the aspect ratio and stimulus quality are kept constant no matter which size the web browser displays.
+The cartoon-like presentation makes the task engaging for children and adults alike.
+Most importantly, we can dynamically modify the stimulus details (e.g., target positions) on a trial-by-trial basis.
+Presented agents, voice-over instructions, and objects can be easily adapted for future task modifications or specific linguistic and cultural settings.
+
+The browser-based implementation allows for different data collection modes: participants can be tested in person with supervision or remotely at home.
+Test instructions are standardized, and with prior informed consent, the webcam records study participation.
+This allows us to scale up data collection: testing is flexible, fast, and requires no further experimenter training.
+We compared children participating in-person and supervised in kindergartens with children who participated remotely at home.
+Our results suggest a comparable developmental trajectory of gaze understanding in both samples.
+Children in the remote sample were slightly more precise.
+This effect was most pronounced in the three-year-olds in the box version (for an analysis of the webcam recordings, see Supplements).
+Therefore, we recommend using a tablet for remote data collection.
+Children can click for themselves, and caregivers have less chance to interfere.
+The design choices of the infrastructure underline how our study design can act as a versatile framework for addressing further research questions on social-cognitive development.
+
+With respect to validity, we found that performance in the TANGO task was related to relevant external variables and cognitive measures.
+Family-level variables, capturing a child's opportunity for social interaction, systematically influenced gaze understanding. Even though the effects were small and confidence intervals were wide, it is remarkable that we were able to detect relationships between this fundamental social-cognitive ability and very distant, real-life variables.
+In addition, we assessed the influence of gaze understanding on receptive vocabulary.
+We found a substantial relationship between the two variables, even when correcting for age.
+Taken together, this speaks to the validity of our TANGO task.
+
+\hypertarget{limitations}{%
+\section{Limitations}\label{limitations}}
+
+First, we want to address the scope and interpretation of the TANGO task.
+We believe that solving the task requires locating the attentional focus of an agent as the gaze cues the target location.
+This speaks to the face validity of the TANGO task and its focus on an inherently social stimulus.
+However, we do not want to claim that the TANGO task does not also recruit other, domain general processes.
+For example, we believe that a considerable part of gaze understanding relies on vector-following: not just in our task but also in real life.
+From that perspective, gaze understanding could be seen as a particular case of vector-following that is learned and used in social interactions.
+Future research could assess how much variation of the gaze understanding task is shared with a physical vector-following task.
+In addition, computational cognitive models might prove helpful in defining children's behavior on a process-level and disentangling parameters that influence task performance (e.g., spatial acuity).
+
+Second, the influence of testing modality requires further attention.
+Remote data collection loosens the standardization of the experimental procedure, as we cannot prevent caregivers from interfering.
+Steering the child's behavior becomes less possible when touchscreens are used, and the child can click on the screen directly.
+This is why we recommend using tablets for remote data collection.
+However, it should be noted that families' access to technological devices varies, both across socio-environmental as well as cultural settings.
+
+Finally, we utilized subtle gaze cues in order to increase difficulty and capture individual differences.
+However, in real-life settings, children could be more accustomed to a combination of head and eye orientation changes, and subtle gaze differences might be less common.
+
+\hypertarget{conclusion}{%
+\section{Conclusion}\label{conclusion}}
+
+We have presented a new experimental paradigm to study gaze understanding across the lifespan.
+The TANGO captures individual differences and shows highly satisfactory psychometric properties with respect to internal consistency and retest reliability.
+The browser-based testing infrastructure allows for standardized, portable data collection at scale, both remotely as well as in person.
+Ultimately, this work shows a promising way forward toward more precise measures of cognitive development.
+The data sets and the analysis code are freely available in the associated online repository (\url{https://github.com/ccp-eva/gazecues-methods}).
+A demo version of the task is available at the following website (see Figure \ref{fig:fig5}): \url{https://ccp-odc.eva.mpg.de/tango-demo/}.
+The code base and respective assets can be accessed in the following repository: \url{https://github.com/ccp-eva/tango-demo}.
+These resources allow interested researchers to use, extend and adapt the task.
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{../figures/tango_demo_screenshot} 
+
+}
+
+\caption{\textbf{TANGO demo website.} We want to highlight that researchers are welcome to use and modify our task according to their needs. The number of training and test trials and the number of boxes can be adjusted within the JavaScript code, while agents and targets can be exchanged within the HTML code.}\label{fig:fig5}
+\end{figure}
+
+\newpage
+
+\hypertarget{declarations}{%
+\section{Declarations}\label{declarations}}
+
+\hypertarget{open-practices-statement}{%
+\subsection{Open practices statement}\label{open-practices-statement}}
+
+The web application (\url{https://ccp-odc.eva.mpg.de/tango-demo/}) described here is open source (\url{https://github.com/ccp-eva/tango-demo}).
+The data sets generated during and/or analysed during the current study are available in the {[}gazecues-methods{]} repository (\url{https://github.com/jprein/gazecues-methods}).
+All experiments were pre-registered (\url{https://osf.io/zjhsc/}).
+
+\hypertarget{funding}{%
+\subsection{Funding}\label{funding}}
+
+This study was funded by the Max Planck Society for the Advancement of Science, a noncommercial, publicly financed scientific organization (no grant number).
+We thank all the children, caregivers, and adults who participated in the study.
+We thank Jana Jurkat for her help with data collection.
+
+\hypertarget{conflicts-of-interest}{%
+\subsection{Conflicts of interest}\label{conflicts-of-interest}}
+
+The authors declare that they have no conflict of interest.
+
+\hypertarget{consent-to-participate}{%
+\subsection{Consent to participate}\label{consent-to-participate}}
+
+Informed consent was obtained from all individual participants included in the study or their legal guardians.
+
+\hypertarget{authors-contributions}{%
+\subsection{Authors' contributions}\label{authors-contributions}}
+
+The authors made the following contributions.
+Julia Prein: Conceptualization, Software, Formal Analysis, Writing - Original Draft Preparation, Writing - Review \& Editing; Manuel Bohn: Conceptualization, Writing - Original Draft Preparation, Writing - Review \& Editing; Steven Kalinke: Software, Writing - Review \& Editing; Daniel Haun: Conceptualization, Writing - Review \& Editing.
+
+\newpage
+
+\hypertarget{references}{%
+\section{References}\label{references}}
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+\hypertarget{refs}{}
+\begin{CSLReferences}{1}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-astor2020social}{}}%
+Astor, K., Lindskog, M., Forssman, L., Kenward, B., Fransson, M., Skalkidou, A., \ldots{} Gredebäck, G. (2020). Social and emotional contexts predict the development of gaze following in early infancy. \emph{Royal Society Open Science}, \emph{7}(9), 201178. \url{https://doi.org/10.1098/rsos.201178}
+
+\leavevmode\vadjust pre{\hypertarget{ref-astor2021gaze}{}}%
+Astor, K., Thiele, M., \& Gredebäck, G. (2021). Gaze following emergence relies on both perceptual cues and social awareness. \emph{Cognitive Development}, \emph{60}, 101121. \url{https://doi.org/10.1016/j.cogdev.2021.101121}
+
+\leavevmode\vadjust pre{\hypertarget{ref-baron-cohen1985does}{}}%
+Baron-Cohen, S., Leslie, A. M., \& Frith, U. (1985). Does the autistic child have a "theory of mind" ? \emph{Cognition}, \emph{21}, 37--46. \url{https://doi.org/10.1016/0010-0277(85)90022-8}
+
+\leavevmode\vadjust pre{\hypertarget{ref-barrett2013early}{}}%
+Barrett, H. C., Broesch, T., Scott, R. M., He, Z., Baillargeon, R., Wu, D., \ldots{} Laurence, S. (2013). Early false-belief understanding in traditional non-{Western} societies. \emph{Proceedings of the Royal Society B: Biological Sciences}. \url{https://doi.org/10.1098/rspb.2012.2654}
+
+\leavevmode\vadjust pre{\hypertarget{ref-beaudoin2020systematic}{}}%
+Beaudoin, C., Leblanc, É., Gagner, C., \& Beauchamp, M. H. (2020). Systematic {Review} and {Inventory} of {Theory} of {Mind Measures} for {Young Children}. \emph{Frontiers in Psychology}, \emph{0}. \url{https://doi.org/10.3389/fpsyg.2019.02905}
+
+\leavevmode\vadjust pre{\hypertarget{ref-begeer2012continuous}{}}%
+Begeer, S., Bernstein, D. M., van Wijhe, J., Scheeren, A. M., \& Koot, H. M. (2012). A continuous false belief task reveals egocentric biases in children and adolescents with {Autism Spectrum Disorders}. \emph{Autism}, \emph{16}(4), 357--366. \url{https://doi.org/10.1177/1362361311434545}
+
+\leavevmode\vadjust pre{\hypertarget{ref-benson2012individual}{}}%
+Benson, J., Sabbagh, M., Carlson, S., \& Zelazo, P. (2012). Individual {Differences} in {Executive Functioning Predict Preschoolers}' {Improvement From Theory-of-Mind Training}. \emph{Developmental Psychology}, \emph{49}. \url{https://doi.org/10.1037/a0031056}
+
+\leavevmode\vadjust pre{\hypertarget{ref-bernstein2011theory}{}}%
+Bernstein, D. M., Thornton, W. L., \& Sommerville, J. A. (2011). Theory of {Mind Through} the {Ages}: {Older} and {Middle-Aged Adults Exhibit More Errors Than Do Younger Adults} on a {Continuous False Belief Task}. \emph{Experimental Aging Research}, \emph{37}(5), 481--502. \url{https://doi.org/10.1080/0361073X.2011.619466}
+
+\leavevmode\vadjust pre{\hypertarget{ref-bohn2018common}{}}%
+Bohn, M., \& Köymen, B. (2018). Common {Ground} and {Development}. \emph{Child Development Perspectives}, \emph{12}(2), 104--108. \url{https://doi.org/10.1111/cdep.12269}
+
+\leavevmode\vadjust pre{\hypertarget{ref-bohn2021children}{}}%
+Bohn, M., Le, K. N., Peloquin, B., Köymen, B., \& Frank, M. C. (2021). Children's interpretation of ambiguous pronouns based on prior discourse. \emph{Developmental Science}, \emph{24}(3), e13049. \url{https://doi.org/10.1111/desc.13049}
+
+\leavevmode\vadjust pre{\hypertarget{ref-bohn2022orev}{}}%
+Bohn, M., Prein, J., Delikaya, B., Haun, D. B. M., \& Gagarina, N. (2022). \emph{{oREV}: An {Item Response Theory} based open receptive vocabulary task for 3 to 8-year-old children}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-bohn2022individual}{}}%
+Bohn, M., Tessler, M. H., Kordt, C., Hausmann, T., \& Frank, M. C. (2022). \emph{An individual differences perspective on the development of pragmatic abilities in the preschool years}. {PsyArXiv}. \url{https://doi.org/10.31234/osf.io/s2e3p}
+
+\leavevmode\vadjust pre{\hypertarget{ref-bohn2021how}{}}%
+Bohn, M., Tessler, M. H., Merrick, M., \& Frank, M. C. (2021). How young children integrate information sources to infer the meaning of words. \emph{Nature Human Behaviour}, \emph{5}(8), 1046--1054. \url{https://doi.org/10.1038/s41562-021-01145-1}
+
+\leavevmode\vadjust pre{\hypertarget{ref-brooks2005development}{}}%
+Brooks, R., \& Meltzoff, A. N. (2005). The development of gaze following and its relation to language. \emph{Developmental Science}, \emph{8}(6), 535--543. \url{https://doi.org/10.1111/j.1467-7687.2005.00445.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-bulgarelli2016social}{}}%
+Bulgarelli, D., \& Molina, P. (2016). Social {Cognition} in {Preschoolers}: {Effects} of {Early Experience} and {Individual Differences}. \emph{Frontiers in Psychology}, \emph{7}. \url{https://doi.org/10.3389/fpsyg.2016.01762}
+
+\leavevmode\vadjust pre{\hypertarget{ref-burkner2017brms}{}}%
+Bürkner, P.-C. (2017). Brms: {An R Package} for {Bayesian Multilevel Models Using Stan}. \emph{Journal of Statistical Software}, \emph{80}(1). \url{https://doi.org/10.18637/jss.v080.i01}
+
+\leavevmode\vadjust pre{\hypertarget{ref-burkner2018advanced}{}}%
+Bürkner, P.-C. (2018). Advanced {Bayesian Multilevel Modeling} with the {R Package} brms. \emph{The R Journal}, \emph{10}(1), 395. \url{https://doi.org/10.32614/RJ-2018-017}
+
+\leavevmode\vadjust pre{\hypertarget{ref-buttelmann2021relations}{}}%
+Buttelmann, D., Kühn, K., \& Zmyj, N. (2021). The {Relations} among {Theory} of {Mind}, {Inhibitory Control}, and {Aggressive Behavior} in 4-{Year-Old Children} \textendash{} {A Multi-Measure Multi-Informant Approach}. \emph{Journal of Cognition and Development}, \emph{0}(0), 1--24. \url{https://doi.org/10.1080/15248372.2021.1987240}
+
+\leavevmode\vadjust pre{\hypertarget{ref-byers-heinlein2021development}{}}%
+Byers-Heinlein, K., Tsui, R. K.-Y., van Renswoude, D., Black, A. K., Barr, R., Brown, A., \ldots{} Singh, L. (2021). The development of gaze following in monolingual and bilingual infants: {A} multi-laboratory study. \emph{Infancy}, \emph{26}(1), 4--38. \url{https://doi.org/10.1111/infa.12360}
+
+\leavevmode\vadjust pre{\hypertarget{ref-callaghan2005synchrony}{}}%
+Callaghan, T., Rochat, P., Lillard, A., Claux, M. L., Odden, H., Itakura, S., \ldots{} Singh, S. (2005). Synchrony in the onset of mental-state reasoning: {Evidence} from five cultures. \emph{Psychological Science}. \url{https://doi.org/10.1111/j.0956-7976.2005.01544.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-carlson2001individual}{}}%
+Carlson, S., \& Moses, L. J. (2001). Individual {Differences} in {Inhibitory Control} and {Children}'s {Theory} of {Mind}. \emph{Child Development}, \emph{72}(4), 1032--1053. Retrieved from \url{https://www.jstor.org/stable/1132428}
+
+\leavevmode\vadjust pre{\hypertarget{ref-carlson2004individual}{}}%
+Carlson, S., Moses, L. J., \& Claxton, L. J. (2004). Individual differences in executive functioning and theory of mind: {An} investigation of inhibitory control and planning ability. \emph{Journal of Experimental Child Psychology}, \emph{87}(4), 299--319. \url{https://doi.org/10.1016/j.jecp.2004.01.002}
+
+\leavevmode\vadjust pre{\hypertarget{ref-cassidy2005theory}{}}%
+Cassidy, K. W., Fineberg, D. S., Brown, K., \& Perkins, A. (2005). Theory of {Mind May Be Contagious}, but {You Don}'t {Catch It} from {Your Twin}. \emph{Child Development}, \emph{76}(1), 97--106. Retrieved from \url{https://www.jstor.org/stable/3696711}
+
+\leavevmode\vadjust pre{\hypertarget{ref-coburn2015new}{}}%
+Coburn, P. I., Bernstein, D. M., \& Begeer, S. (2015). A new paper and pencil task reveals adult false belief reasoning bias. \emph{Psychological Research}, \emph{79}(5), 739--749. \url{https://doi.org/10.1007/s00426-014-0606-0}
+
+\leavevmode\vadjust pre{\hypertarget{ref-coelho2006searching}{}}%
+Coelho, E., George, N., Conty, L., Hugueville, L., \& Tijus, C. (2006). Searching for asymmetries in the detection of gaze contact versus averted gaze under different head views: A behavioural study. \emph{Spatial Vision}, \emph{19}(6), 529--545. \url{https://doi.org/10.1163/156856806779194026}
+
+\leavevmode\vadjust pre{\hypertarget{ref-cutting1999theory}{}}%
+Cutting, A. L., \& Dunn, J. (1999). Theory of {Mind}, {Emotion Understanding}, {Language}, and {Family Background}: {Individual Differences} and {Interrelations}. \emph{Child Development}, \emph{70}(4), 853--865. \url{https://doi.org/10.1111/1467-8624.00061}
+
+\leavevmode\vadjust pre{\hypertarget{ref-delbianco2019developmental}{}}%
+Del Bianco, T., Falck-Ytter, T., Thorup, E., \& Gredebäck, G. (2019). The {Developmental Origins} of {Gaze-Following} in {Human Infants}. \emph{Infancy}, \emph{24}(3), 433--454. \url{https://doi.org/10.1111/infa.12276}
+
+\leavevmode\vadjust pre{\hypertarget{ref-devine2018family}{}}%
+Devine, R. T., \& Hughes, C. (2018). Family {Correlates} of {False Belief Understanding} in {Early Childhood}: {A Meta-Analysis}. \emph{Child Development}, \emph{89}(3), 971--987. \url{https://doi.org/10.1111/cdev.12682}
+
+\leavevmode\vadjust pre{\hypertarget{ref-dunn1991young}{}}%
+Dunn, J., Brown, J., Slomkowski, C., Tesla, C., \& Youngblade, L. (1991). \href{https://www.ncbi.nlm.nih.gov/pubmed/1786720}{Young children's understanding of other people's feelings and beliefs: Individual differences and their antecedents}. \emph{Child Development}, \emph{62}(6), 1352--1366.
+
+\leavevmode\vadjust pre{\hypertarget{ref-frank2016using}{}}%
+Frank, M. C., Sugarman, E., Horowitz, A. C., Lewis, M. L., \& Yurovsky, D. (2016). Using {Tablets} to {Collect Data From Young Children}. \emph{Journal of Cognition and Development}, \emph{17}(1), 1--17. \url{https://doi.org/10.1080/15248372.2015.1061528}
+
+\leavevmode\vadjust pre{\hypertarget{ref-frischen2007gaze}{}}%
+Frischen, A., Bayliss, A. P., \& Tipper, S. P. (2007). Gaze cueing of attention: {Visual} attention, social cognition, and individual differences. \emph{Psychological Bulletin}, \emph{133}(4), 694--724. \url{https://doi.org/10.1037/0033-2909.133.4.694}
+
+\leavevmode\vadjust pre{\hypertarget{ref-gathercole2004structure}{}}%
+Gathercole, S. E., Pickering, S. J., Ambridge, B., \& Wearing, H. (2004). The {Structure} of {Working Memory From} 4 to 15 {Years} of {Age}. \emph{Developmental Psychology}, \emph{40}, 177--190. \url{https://doi.org/10.1037/0012-1649.40.2.177}
+
+\leavevmode\vadjust pre{\hypertarget{ref-gola2012mental}{}}%
+Gola, A. A. H. (2012). Mental verb input for promoting children's theory of mind: {A} training study. \emph{Cognitive Development}, \emph{27}(1), 64--76. \url{https://doi.org/10.1016/j.cogdev.2011.10.003}
+
+\leavevmode\vadjust pre{\hypertarget{ref-gopnik1991young}{}}%
+Gopnik, A., \& Slaughter, V. (1991). Young {Children}'s {Understanding} of {Changes} in {Their Mental States}. \emph{Child Development}, \emph{62}(1), 98. \url{https://doi.org/10.2307/1130707}
+
+\leavevmode\vadjust pre{\hypertarget{ref-haines2020theoretically}{}}%
+Haines, N., Kvam, P. D., Irving, L. H., Smith, C., Beauchaine, T. P., Pitt, M. A., \ldots{} Turner, B. M. (2020). \emph{Theoretically {Informed Generative Models Can Advance} the {Psychological} and {Brain Sciences}: {Lessons} from the {Reliability Paradox}}. {PsyArXiv}. \url{https://doi.org/10.31234/osf.io/xr7y3}
+
+\leavevmode\vadjust pre{\hypertarget{ref-happe2017structure}{}}%
+Happé, F., Cook, J. L., \& Bird, G. (2017). The {Structure} of {Social Cognition}: {In}(ter)dependence of {Sociocognitive Processes}. \emph{Annual Review of Psychology}, \emph{68}(1), 243--267. \url{https://doi.org/10.1146/annurev-psych-010416-044046}
+
+\leavevmode\vadjust pre{\hypertarget{ref-hedge2018reliability}{}}%
+Hedge, C., Powell, G., \& Sumner, P. (2018). The reliability paradox: {Why} robust cognitive tasks do not produce reliable individual differences. \emph{Behavior Research Methods}, \emph{50}(3), 1166--1186. \url{https://doi.org/10.3758/s13428-017-0935-1}
+
+\leavevmode\vadjust pre{\hypertarget{ref-hernik2019infant}{}}%
+Hernik, M., \& Broesch, T. (2019). Infant gaze following depends on communicative signals: {An} eye-tracking study of 5- to 7-month-olds in {Vanuatu}. \emph{Developmental Science}, \emph{22}(4), e12779. \url{https://doi.org/10.1111/desc.12779}
+
+\leavevmode\vadjust pre{\hypertarget{ref-herrmann2010structure}{}}%
+Herrmann, E., Hernández-Lloreda, M. V., Call, J., Hare, B., \& Tomasello, M. (2010). The {Structure} of {Individual Differences} in the {Cognitive Abilities} of {Children} and {Chimpanzees}. \emph{Psychological Science}, \emph{21}(1), 102--110. \url{https://doi.org/10.1177/0956797609356511}
+
+\leavevmode\vadjust pre{\hypertarget{ref-hughes2000good}{}}%
+Hughes, C., Adlam, A., Happé, F., Jackson, J., Taylor, A., \& Caspi, A. (2000). Good {Test}-{Retest Reliability} for {Standard} and {Advanced False}-{Belief Tasks} across a {Wide Range} of {Abilities}. \emph{Journal of Child Psychology and Psychiatry}, \emph{41}(4), 483--490. \url{https://doi.org/10.1111/1469-7610.00633}
+
+\leavevmode\vadjust pre{\hypertarget{ref-hughes2015individual}{}}%
+Hughes, C., \& Devine, R. T. (2015). Individual {Differences} in {Theory} of {Mind From Preschool} to {Adolescence}: {Achievements} and {Directions}. \emph{Child Development Perspectives}, \emph{9}(3), 149--153. \url{https://doi.org/10.1111/cdep.12124}
+
+\leavevmode\vadjust pre{\hypertarget{ref-hughes2007executive}{}}%
+Hughes, C., \& Ensor, R. (2007). Executive function and theory of mind: {Predictive} relations from ages 2 to 4. \emph{Developmental Psychology}, \emph{43}(6), 1447--1459. \url{https://doi.org/10.1037/0012-1649.43.6.1447}
+
+\leavevmode\vadjust pre{\hypertarget{ref-hughes2011individual}{}}%
+Hughes, C., Ensor, R., \& Marks, A. (2011). Individual differences in false belief understanding are stable from 3 to 6 years of age and predict children's mental state talk with school friends. \emph{Journal of Experimental Child Psychology}, \emph{108}(1), 96--112. \url{https://doi.org/10.1016/j.jecp.2010.07.012}
+
+\leavevmode\vadjust pre{\hypertarget{ref-hughes2004links}{}}%
+Hughes, C., \& Leekam, S. (2004). What are the {Links Between Theory} of {Mind} and {Social Relations}? {Review}, {Reflections} and {New Directions} for {Studies} of {Typical} and {Atypical Development}. \emph{Social Development}, \emph{13}(4), 590--619. \url{https://doi.org/10.1111/j.1467-9507.2004.00285.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-imuta2016theory}{}}%
+Imuta, K., Henry, J. D., Slaughter, V., Selcuk, B., \& Ruffman, T. (2016). Theory of mind and prosocial behavior in childhood: {A} meta-analytic review. \emph{Developmental Psychology}, \emph{52}(8), 1192--1205. \url{https://doi.org/10.1037/dev0000140}
+
+\leavevmode\vadjust pre{\hypertarget{ref-itakura1998use}{}}%
+Itakura, S., \& Tanaka, M. (1998). Use of experimenter-given cues during object-choice tasks by chimpanzees ({Pan} troglodytes), an orangutan ({Pongo} pygmaeus), and human infants ({Homo} sapiens). \emph{Journal of Comparative Psychology}, \emph{112}(2), 119--126. \url{https://doi.org/10.1037/0735-7036.112.2.119}
+
+\leavevmode\vadjust pre{\hypertarget{ref-kidd2018individual}{}}%
+Kidd, E., Donnelly, S., \& Christiansen, M. H. (2018). Individual {Differences} in {Language Acquisition} and {Processing}. \emph{Trends in Cognitive Sciences}, \emph{22}(2), 154--169. \url{https://doi.org/10.1016/j.tics.2017.11.006}
+
+\leavevmode\vadjust pre{\hypertarget{ref-lecce2014promoting}{}}%
+Lecce, S., Bianco, F., Devine, R. T., Hughes, C., \& Banerjee, R. (2014). Promoting theory of mind during middle childhood: {A} training program. \emph{Journal of Experimental Child Psychology}, \emph{126}, 52--67. \url{https://doi.org/10.1016/j.jecp.2014.03.002}
+
+\leavevmode\vadjust pre{\hypertarget{ref-lee1998children}{}}%
+Lee, K., Eskritt, M., Symons, L. A., \& Muir, D. (1998). Children's use of triadic eye gaze information for "mind reading". \emph{Developmental Psychology}, \emph{34}(3), 525--539. \url{https://doi.org/10.1037//0012-1649.34.3.525}
+
+\leavevmode\vadjust pre{\hypertarget{ref-macdonald2013eye}{}}%
+Macdonald, R. G., \& Tatler, B. W. (2013). Do as eye say: {Gaze} cueing and language in a real-world social interaction. \emph{Journal of Vision}, \emph{13}(4), 6--6. \url{https://doi.org/10.1167/13.4.6}
+
+\leavevmode\vadjust pre{\hypertarget{ref-mahy2017testing}{}}%
+Mahy, C. E. V., Bernstein, D. M., Gerrard, L. D., \& Atance, C. M. (2017). Testing the validity of a continuous false belief task in 3- to 7-year-old children. \emph{Journal of Experimental Child Psychology}, \emph{160}, 50--66. \url{https://doi.org/10.1016/j.jecp.2017.03.010}
+
+\leavevmode\vadjust pre{\hypertarget{ref-mayer2015weird}{}}%
+Mayer, A., \& Träuble, B. (2015). The weird world of cross-cultural false-belief research: {A} true- and false-belief study among samoan children based on commands. \emph{Journal of Cognition and Development}, \emph{16}(4), 650--665. \url{https://doi.org/10.1080/15248372.2014.926273}
+
+\leavevmode\vadjust pre{\hypertarget{ref-mayes1996testretest}{}}%
+Mayes, L. C., Klin, A., Tercyak, K. P., Cicchetti, D. V., \& Cohen, D. J. (1996). Test-{Retest Reliability} for {False-Belief Tasks}. \emph{Journal of Child Psychology and Psychiatry}, \emph{37}(3), 313--319. \url{https://doi.org/10.1111/j.1469-7610.1996.tb01408.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-mcewen2007origins}{}}%
+McEwen, F., Happé, F., Bolton, P., Rijsdijk, F., Ronald, A., Dworzynski, K., \& Plomin, R. (2007). Origins of individual differences in imitation: Links with language, pretend play, and socially insightful behavior in two-year-old twins. \emph{Child Development}, \emph{78}(2), 474--492. \url{https://doi.org/10.1111/j.1467-8624.2007.01010.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-milligan2007language}{}}%
+Milligan, K., Astington, J. W., \& Dack, L. A. (2007). Language and {Theory} of {Mind}: {Meta-Analysis} of the {Relation Between Language Ability} and {False-belief Understanding}. \emph{Child Development}, \emph{78}(2), 622--646. \url{https://doi.org/10.1111/j.1467-8624.2007.01018.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-molleman2019unleashing}{}}%
+Molleman, L., Kurvers, R. H. J. M., \& van den Bos, W. (2019). Unleashing the {BEAST}: A brief measure of human social information use. \emph{Evolution and Human Behavior}, \emph{40}(5), 492--499. \url{https://doi.org/10.1016/j.evolhumbehav.2019.06.005}
+
+\leavevmode\vadjust pre{\hypertarget{ref-moore2008development}{}}%
+Moore, C. (2008). The {Development} of {Gaze Following}. \emph{Child Development Perspectives}, \emph{2}(2), 66--70. \url{https://doi.org/10.1111/j.1750-8606.2008.00052.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-mundy2007individual}{}}%
+Mundy, P., Block, J., Delgado, C., Pomares, Y., Van Hecke, A. V., \& Parlade, M. V. (2007). Individual differences and the development of joint attention in infancy. \emph{Child Development}, \emph{78}(3), 938--954. \url{https://doi.org/10.1111/j.1467-8624.2007.01042.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-okumura2017individual}{}}%
+Okumura, Y., Kanakogi, Y., Kobayashi, T., \& Itakura, S. (2017). Individual differences in object-processing explain the relationship between early gaze-following and later language development. \emph{Cognition}, \emph{166}, 418--424. \url{https://doi.org/10.1016/j.cognition.2017.06.005}
+
+\leavevmode\vadjust pre{\hypertarget{ref-palan2018prolific}{}}%
+Palan, S., \& Schitter, C. (2018). Prolific.ac\textemdash{{A}} subject pool for online experiments. \emph{Journal of Behavioral and Experimental Finance}, \emph{17}, 22--27. \url{https://doi.org/10.1016/j.jbef.2017.12.004}
+
+\leavevmode\vadjust pre{\hypertarget{ref-pavarini2013parental}{}}%
+Pavarini, G., de Hollanda Souza, D., \& Hawk, C. K. (2013). Parental {Practices} and {Theory} of {Mind Development}. \emph{Journal of Child and Family Studies}, \emph{22}(6), 844--853. \url{https://doi.org/10.1007/s10826-012-9643-8}
+
+\leavevmode\vadjust pre{\hypertarget{ref-perner1994theory}{}}%
+Perner, J., Ruffman, T., \& Leekam, S. R. (1994). Theory of {Mind Is Contagious}: {You Catch It} from {Your Sibs}. \emph{Child Development}, \emph{65}(4), 1228--1238. \url{https://doi.org/10.2307/1131316}
+
+\leavevmode\vadjust pre{\hypertarget{ref-peterson2000kindred}{}}%
+Peterson. (2000). Kindred spirits: {Influences} of siblings' perspectives on theory of mind. \emph{Cognitive Development}, \emph{15}(4), 435--455. \url{https://doi.org/10.1016/S0885-2014(01)00040-5}
+
+\leavevmode\vadjust pre{\hypertarget{ref-peterson2012mind}{}}%
+Peterson, Wellman, H. M., \& Slaughter, V. (2012). The {Mind Behind} the {Message}: {Advancing Theory-of-Mind Scales} for {Typically Developing Children}, and {Those With Deafness}, {Autism}, or {Asperger Syndrome}: {\textbf{The Mind Behind}}{ \textbf{the} }{\textbf{Message}}. \emph{Child Development}, \emph{83}(2), 469--485. \url{https://doi.org/10.1111/j.1467-8624.2011.01728.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-poulin-dubois2023discontinuity}{}}%
+Poulin-Dubois, D., Goldman, E. J., Meltzer, A., \& Psaradellis, E. (2023). Discontinuity from implicit to explicit theory of mind from infancy to preschool age. \emph{Cognitive Development}, \emph{65}, 101273. \url{https://doi.org/10.1016/j.cogdev.2022.101273}
+
+\leavevmode\vadjust pre{\hypertarget{ref-pronk2021methods}{}}%
+Pronk, T., Molenaar, D., Wiers, R. W., \& Murre, J. (2021). Methods to split cognitive task data for estimating split-half reliability: {A} comprehensive review and systematic assessment. \emph{Psychonomic Bulletin \& Review}. \url{https://doi.org/10.3758/s13423-021-01948-3}
+
+\leavevmode\vadjust pre{\hypertarget{ref-rcoreteam2022language}{}}%
+R Core Team. (2022). \emph{R: {A} language and environment for statistical computing} {[}Manual{]}. {Vienna, Austria}: {R Foundation for Statistical Computing}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-rakoczy2022foundations}{}}%
+Rakoczy, H. (2022). Foundations of theory of mind and its development in early childhood. \emph{Nature Reviews Psychology}, 1--13. \url{https://doi.org/10.1038/s44159-022-00037-z}
+
+\leavevmode\vadjust pre{\hypertarget{ref-raviv2018developmental}{}}%
+Raviv, L., \& Arnon, I. (2018). The developmental trajectory of children's auditory and visual statistical learning abilities: Modality-based differences in the effect of age. \emph{Developmental Science}, \emph{21}(4), e12593. \url{https://doi.org/10.1111/desc.12593}
+
+\leavevmode\vadjust pre{\hypertarget{ref-repacholi2003introduction}{}}%
+Repacholi, V. S. \&. B. (2003). Introduction {Individual Differences} in {Theory} of {Mind}: {What Are We Investigating}? In \emph{Individual {Differences} in {Theory} of {Mind}}. {Psychology Press}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-rizzo2018theory}{}}%
+Rizzo, M. T., \& Killen, M. (2018). Theory of mind is related to children's resource allocations in gender stereotypic contexts. \emph{Developmental Psychology}, \emph{54}(3), 510. \url{https://doi.org/10.1037/dev0000439}
+
+\leavevmode\vadjust pre{\hypertarget{ref-rouder2019psychometrics}{}}%
+Rouder, J. N., \& Haaf, J. M. (2019). A psychometrics of individual differences in experimental tasks. \emph{Psychonomic Bulletin \& Review}, \emph{26}(2), 452--467. \url{https://doi.org/10.3758/s13423-018-1558-y}
+
+\leavevmode\vadjust pre{\hypertarget{ref-samuel2018egocentric}{}}%
+Samuel, S., Legg, E. W., Lurz, R., \& Clayton, N. S. (2018a). Egocentric bias across mental and non-mental representations in the {Sandbox Task}. \emph{Quarterly Journal of Experimental Psychology}, \emph{71}(11), 2395--2410. \url{https://doi.org/10.1177/1747021817742367}
+
+\leavevmode\vadjust pre{\hypertarget{ref-samuel2018unreliability}{}}%
+Samuel, S., Legg, E. W., Lurz, R., \& Clayton, N. S. (2018b). The unreliability of egocentric bias across self\textendash other and memory\textendash belief distinctions in the {Sandbox Task}. \emph{Royal Society Open Science}, \emph{5}(11), 181355. \url{https://doi.org/10.1098/rsos.181355}
+
+\leavevmode\vadjust pre{\hypertarget{ref-schaafsma2015deconstructing}{}}%
+Schaafsma, S. M., Pfaff, D. W., Spunt, R. P., \& Adolphs, R. (2015). Deconstructing and reconstructing theory of mind. \emph{Trends in Cognitive Sciences}, \emph{19}(2), 65--72. \url{https://doi.org/10.1016/j.tics.2014.11.007}
+
+\leavevmode\vadjust pre{\hypertarget{ref-shepherd2010following}{}}%
+Shepherd, S. (2010). Following {Gaze}: {Gaze-Following Behavior} as a {Window} into {Social Cognition}. \emph{Frontiers in Integrative Neuroscience}, \emph{4}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-slaughter2015theorya}{}}%
+Slaughter, V. (2015). Theory of {Mind} in {Infants} and {Young Children}: {A Review}. \emph{Australian Psychologist}, \emph{50}(3), 169--172. \url{https://doi.org/10.1111/ap.12080}
+
+\leavevmode\vadjust pre{\hypertarget{ref-sodian2023reply}{}}%
+Sodian, B. (2023). Reply to {Poulin-Dubois} et al. (2023): {Replication} problems concerning both implicit and explicit false belief reasoning greatly reduced the chance of finding longitudinal correlations. \emph{Cognitive Development}, \emph{65}, 101294. \url{https://doi.org/10.1016/j.cogdev.2022.101294}
+
+\leavevmode\vadjust pre{\hypertarget{ref-sodian2016understanding}{}}%
+Sodian, B., Licata, M., Kristen-Antonow, S., Paulus, M., Killen, M., \& Woodward, A. (2016). Understanding of {Goals}, {Beliefs}, and {Desires Predicts Morally Relevant Theory} of {Mind}: {A Longitudinal Investigation}. \emph{Child Development}, \emph{87}(4), 1221--1232. \url{https://doi.org/10.1111/cdev.12533}
+
+\leavevmode\vadjust pre{\hypertarget{ref-sommerville2013measuring}{}}%
+Sommerville, J. A., Bernstein, D. M., \& Meltzoff, A. N. (2013). Measuring {Beliefs} in {Centimeters}: {Private Knowledge Biases Preschoolers}' and {Adults}' {Representation} of {Others}' {Beliefs}. \emph{Child Development}, \emph{84}(6), 1846--1854. \url{https://doi.org/10.1111/cdev.12110}
+
+\leavevmode\vadjust pre{\hypertarget{ref-tomasello2003constructing}{}}%
+Tomasello, M. (2003). \emph{Constructing a language: {A} usage-based theory of language acquisition} (pp. viii, 388). {Cambridge, MA, US}: {Harvard University Press}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-tomasello2007reliance}{}}%
+Tomasello, M., Hare, B., Lehmann, H., \& Call, J. (2007). Reliance on head versus eyes in the gaze following of great apes and human infants: The cooperative eye hypothesis. \emph{Journal of Human Evolution}, \emph{52}(3), 314--320. \url{https://doi.org/10.1016/j.jhevol.2006.10.001}
+
+\leavevmode\vadjust pre{\hypertarget{ref-underwood1975individual}{}}%
+Underwood, B. J. (1975). Individual differences as a crucible in theory construction. \emph{American Psychologist}, \emph{30}(2), 128--134. \url{https://doi.org/10.1037/h0076759}
+
+\leavevmode\vadjust pre{\hypertarget{ref-walker2005gender}{}}%
+Walker, S. (2005). Gender {Differences} in the {Relationship Between Young Children}'s {Peer-Related Social Competence} and {Individual Differences} in {Theory} of {Mind}. \emph{The Journal of Genetic Psychology}, \emph{166}(3), 297--312. \url{https://doi.org/10.3200/GNTP.166.3.297-312}
+
+\leavevmode\vadjust pre{\hypertarget{ref-wellman2012theory}{}}%
+Wellman, H. M. (2012). Theory of mind: {Better} methods, clearer findings, more development. \emph{European Journal of Developmental Psychology}, \emph{9}(3), 313--330. \url{https://doi.org/10.1080/17405629.2012.680297}
+
+\leavevmode\vadjust pre{\hypertarget{ref-wellman2001metaanalysis}{}}%
+Wellman, H. M., Cross, D., \& Watson, J. (2001). Meta-analysis of theory-of-mind development: {The} truth about false belief. \emph{Child Development}, \emph{72}, 655--684. \url{https://doi.org/10.1111/1467-8624.00304}
+
+\leavevmode\vadjust pre{\hypertarget{ref-wellman2004scaling}{}}%
+Wellman, H. M., \& Liu, D. (2004). Scaling of {Theory-of-Mind Tasks}. \emph{Child Development}, \emph{75}(2), 523--541. \url{https://doi.org/10.1111/j.1467-8624.2004.00691.x}
+
+\leavevmode\vadjust pre{\hypertarget{ref-wimmer1983beliefs}{}}%
+Wimmer, H., \& Perner, J. (1983). Beliefs about beliefs: {Representation} and constraining function of wrong beliefs in young children's understanding of deception. \emph{Cognition}. \url{https://doi.org/10.1016/0010-0277(83)90004-5}
+
+\leavevmode\vadjust pre{\hypertarget{ref-zhang2021worse}{}}%
+Zhang, Z., Yu, H., Long, M., \& Li, H. (2021). Worse {Theory} of {Mind} in {Only-Children Compared} to {Children With Siblings} and {Its Intervention}. \emph{Frontiers in Psychology}, \emph{12}, 5073. \url{https://doi.org/10.3389/fpsyg.2021.754168}
+
+\end{CSLReferences}
+
+\endgroup
+
+
+\end{document}
