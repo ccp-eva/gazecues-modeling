@@ -24,30 +24,137 @@ theme_set(theme_classic())
 set.seed(42)
 ```
 
+
 ```{r load_data}
-# testtrials <- readRDS(file = "../data/tango-testtrials.rds") %>% 
-#   # determine order of factors
-#   mutate(
-#     targetPosition = factor(targetPosition, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "box1", "box2", "box3", "box4", "box5")), 
-#     studyversion = factor(studyversion, levels = c("hedge", "box")), 
-#     datacollection = factor(datacollection, levels = c("in-person - supervised", "remote - unsupervised")),
-#     sample = factor(sample, levels = c("kids", "adults")), 
-#     studytype = factor(studytype, levels = c("vali", "vali2", "reli")),
-#     
-#     # for models, summarize targetPositions in a way that it's symmetrical for left/ right side
-#     # the smaller the value, the more central the position
-#     symmetricPosition = ifelse(studyversion == "box", 
-#                                # for box version
-#                                case_when(
-#                                   targetPosition == "box3" ~ 0, 
-#                                   targetPosition == "box2" | targetPosition == "box4" ~ 1,
-#                                   targetPosition == "box1" | targetPosition == "box5" ~ 2), 
-#                                # for hedge version
-#                                targetCentralityX
-#                        ), 
-#     
-#     # distance between target and click in balloon widths (balloon width is 160 SVG units)
-#     clickDistInBalloons = abs(clickDistFromTargetCenterX)/160,
-#   )
+testtrials <- readRDS(file = "../data/tango-testtrials.rds") %>%
+  mutate_if(is.character, as.factor) %>% 
+  # determine order of factors
+  mutate(
+    targetPosition = factor(targetPosition, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "box1", "box2", "box3", "box4", "box5")),
+    studyversion = factor(studyversion, levels = c("hedge", "box")),
+    datacollection = factor(datacollection, levels = c("in-person - supervised", "remote - unsupervised")),
+    sample = factor(sample, levels = c("kids", "teens", "adults")),
+    studytype = factor(studytype, levels = c("vali", "vali2", "reli")),
+
+    # for models, summarize targetPositions in a way that it's symmetrical for left/ right side
+    # the smaller the value, the more central the position
+    symmetricPosition = case_when(
+                                  targetPosition == "5" | targetPosition == "6" | targetPosition == "box3" ~ 1,
+                                  targetPosition == "4" | targetPosition == "7" | targetPosition == "box2" | targetPosition == "box4" ~ 2,
+                                  targetPosition == "3" | targetPosition == "8" | targetPosition == "box1" | targetPosition == "box5" ~ 3,
+                                  targetPosition == "2" | targetPosition == "9" ~ 4,
+                                  targetPosition == "1" | targetPosition == "10" ~ 5,
+                       ),
+
+    # distance between target and click in balloon widths (balloon width is 160 SVG units)
+    clickDistInBalloons = abs(clickDistFromTargetCenterX)/160,
+  )
+```
+
+```{r check_sample}
+# child sample 
+testtrials %>% 
+  filter(agegroup < 18) %>% 
+  group_by(datacollection, studytype, studyversion, agegroup) %>%
+  mutate(female = ifelse(gender == "f", 1, 0)) %>% 
+  summarise(
+    nTotal = n_distinct(subjID), 
+    meanAge = mean(age, na.rm = T) %>% round(2),
+    sdAge = sd(age, na.rm = T) %>% round(2),
+    minAge = min(age, na.rm = T),
+    maxAge = max(age, na.rm = T),
+    nFemales = ceiling(sum(female/15)),
+  ) %>% View()
+
+# reli
+testtrials %>% 
+  filter(agegroup < 6 & completedReli) %>% 
+  group_by(datacollection, studyversion, agegroup) %>%
+  mutate(female = ifelse(gender == "f", 1, 0)) %>% 
+  summarise(
+    nTotal = n_distinct(subjID), 
+    meanAge = mean(age, na.rm = T) %>% round(2),
+    sdAge = sd(age, na.rm = T) %>% round(2),
+    minAge = min(age, na.rm = T),
+    maxAge = max(age, na.rm = T),
+    nFemales = ceiling(sum(female/15)),
+  )
+```
+
+# DEVELOPMENTAL TRAJECTORY
+
+```{r variation_preparateData}
+variationInd <- testtrials %>% 
+  mutate(
+    age_centered = scale(age, center = TRUE, scale = TRUE)[,1],
+  ) %>% 
+  group_by(studyversion, sample, datacollection, age, agegroup, age_centered, subjID) %>%
+  summarise(mean = mean(clickDistInBalloons, na.rm = TRUE))
+
+# variation <- variationInd %>%
+#   group_by(sample, datacollection, ageInYears) %>%
+#   tidyboot_mean(column = mean)
+```
+
+```{r dev_model}
+mDataAgeHedge <- testtrials %>% 
+  filter(studyversion == "hedge" & studytype == "vali") %>% 
+  mutate(
+    # scaled (centered around mean, SD = 1, i.e., z-transformed)
+    age = scale(age, center = TRUE, scale = TRUE)[,1], 
+  ) %>% 
+  select(subjID, age, agegroup, datacollection, symmetricPosition, targetPosition, clickDistInBalloons)
+
+mAgeHedge <- brm(clickDistInBalloons ~ age + datacollection + (symmetricPosition | subjID) + (1 | targetPosition),
+                    data = mDataAgeHedge,
+                    family = lognormal(),
+                    warmup = 500, 
+                    iter   = 1000, # todo: increase once done
+                    chains = 4, 
+                    inits  = "random",
+                    cores  = 100)
+
+write.csv(mAgeHedge, "../saves/mAgeHedge.csv", quote = F, row.names = F)
+saveRDS(mAgeHedge, "../saves/mAgeHedge.rds")
+```
+
+```{r dev_plot}
+ggplot(data = variationInd, aes(x = age, y = mean, shape = datacollection, color = studyversion)) +
+  geom_point(alpha = 0.5) +
+  scale_color_manual(values = c("#006c66", "darkgrey")) +
+  geom_smooth(data = variationInd, aes(x = age, y = mean, group = studyversion, color = studyversion), method = "lm", size = 1, se=F) +
+  facet_wrap(. ~ sample, scales = "free") +
+  scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, 1))
+
+ggsave("../figures/tango_dev.png", width = 8, height = 4)
+
+ggplot(data = variationInd, aes(x = age, y = mean, shape = datacollection, color = studyversion)) +
+  geom_point(alpha = 0.5) +
+  scale_color_manual(values = c("#006c66", "darkgrey")) +
+  geom_smooth(data = variationInd, aes(x = age, y = mean, group = studyversion, color = studyversion), size = 1, se=F) +
+  # facet_wrap(. ~ sample, scales = "free") +
+  scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, 1))
+ggsave("../figures/tango_dev_wofacets.png", width = 8, height = 4)
+```
+
+# COGNITIVE MODEL
+
+```{r gazefunnel_hedge}
+imprecisionBinHedge <- testtrials %>% 
+  filter(agegroup < 6 & studyversion == "hedge") %>% 
+  group_by(datacollection, targetPosition) %>% 
+  tidyboot_mean(col = clickDistInBalloons, na.rm = TRUE) 
+
+imprecisionBinHedgeInd <- testtrials %>% 
+  filter(agegroup < 6 & studyversion == "hedge") %>% 
+  group_by(datacollection, targetPosition, subjID) %>% 
+  tidyboot_mean(col = clickDistInBalloons, na.rm = TRUE) 
+
+ggplot() +
+  labs(x = "Target position (binned)", y = "Average imprecision in target widths", col = "Data collection mode") +
+  # geom_point(data = imprecisionBinHedgeInd, aes(x = targetPosition, y = mean, col = datacollection), alpha = .1, position = position_dodge(width = 0.2)) +
+  geom_pointrange(data = imprecisionBinHedge, aes(x = targetPosition, y = mean, ymin = ci_lower, ymax = ci_upper, col = datacollection), pch = 1,  size = 0.7, position = position_dodge(width = .2)) +
+  scale_color_colorblind()
+
 ```
 
