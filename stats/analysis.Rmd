@@ -56,7 +56,7 @@ lifespan_variation <- tango_lifespan %>%
 ```{r lifespan_plot}
 ggplot(data = lifespan_variation, aes(x = age, y = mean)) +
   geom_point(color = "darkgrey", alpha = 0.5) +
-  geom_smooth(method = "loess", size = 1, se = F, color = "#006c66") + 
+  geom_smooth(method = "loess", size = 1, se = T, color = "#006c66", fill = "#006c66") + 
   scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) + 
   scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
   labs(x = "Age in years", y = "Average imprecision in target widths") 
