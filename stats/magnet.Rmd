@@ -1,0 +1,102 @@
+---
+title: "Stats"
+author: "Julia Prein"
+date: "03/21/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse) # data handling etc.
+library(corrr)
+library(psych)
+library(apaTables)
+
+options(scipen = 999)
+theme_set(theme_classic())
+
+# Seed for random number generation
+set.seed(42)
+```
+
+```{r load_data}
+magnet <- readRDS("../data/magnet-data.rds")
+```
+
+```{r scatterplots}
+magnet %>% 
+  ggplot(., aes(x = magnet_mean, y = tango_mean)) + 
+  geom_abline(intercept = 0, slope = 1, col = "darkgrey", linetype = "longdash") +
+  geom_smooth(method = "lm", size = 1, alpha = 0.25, col = "darkgrey") +
+  geom_point(color = "#005555") +
+  stat_cor(method = "pearson", label.x = 5, label.y = 6, aes(label = paste(..r.label..)), size = 5, r.accuracy = 0.01, cor.coef.name = "r") + 
+  scale_x_continuous(limits = c(0, 6), breaks = seq(0, 6, 0.5)) +
+  scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, 0.5)) +
+  labs(x = "Magnet mean", y = "Tango mean")
+
+magnet %>% 
+  ggplot(., aes(x = magnet_mean, y = tango_mean)) + 
+  geom_abline(intercept = 0, slope = 1, col = "darkgrey", linetype = "longdash") +
+  geom_smooth(method = "lm", size = 1, alpha = 0.25, col = "darkgrey") +
+  geom_point(color = "#005555") +
+  stat_cor(method = "pearson", label.x = 3.5, label.y = 3.25, aes(label = paste(..r.label..)), size = 5, r.accuracy = 0.01, cor.coef.name = "r") + 
+  scale_x_continuous(limits = c(0, 3.75), breaks = seq(0, 4, 0.5)) +
+  scale_y_continuous(limits = c(0, 3.75), breaks = seq(0, 4, 0.5)) +
+  labs(x = "Magnet mean", y = "Tango mean")
+```
+
+```{r corrplot}
+magnet %>% 
+  select(tango_mean, magnet_mean, tom_aggregate, perspective_aggregate) %>% 
+  rename("Tango mean" = tango_mean, "Magnet mean" = magnet_mean, "ToM aggregate score" = tom_aggregate, "Perspective-taking score" = perspective_aggregate) %>% 
+  cor() %>% 
+  corrplot(diag = FALSE, type = 'upper', method = 'ellipse', order = 'FPC', col = COL2('BrBG'), tl.col = 'black', cl.ratio = 0.2, tl.srt = 30, addCoef.col ='black', number.cex = 0.8)
+```
+
+```{r cor_matrix}
+tango_magnet <- magnet %>% select(tango_mean, magnet_mean) %>% corr.test(method = "pearson")
+tango_tom <- magnet %>% select(tango_mean, tom_aggregate, perspective_aggregate) %>% corr.test(method = "spearman")
+magnet_tom <- magnet %>% select(magnet_mean, tom_aggregate, perspective_aggregate) %>% corr.test(method = "spearman")
+
+cor_matrix <- rbind(tango_magnet$ci, tango_tom$ci, magnet_tom$ci) %>% 
+  mutate(Correlation = rownames(.)) %>%
+  as.tibble()
+
+cor_matrix <- cor_matrix %>%
+  # remove tom - perspective correlations
+  filter(Correlation != "tm_gg-prsp_1") %>%
+  mutate(
+    Correlation = recode(Correlation,
+                  `tng_m-mgnt_` = "Tango x Magnet", 
+                  `tng_m-tm_gg` = "Tango x ToM",
+                  `tng_m-prsp_` = "Tango x Perspective-taking",
+                  `mgnt_-tm_gg` = "Magnet x ToM",
+                  `mgnt_-prsp_` = "Magnet x Perspective-taking", 
+                  `tm_gg-prsp_` = "ToM x Perspective-taking")
+  ) %>% 
+  mutate(across(where(is.numeric), round, 2)) %>% 
+  select(Correlation, r, lower, upper, p)
+
+# apa table function only supports pearson corr so far
+magnet %>% select(tango_mean, magnet_mean, tom_aggregate, perspective_aggregate) %>% apa.cor.table(filename = "APA_Correlation_Table.doc", table.number=1)
+```
+
+```{r plot_cor_ci}
+cor_matrix %>% 
+  filter(Correlation != "ToM x Perspective-taking") %>% 
+  mutate(Correlation = fct_relevel(Correlation, "Magnet x Perspective-taking", "Magnet x ToM", "Tango x Perspective-taking", "Tango x ToM", "Tango x Magnet")) %>%
+  ggplot(., aes(x=Correlation, y=r, ymin=lower, ymax=upper)) +
+  geom_pointrange(color = "#005555", size = 0.8, linewidth = 1) +
+  scale_y_continuous(limits = c(-1, 1), breaks = seq(-1, 1, 0.25)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("") +
+  coord_flip() +
+  theme(axis.title.x = element_text(face="italic"))
+
+ggsave("../figures/magnet_cor_ci.png", width = 5, height = 3)
+```
+```
+
