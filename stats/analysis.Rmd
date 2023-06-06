@@ -17,6 +17,8 @@ library(ggthemes)
 library(tidyboot) # for bootstrap CIs
 library(brms) # modeling
 library(tidybayes) # for stat_halfeye
+library(cmdstanr)
+check_cmdstan_toolchain(fix = TRUE, quiet = TRUE)
 
 options(scipen = 999)
 theme_set(theme_classic())
@@ -44,69 +46,294 @@ lifespan_sample <- tango_lifespan %>%
     age_max = max(age, na.rm = T),
     n_females = ceiling(sum(female/15)),
   )
-```
 
-```{r variation_preparateData}
-lifespan_variation <- tango_lifespan %>% 
-  group_by(subj_id, age, age_group) %>%
-  summarise(mean = mean(click_dist_balloons, na.rm = TRUE))
+mDataLifespan <- tango_lifespan %>% 
+  group_by(subj_id, age, age_centered) %>% 
+  summarize(mean_dist = mean(click_dist_balloons, na.rm = TRUE))
 ```
-
 
 ```{r lifespan_plot}
-ggplot(data = lifespan_variation, aes(x = age, y = mean)) +
+tango_lifespan %>% 
+  group_by(subj_id, age, age_group) %>%
+  summarise(mean = mean(click_dist_balloons, na.rm = TRUE)) %>% 
+  ggplot(., aes(x = age, y = mean)) +
   geom_point(color = "darkgrey", alpha = 0.5) +
   geom_smooth(method = "loess", size = 1, se = T, color = "#006c66", fill = "#006c66") + 
   scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) + 
   scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
   labs(x = "Age in years", y = "Average imprecision in target widths") 
   
-ggsave("../figures/tango_lifespan.png", width = 8, height = 4, scale = 1.2)
+# ggsave("../figures/tango_lifespan.png", width = 8, height = 4, scale = 1.2)
 ```
 
 ```{r lifespan_model}
-mDataLifespan <- tango_lifespan %>% 
-  mutate(
-    symmetric_position = scale(symmetric_position),
-    trial_nr = trial_nr - min(trial_nr), 
-    click_dist = abs(click_dist_from_target_center_x),
-  ) %>% 
-  select(subj_id, age, age_centered, symmetric_position, trial_nr, click_dist, click_dist_balloons)
-
-mLifespanNull <- brm(click_dist_balloons ~ age_centered + symmetric_position + trial_nr + (1 + symmetric_position + trial_nr | subj_id),
+# model as in tango paper
+# except we use click_dist in pixel, lognormal needs > 0
+mLifespanLinear <- brm(mean_dist ~ age_centered,
                     data = mDataLifespan,
                     family = lognormal(),
-                    warmup = 1000, 
-                    iter   = 3000, 
+                    warmup = 2000, 
+                    iter   = 6000, 
                     chains = 4, 
-                    inits  = "random",
-                    cores  = 4)
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+mLifespanLinear
+
+pp_check(mLifespanLinear) 
+
+write.csv(mLifespanLinear, "../saves/mLifespanLinear.csv", quote = F, row.names = F)
+saveRDS(mLifespanLinear, "../saves/mLifespanLinear.rds")
+
+## squared age
+mLifespanQuadratic <- brm(mean_dist ~ 1 + age_centered + I(age_centered^2),
+                    data = mDataLifespan,
+                    family = lognormal(),
+                    warmup = 2000, 
+                    iter   = 6000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+mLifespanQuadratic
+
+pp_check(mLifespanQuadratic)
+
+conditional_effects(mLifespanQuadratic, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(mLifespanQuadratic, "../saves/mLifespanQuadratic.csv", quote = F, row.names = F)
+saveRDS(mLifespanQuadratic, "../saves/mLifespanQuadratic.rds")
+
+## cubic age
+mLifespanCubic <- brm(mean_dist ~ 1 + age_centered + I(age_centered^2) + I(age_centered^3),
+                    data = mDataLifespan,
+                    family = lognormal(),
+                    warmup = 2000, 
+                    iter   = 6000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+mLifespanCubic
+
+pp_check(mLifespanCubic)
+
+plot(mLifespanCubic)
+
+conditional_effects(mLifespanCubic, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(mLifespanCubic, "../saves/mLifespanCubic.csv", quote = F, row.names = F)
+saveRDS(mLifespanCubic, "../saves/mLifespanCubic.rds")
+
+## gaussian process model
+mLifespanGP <- brm(mean_dist ~ gp(age_centered, k=50, c=5/4, scale=TRUE),
+                    data = mDataLifespan,
+                    family = lognormal(),
+                    warmup = 2000, 
+                    iter   = 6000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+mLifespanGP
+
+pp_check(mLifespanGP)
+
+conditional_effects(mLifespanGP, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(mLifespanGP, "../saves/mLifespanGP.csv", quote = F, row.names = F)
+saveRDS(mLifespanGP, "../saves/mLifespanGP.rds")
+
+## spline model
+# https://discourse.mc-stan.org/t/smooth-spline-modeling-with-brm/6364/2
+mLifespanS <- brm(mean_dist ~ s(age_centered),
+                    data = mDataLifespan,
+                    family = lognormal(),
+                    warmup = 2000,
+                    iter   = 6000,
+                    chains = 4,
+                    cores  = 4,
+                    threads = threading(8),
+                    control = list(adapt_delta = 0.95),
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+mLifespanS
+
+pp_check(mLifespanS)
+
+conditional_effects(mLifespanS, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+conditional_smooths(mLifespanS2, effects = "weight")
+
+write.csv(mLifespanS, "../saves/mLifespanS.csv", quote = F, row.names = F)
+saveRDS(mLifespanS, "../saves/mLifespanS.rds")
+
+## playing around with parameters
+mLifespanS2 <- brm(mean_dist ~ s(age_centered, k = 2),
+                    data = mDataLifespan,
+                    family = lognormal(),
+                    warmup = 2000,
+                    iter   = 6000,
+                    chains = 4,
+                    cores  = 4,
+                    threads = threading(8),
+                    control = list(adapt_delta = 0.95),
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+conditional_effects(mLifespanS2, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(mLifespanS2, "../saves/mLifespanS2.csv", quote = F, row.names = F)
+saveRDS(mLifespanS2, "../saves/mLifespanS2.rds")
+
+# 3
+mLifespanS3 <- brm(mean_dist ~ s(age_centered, k = 3),
+                    data = mDataLifespan,
+                    family = lognormal(),
+                    warmup = 2000,
+                    iter   = 6000,
+                    chains = 4,
+                    cores  = 4,
+                    threads = threading(8),
+                    control = list(adapt_delta = 0.95),
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+conditional_effects(mLifespanS3, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(mLifespanS3, "../saves/mLifespanS3.csv", quote = F, row.names = F)
+saveRDS(mLifespanS3, "../saves/mLifespanS3.rds")
 
 
-write.csv(mAgeHedge, "../saves/mLifespan.csv", quote = F, row.names = F)
-saveRDS(mAgeHedge, "../saves/mLifespan.rds")
+# 4
+mLifespanS4 <- brm(mean_dist ~ s(age_centered, k = 4),
+                    data = mDataLifespan,
+                    family = lognormal(),
+                    warmup = 2000,
+                    iter   = 6000,
+                    chains = 4,
+                    cores  = 4,
+                    threads = threading(8),
+                    control = list(adapt_delta = 0.95),
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+conditional_effects(mLifespanS4, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(mLifespanS4, "../saves/mLifespanS4.csv", quote = F, row.names = F)
+saveRDS(mLifespanS4, "../saves/mLifespanS4.rds")
+
+# 5
+mLifespanS5 <- brm(mean_dist ~ s(age_centered, k = 5),
+                    data = mDataLifespan,
+                    family = lognormal(),
+                    warmup = 2000,
+                    iter   = 6000,
+                    chains = 4,
+                    cores  = 4,
+                    threads = threading(8),
+                    control = list(adapt_delta = 0.95),
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+conditional_effects(mLifespanS5, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(mLifespanS5, "../saves/mLifespanS5.csv", quote = F, row.names = F)
+saveRDS(mLifespanS5, "../saves/mLifespanS5.rds")
+```
+
+```{r prediction_plot}
+# https://ourcodingclub.github.io/tutorials/brms/#plot
+library(tidybayes)
+
+mDataLifespan %>%
+  add_predicted_draws(mLifespanQuadratic) %>%  # adding the posterior distribution
+  ggplot(aes(x = age_centered, y = mean_dist)) +  
+  geom_jitter(data = mDataLifespan, colour = "grey", size = 1.5, alpha = 0.8) + 
+  stat_lineribbon(aes(y = .prediction), .width = c(.95, .80), alpha = 0.5, colour = "black") +
+  scale_fill_brewer(palette = "Greys") + 
+  scale_y_continuous(limits = c(0,4))
+```
+
+```{r lifespan_modelcomparison}
+# mLifespanLinear <- readRDS("../saves/mLifespanLinear.rds")
+# mLifespanQuadratic <- readRDS("../saves/mLifespanQuadratic.rds")
+# mLifespanCubic <- readRDS("../saves/mLifespanCubic.rds")
+# mLifespanGP <- readRDS("../saves/mLifespanGP.rds")
+# mLifespanS <- readRDS("../saves/mLifespanS.rds")
+
+mLifespanComparison <- loo_compare(mLifespanLinear, mLifespanQuadratic, mLifespanCubic, mLifespanGP, mLifespanS, mLifespanS2, mLifespanS3, mLifespanS4, mLifespanS5, criterion = "waic") %>% 
+  as_tibble(rownames = "model") %>%
+  left_join(as_tibble(model_weights(mLifespanLinear, mLifespanQuadratic, mLifespanCubic, mLifespanGP, mLifespanS, mLifespanS2, mLifespanS3, mLifespanS4, mLifespanS5, weights = "waic"), rownames = "model")) %>% 
+  rename(modelweight = value)
+
+mLifespanComparison %>% 
+  select(-c(se_elpd_waic, p_waic, se_p_waic)) %>% 
+  mutate(across(where(is.numeric), round, 4))
+
+write.csv(mLifespanComparison, "../saves/mLifespanComparison.csv", quote = F, row.names = F)
+saveRDS(mLifespanComparison, "../saves/mLifespanComparison.rds")
+```
+
+```{r lifespan_posteriordraws}
+# lifespan_draws <- bind_rows(
+#   mLifespanNull %>% gather_draws(b_age_centered, b_trial_nr, b_symmetric_position) %>% mutate(model = "null model"), 
+#   # mOrevFull %>% gather_draws(b_age_centered, b_mean_tango_centered) %>% mutate(model = "full model"), 
+#   ) %>% 
+#   mutate(
+#     .variable = factor(.variable, levels = c("b_age_centered", "b_trial_nr", "b_symmetric_position"), labels = c("Age (scaled)", "Trial Nr", "Symmetric Position")), 
+#   ) %>% 
+#   rename(estimate = .value, predictor = .variable)
+```
+
+```{r lifespan_modelplot}
+# lifespan_modelplot <- lifespan_draws %>% 
+#   ggplot(., aes(x = estimate, y = predictor)) +
+#   tidybayes::stat_halfeye(.width = c(.95, .8), scale = 1, slab_color = "#006c66", slab_fill = "#006c66", slab_alpha = 0.4) +
+#     labs(x = "Posterior estimate when predicting oREV score", y = "") +
+#   guides(fill = "none")+
+#   geom_vline(xintercept = 0, linetype = "dashed") +
+#   coord_cartesian(expand = TRUE, xlim = c(-0.1, 0.6), ylim = c(1.5, 2.5)) +
+#   theme_classic()
+# 
+# lifespan_modelplot
+# 
+# saveRDS(lifespan_modelplot, file = "../saves/lifespan_modelplot.rds")
+# ggsave("../figures/lifespan_modelplot.png", width = 10, height = 6, scale = 0.7, bg = "white")
 ```
 
 # COGNITIVE MODEL
 
 ```{r gazefunnel}
-target_position_impr <- tango_model %>% 
-  group_by(age_group, target_position) %>% 
-  tidyboot_mean(column = click_dist_balloons, na.rm = TRUE) 
-
-target_position_impr_ind <- tango_model %>% 
-  group_by(subj_id, age_group, target_position) %>% 
-  tidyboot_mean(column = click_dist_balloons, na.rm = TRUE) 
-
-ggplot() +
-  geom_point(data = target_position_impr_ind, aes(x = target_position, y = mean, col = as.factor(age_group)), alpha = .1, position = position_dodge(width = 0.3)) +
-  
-  geom_pointrange(data = target_position_impr, aes(x = target_position, y = mean, ymin = ci_lower, ymax = ci_upper, col = as.factor(age_group)), pch = 18,  size = 1, position = position_dodge(width = .3)) + 
-  
-  scale_y_continuous(limits = c(0, 7), breaks = seq(0, 7, 1)) + 
-  scale_color_manual(values = c("#c6d325", "#00b1ea", "#29485d"), breaks = c("3", "4", "5"), labels = c("3-year-olds", "4-year-olds", "5-year-olds")) +
-    labs(x = "Target position (binned)", y = "Average imprecision in target widths", col = "Age in years")
-
-ggsave("../figures/tango_gazefunnel.png", width = 6, height = 4, scale = 1.2)
+# target_position_impr <- tango_model %>% 
+#   group_by(age_group, target_position) %>% 
+#   tidyboot_mean(column = click_dist_balloons, na.rm = TRUE) 
+# 
+# target_position_impr_ind <- tango_model %>% 
+#   group_by(subj_id, age_group, target_position) %>% 
+#   tidyboot_mean(column = click_dist_balloons, na.rm = TRUE) 
+# 
+# ggplot() +
+#   geom_point(data = target_position_impr_ind, aes(x = target_position, y = mean, col = as.factor(age_group)), alpha = .1, position = position_dodge(width = 0.3)) +
+#   
+#   geom_pointrange(data = target_position_impr, aes(x = target_position, y = mean, ymin = ci_lower, ymax = ci_upper, col = as.factor(age_group)), pch = 18,  size = 1, position = position_dodge(width = .3)) + 
+#   
+#   scale_y_continuous(limits = c(0, 7), breaks = seq(0, 7, 1)) + 
+#   scale_color_manual(values = c("#c6d325", "#00b1ea", "#29485d"), breaks = c("3", "4", "5"), labels = c("3-year-olds", "4-year-olds", "5-year-olds")) +
+#     labs(x = "Target position (binned)", y = "Average imprecision in target widths", col = "Age in years")
+# 
+# ggsave("../figures/tango_gazefunnel.png", width = 6, height = 4, scale = 1.2)
 ```
 
