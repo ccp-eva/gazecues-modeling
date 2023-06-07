@@ -1,7 +1,7 @@
 ---
-title: "Stats"
+title: "Magnet analysis"
 author: "Julia Prein"
-date: "03/21/2023"
+date: "06/07/2023"
 output: pdf_document
 ---
 
@@ -11,9 +11,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
 library(tidyverse) # data handling etc.
-library(corrr)
-library(psych)
-library(apaTables)
+library(psych) # corr.test
+library(brms) # modeling
+library(tidybayes) # modeling
+library(ggpubr) # stat_cor 
+library(corrplot) # corr plot
+library(apaTables) # as name says
 
 options(scipen = 999)
 theme_set(theme_classic())
@@ -23,11 +26,30 @@ set.seed(42)
 ```
 
 ```{r load_data}
-magnet <- readRDS("../data/magnet-data.rds")
+magnet_data <- readRDS("../data/magnet-data.rds")
+```
+
+```{r sample}
+magnet_sample <- magnet_data %>% 
+  mutate(female = ifelse(gender == "f", 1, 0)) %>% 
+  summarise(
+    n_total = n_distinct(subj_id), 
+    age_mean = mean(age, na.rm = T) %>% round(2),
+    age_sd = sd(age, na.rm = T) %>% round(2),
+    age_min = min(age, na.rm = T),
+    age_max = max(age, na.rm = T),
+    n_females = sum(female, na.rm = T),
+  )
+
+magnet_sample
+
+write.csv(magnet_sample, "../saves/magnet_sample.csv", quote = F, row.names = F)
+saveRDS(magnet_sample, "../saves/magnet_sample.rds")
 ```
 
 ```{r scatterplots}
-magnet %>% 
+# doesnt make a difference whether we exclude outlier / "imprecise" kids
+magnet_data %>% 
   ggplot(., aes(x = magnet_mean, y = tango_mean)) + 
   geom_abline(intercept = 0, slope = 1, col = "darkgrey", linetype = "longdash") +
   geom_smooth(method = "lm", size = 1, alpha = 0.25, col = "darkgrey") +
@@ -37,7 +59,7 @@ magnet %>%
   scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, 0.5)) +
   labs(x = "Magnet mean", y = "Tango mean")
 
-magnet %>% 
+magnet_data %>% 
   ggplot(., aes(x = magnet_mean, y = tango_mean)) + 
   geom_abline(intercept = 0, slope = 1, col = "darkgrey", linetype = "longdash") +
   geom_smooth(method = "lm", size = 1, alpha = 0.25, col = "darkgrey") +
@@ -49,17 +71,17 @@ magnet %>%
 ```
 
 ```{r corrplot}
-magnet %>% 
+magnet_data %>% 
   select(tango_mean, magnet_mean, tom_aggregate, perspective_aggregate) %>% 
-  rename("Tango mean" = tango_mean, "Magnet mean" = magnet_mean, "ToM aggregate score" = tom_aggregate, "Perspective-taking score" = perspective_aggregate) %>% 
+  rename("Tango mean" = tango_mean, "Magnet mean" = magnet_mean, "ToM score" = tom_aggregate, "Perspective-taking score" = perspective_aggregate) %>% 
   cor() %>% 
-  corrplot(diag = FALSE, type = 'upper', method = 'ellipse', order = 'FPC', col = COL2('BrBG'), tl.col = 'black', cl.ratio = 0.2, tl.srt = 30, addCoef.col ='black', number.cex = 0.8)
+  corrplot(diag = FALSE, type = 'lower', method = 'color', order = 'FPC', col = COL2('BrBG'), tl.col = 'black', cl.ratio = 0.2, tl.srt = 0, addCoef.col ='black', number.cex = 0.8)
 ```
 
 ```{r cor_matrix}
-tango_magnet <- magnet %>% select(tango_mean, magnet_mean) %>% corr.test(method = "pearson")
-tango_tom <- magnet %>% select(tango_mean, tom_aggregate, perspective_aggregate) %>% corr.test(method = "spearman")
-magnet_tom <- magnet %>% select(magnet_mean, tom_aggregate, perspective_aggregate) %>% corr.test(method = "spearman")
+tango_magnet <- magnet_data %>% select(tango_mean, magnet_mean) %>% corr.test(method = "pearson")
+tango_tom <- magnet_data %>% select(tango_mean, tom_aggregate, perspective_aggregate) %>% corr.test(method = "spearman")
+magnet_tom <- magnet_data %>% select(magnet_mean, tom_aggregate, perspective_aggregate) %>% corr.test(method = "spearman")
 
 cor_matrix <- rbind(tango_magnet$ci, tango_tom$ci, magnet_tom$ci) %>% 
   mutate(Correlation = rownames(.)) %>%
@@ -81,11 +103,11 @@ cor_matrix <- cor_matrix %>%
   select(Correlation, r, lower, upper, p)
 
 # apa table function only supports pearson corr so far
-magnet %>% select(tango_mean, magnet_mean, tom_aggregate, perspective_aggregate) %>% apa.cor.table(filename = "APA_Correlation_Table.doc", table.number=1)
+magnet_data %>% select(tango_mean, magnet_mean, tom_aggregate, perspective_aggregate) %>% apa.cor.table(filename = "../saves/magnet_corrtable.doc", table.number=1)
 ```
 
 ```{r plot_cor_ci}
-cor_matrix %>% 
+cor_ci <- cor_matrix %>% 
   filter(Correlation != "ToM x Perspective-taking") %>% 
   mutate(Correlation = fct_relevel(Correlation, "Magnet x Perspective-taking", "Magnet x ToM", "Tango x Perspective-taking", "Tango x ToM", "Tango x Magnet")) %>%
   ggplot(., aes(x=Correlation, y=r, ymin=lower, ymax=upper)) +
@@ -96,7 +118,136 @@ cor_matrix %>%
   coord_flip() +
   theme(axis.title.x = element_text(face="italic"))
 
-ggsave("../figures/magnet_cor_ci.png", width = 5, height = 3)
+cor_ci
+
+saveRDS(cor_ci, file = "../saves/magnet_cor_ci.rds")
+# ggsave("../figures/magnet_cor_ci.png", width = 5, height = 3)
 ```
+
+```{r check_tango_distribution}
+ggplot(magnet_data, aes(x = tango_mean)) + 
+  geom_density() + 
+  stat_function(fun = dnorm, 
+                args = with(magnet_data, c(mean = mean(tango_mean), sd = sd(tango_mean))), 
+                color = "red", linetype = "dotted") + 
+  
+  stat_function(fun = dlnorm, 
+                args = with(magnet_data, c(meanlog = mean(log(tango_mean)), sdlog = sd(log(tango_mean)))),
+                color = "blue", linetype = "dotted")
+```
+
+```{r prepare_modeldata}
+mdata <- magnet_data %>% 
+  mutate(
+    magnet_scaled = scale(magnet_mean), 
+    tom_scaled = scale(tom_aggregate), 
+    perspective_scaled = scale(perspective_aggregate)
+  ) %>% 
+  select(subj_id, tango_mean, age_centered, magnet_scaled, tom_scaled, perspective_scaled)
+```
+
+```{r models, message=FALSE, warning=FALSE}
+mage <- brm(tango_mean ~ age_centered,
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 1000, 
+                    iter   = 3000, 
+                    chains = 4, 
+                    inits  = "random",
+                    cores  = 4) %>%
+  add_criterion(c("loo","waic"))
+
+mmagnet <- update(mage, formula. = ~ . + magnet_scaled, newdata = mdata) %>% 
+  add_criterion(c("loo","waic"))
+
+mtom <- update(mage, formula. = ~ . + tom_scaled, newdata = mdata) %>% 
+  add_criterion(c("loo","waic"))
+
+mperspective <- update(mage, formula. = ~ . + perspective_scaled, newdata = mdata) %>% 
+  add_criterion(c("loo","waic"))
+
+mmagnet_tom <- update(mage, formula. = ~ . + magnet_scaled + tom_scaled, newdata = mdata) %>% 
+  add_criterion(c("loo","waic"))
+
+mmagnet_perspective <- update(mage, formula. = ~ . + magnet_scaled + perspective_scaled, newdata = mdata) %>%
+  add_criterion(c("loo","waic"))
+```
+
+```{r modelcomparison}
+mcomparison <- loo_compare(mage, mmagnet, mtom, mperspective, mmagnet_tom, mmagnet_perspective, criterion = "waic") %>% as_tibble(rownames = "model") %>%
+  left_join(as_tibble(model_weights(mage, mmagnet, mtom, mperspective, mmagnet_tom, mmagnet_perspective, weights = "waic"), rownames = "model")) %>% 
+  rename(modelweight = value)
+
+mcomparison
+
+model_results <- mcomparison %>%
+  select(model, waic, se_waic, modelweight, elpd_diff, se_diff) %>%
+  rename(
+    Model = model, 
+    WAIC = waic, 
+    SE_WAIC = se_waic,
+    Weight = modelweight, 
+    ELPD_DIFF = elpd_diff, 
+    SE_ELPD_DIFF = se_diff,
+  ) %>% 
+  mutate(
+    Model = recode(Model, 
+                   "mage" = "Null model with Age (scaled)", 
+                   "mmagnet" = "Magnet mean (scaled)", 
+                   "mtom" = "ToM aggregate (scaled)", 
+                   "mperspective" = "Perspective-taking aggregate (scaled)", 
+                   "mmagnet_tom" = "Magnet mean (scaled) + ToM aggregate (scaled)", 
+                   "mmagnet_perspective" = "Magnet mean (scaled) + Perspective-taking aggregate (scaled)", 
+                   )
+  )
+
+write.csv(model_results, "../saves/magnet_modelresults.csv", quote = F, row.names = F)
+saveRDS(model_results, "../saves/magnet_modelresults.rds")
+```
+
+```{r magnet_draws}
+magnet_draws <-mmagnet_perspective %>% 
+  gather_draws(b_age_centered, b_magnet_scaled, b_perspective_scaled) %>% 
+  mutate(
+    .variable = factor(.variable, 
+                       levels = c("b_age_centered", "b_perspective_scaled", "b_magnet_scaled"), 
+                       labels = c("Age (scaled)", "Perspective-taking (scaled)", "Magnet mean (scaled)")), 
+  ) %>% 
+  rename(estimate = .value, predictor = .variable)
+
+write.csv(magnet_draws, "../saves/magnet_draws.csv", quote = F, row.names = F)
+saveRDS(magnet_draws, "../saves/magnet_draws.rds")
+```
+
+```{r modelplot}
+modelplot <- magnet_draws %>% 
+  mutate(
+    includes_zero = ifelse(predictor == "Age (scaled)", TRUE, FALSE)
+  ) %>%
+  ggplot(., aes(x = estimate, y = predictor, fill = includes_zero)) +
+ tidybayes::stat_halfeye(.width = c(.95, .8), scale = 1, slab_color = "#006c66", slab_alpha = 0.5) +
+    labs(x = "Posterior estimate when predicting TANGO mean", y = "") +
+  guides(fill = "none")+
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  scale_fill_manual(values = c("#006c66", "#EBECEC")) +
+  coord_cartesian(expand = TRUE, xlim = c(-0.6, 0.4), ylim = c(1.5, 3.5)) +
+  theme_classic()
+
+modelplot
+
+saveRDS(modelplot, file = "../saves/magnet_modelplot.rds")
+# ggsave("../figures/modelplot.png", width = 10, height = 6, scale = 0.7, bg = "white")
+```
+
+```{r arrange_plot}
+arrangedplot <- ggarrange(
+  cor_ci, 
+  modelplot, 
+  ncol = 2, 
+  labels = c("A", "B")
+)
+
+saveRDS(arrangedplot, file = "../saves/magnet_arrangedplot.rds")
+ggsave("../figures/magnet_arrangedplot.png", width = 6, height = 2, scale = 1.75, bg = "white")
 ```
 

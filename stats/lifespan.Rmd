@@ -1,0 +1,290 @@
+---
+title: "Lifespan analysis"
+author: "Julia Prein"
+date: "03/21/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse) # data handling etc.
+library(tidybayes) # for stat_halfeye, add_predictive_draws
+library(brms) # modeling
+library(cmdstanr) # modeling
+check_cmdstan_toolchain(fix = TRUE, quiet = TRUE)
+
+options(scipen = 999)
+theme_set(theme_classic())
+
+# Seed for random number generation
+set.seed(42)
+```
+
+```{r load_data}
+lifespan_data <- readRDS("../data/tango-lifespan.rds")
+```
+
+```{r prepare_modeldata}
+mdata <- lifespan_data %>% 
+  group_by(subj_id, age, age_centered) %>% 
+  summarize(mean_dist = mean(click_dist_balloons, na.rm = TRUE))
+```
+
+```{r sample}
+lifespan_sample <- lifespan_data %>% 
+  group_by(age_group) %>%
+  mutate(female = ifelse(gender == "f", 1, 0)) %>% 
+  summarise(
+    n_total = n_distinct(subj_id), 
+    age_mean = mean(age, na.rm = T) %>% round(2),
+    age_sd = sd(age, na.rm = T) %>% round(2),
+    age_min = min(age, na.rm = T),
+    age_max = max(age, na.rm = T),
+    n_females = ceiling(sum(female/15)),
+  )
+
+lifespan_sample
+
+write.csv(lifespan_sample, "../saves/lifespan_sample.csv", quote = F, row.names = F)
+saveRDS(lifespan_sample, "../saves/lifespan_sample.rds")
+```
+
+```{r plot}
+lifespan <- lifespan_data %>% 
+  group_by(subj_id, age, age_group) %>%
+  summarise(mean = mean(click_dist_balloons, na.rm = TRUE)) %>% 
+  ggplot(., aes(x = age, y = mean)) +
+  geom_point(color = "darkgrey", alpha = 0.5) +
+  geom_smooth(method = "loess", size = 1, se = T, color = "#006c66", fill = "#006c66") + 
+  scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) + 
+  scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
+  labs(x = "Age in years", y = "Average imprecision in target widths") 
+  
+ggsave("../figures/lifespan.png", width = 8, height = 4, scale = 1.2)
+saveRDS(lifespan, "../saves/lifespan.rds")
+```
+
+```{r models, message=FALSE, warning=FALSE}
+# linear age
+mlinear <- brm(mean_dist ~ age_centered,
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000, 
+                    iter   = 6000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+mlinear
+
+pp_check(mlinear) 
+
+write.csv(mlinear, "../saves/mlinear.csv", quote = F, row.names = F)
+saveRDS(mlinear, "../saves/mlinear.rds")
+
+## quadratic age
+mquadratic <- brm(mean_dist ~ 1 + age_centered + I(age_centered^2),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000, 
+                    iter   = 6000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+mquadratic
+
+pp_check(mquadratic)
+
+conditional_effects(mquadratic, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(mquadratic, "../saves/mquadratic.csv", quote = F, row.names = F)
+saveRDS(mquadratic, "../saves/mquadratic.rds")
+
+## cubic age
+mcubic <- brm(mean_dist ~ 1 + age_centered + I(age_centered^2) + I(age_centered^3),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000, 
+                    iter   = 6000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+mcubic
+
+pp_check(mcubic)
+
+plot(mcubic)
+
+conditional_effects(mcubic, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(mcubic, "../saves/mcubic.csv", quote = F, row.names = F)
+saveRDS(mcubic, "../saves/mcubic.rds")
+
+## gaussian process model
+mgaussianprocess <- brm(mean_dist ~ gp(age_centered, k=50, c=5/4, scale=TRUE),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000, 
+                    iter   = 6000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+mgaussianprocess
+
+pp_check(mgaussianprocess)
+
+conditional_effects(mgaussianprocess, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(mgaussianprocess, "../saves/mgaussianprocess.csv", quote = F, row.names = F)
+saveRDS(mgaussianprocess, "../saves/mgaussianprocess.rds")
+
+## spline model
+# https://discourse.mc-stan.org/t/smooth-spline-modeling-with-brm/6364/2
+msplines <- brm(mean_dist ~ s(age_centered),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000,
+                    iter   = 6000,
+                    chains = 4,
+                    cores  = 4,
+                    threads = threading(8),
+                    control = list(adapt_delta = 0.95),
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+msplines
+
+pp_check(msplines)
+
+conditional_effects(msplines, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+conditional_smooths(msplines2, effects = "weight")
+
+write.csv(msplines, "../saves/msplines.csv", quote = F, row.names = F)
+saveRDS(msplines, "../saves/msplines.rds")
+
+## playing around with parameters
+msplines2 <- brm(mean_dist ~ s(age_centered, k = 2),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000,
+                    iter   = 6000,
+                    chains = 4,
+                    cores  = 4,
+                    threads = threading(8),
+                    control = list(adapt_delta = 0.95),
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+conditional_effects(msplines2, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(msplines2, "../saves/msplines2.csv", quote = F, row.names = F)
+saveRDS(msplines2, "../saves/msplines2.rds")
+
+# 3
+msplines3 <- brm(mean_dist ~ s(age_centered, k = 3),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000,
+                    iter   = 6000,
+                    chains = 4,
+                    cores  = 4,
+                    threads = threading(8),
+                    control = list(adapt_delta = 0.95),
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+conditional_effects(msplines3, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(msplines3, "../saves/msplines3.csv", quote = F, row.names = F)
+saveRDS(msplines3, "../saves/msplines3.rds")
+
+
+# 4
+msplines4 <- brm(mean_dist ~ s(age_centered, k = 4),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000,
+                    iter   = 6000,
+                    chains = 4,
+                    cores  = 4,
+                    threads = threading(8),
+                    control = list(adapt_delta = 0.95),
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+conditional_effects(msplines4, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(msplines4, "../saves/msplines4.csv", quote = F, row.names = F)
+saveRDS(msplines4, "../saves/msplines4.rds")
+
+# 5
+msplines5 <- brm(mean_dist ~ s(age_centered, k = 5),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000,
+                    iter   = 6000,
+                    chains = 4,
+                    cores  = 4,
+                    threads = threading(8),
+                    control = list(adapt_delta = 0.95),
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+conditional_effects(msplines5, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+write.csv(msplines5, "../saves/msplines5.csv", quote = F, row.names = F)
+saveRDS(msplines5, "../saves/msplines5.rds")
+```
+
+```{r lifespan_modelcomparison}
+# mlinear <- readRDS("../saves/mlinear.rds")
+# mquadratic <- readRDS("../saves/mquadratic.rds")
+# mcubic <- readRDS("../saves/mcubic.rds")
+# mgaussianprocess <- readRDS("../saves/mgaussianprocess.rds")
+# msplines <- readRDS("../saves/msplines.rds")
+
+mcomparison <- loo_compare(mlinear, mquadratic, mcubic, mgaussianprocess, msplines, msplines2, msplines3, msplines4, msplines5, criterion = "waic") %>% 
+  as_tibble(rownames = "model") %>%
+  left_join(as_tibble(model_weights(mlinear, mquadratic, mcubic, mgaussianprocess, msplines, msplines2, msplines3, msplines4, msplines5, weights = "waic"), rownames = "model")) %>% 
+  rename(modelweight = value)
+
+mcomparison %>% 
+  select(-c(se_elpd_waic, p_waic, se_p_waic)) %>% 
+  mutate(across(where(is.numeric), round, 4))
+
+write.csv(mcomparison, "../saves/mcomparison.csv", quote = F, row.names = F)
+saveRDS(mcomparison, "../saves/mcomparison.rds")
+```
+
+```{r prediction_plot_winning_model}
+prediction_plot <- mdata %>%
+  add_predicted_draws(msplines) %>%  # adding the posterior distribution
+  ggplot(aes(x = age_centered, y = mean_dist)) +  
+  geom_jitter(data = mdata, colour = "grey", size = 1.5, alpha = 0.8) + 
+  stat_lineribbon(aes(y = .prediction), .width = c(.95, .80), alpha = 0.5, colour = "black") +
+  scale_fill_brewer(palette = "Greys") + 
+  scale_y_continuous(limits = c(0,4))
+
+prediction_plot
+
+# saveRDS(prediction_plot, file = "../saves/lifespan_modelplot.rds")
+# ggsave("../figures/lifespan_modelplot.png", width = 10, height = 6, scale = 0.7, bg = "white")
+```
