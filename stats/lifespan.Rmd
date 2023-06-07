@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
 library(tidyverse) # data handling etc.
 library(tidybayes) # for stat_halfeye, add_predictive_draws
+library(tidyboot) # for bootstrapped CIs
 library(brms) # modeling
 library(cmdstanr) # modeling
 check_cmdstan_toolchain(fix = TRUE, quiet = TRUE)
@@ -62,8 +63,10 @@ lifespan_plot <- lifespan_data %>%
   scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) + 
   scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
   labs(x = "Age in years", y = "Average imprecision in target widths") 
-  
-# ggsave("../figures/lifespan.png", width = 8, height = 4, scale = 1.2)
+ 
+lifespan_plot
+
+ggsave("../figures/lifespan_plot.png", width = 8, height = 4, scale = 1.2)
 saveRDS(lifespan_plot, "../saves/lifespan_plot.rds")
 ```
 
@@ -272,8 +275,10 @@ write.csv(mcomparison, "../saves/lifespan_mcomparison.csv", quote = F, row.names
 saveRDS(mcomparison, "../saves/lifespan_mcomparison.rds")
 ```
 
-```{r prediction_plot_winning_model}
- mdraws <- mdata %>%
+```{r draws_winning_model}
+msplines <- readRDS("../saves/lifespan_msplines.rds")
+
+mdraws <- mdata %>%
   add_predicted_draws(msplines) %>% 
   ungroup() %>% 
   select(-c(.row, .chain, .iteration)) %>%
@@ -281,19 +286,48 @@ saveRDS(mcomparison, "../saves/lifespan_mcomparison.rds")
 
 write.csv(mdraws, "../saves/lifespan_mdraws.csv", quote = F, row.names = F)
 saveRDS(mdraws, "../saves/lifespan_mdraws.rds")
+```
 
-prediction_plot <- mdraws %>%
-  ggplot(aes(x = age)) +  
-  geom_jitter(aes(y = mean_dist), colour = "grey", size = 1.5, alpha = 0.8) + 
-  stat_lineribbon(aes(y = predicted_value), .width = c(.95), colour = "#006c66") +
+```{r prediction_plot_winning_model}
+### this sections takes a while to run
+
+# mdraws <- readRDS("../saves/lifespan_mdraws.rds")
+
+mdraws %>%
+  ggplot(aes(x = age)) +
+  stat_lineribbon(aes(y = predicted_value), .width = c(.95), colour = "#006c66", fill = "lightgrey") +
+  geom_jitter(aes(y = mean_dist), colour = "darkgrey", size = 1.5, alpha = 0.8) +
+  scale_x_continuous(limits = c(0,80), breaks = seq(0, 80, 5)) +
+  scale_y_continuous(limits = c(0,4)) +
+  labs(x = "Age in years", y = "Mean click distance in target widths")
+
+# prediction_plot
+
+# saveRDS(prediction_plot, file = "../saves/lifespan_modelplot.rds")
+ggsave("../figures/lifespan_modelplot.png", width = 8, height = 5, scale = 1, bg = "white")
+```
+
+```{r smooths}
+lifespan_smooths <- mdata %>%
+  ggplot(aes(x = age, y = mean_dist)) +  
+  geom_jitter(colour = "grey", size = 1.5, alpha = 0.8) + 
+  geom_smooth(method = lm, se = F, aes(colour = "A")) +
+  geom_smooth(method = lm, formula = y ~ poly(x, 2), se = F, aes(colour = "B")) +
+  geom_smooth(method = lm, formula = y ~ poly(x, 3), se = F, aes(colour = "C")) +
+  geom_smooth(method = loess, se = F, aes(colour = "D")) +
+  geom_smooth(method = lm, formula = y ~ splines::bs(x, 5), se = F, aes(colour = "E")) +
   scale_fill_brewer(palette = "Greys") + 
   scale_x_continuous(limits = c(0,80), breaks = seq(0, 80, 5)) + 
   scale_y_continuous(limits = c(0,4)) + 
-  guides(fill = "none") +
-  labs(x = "Age in years", y = "Mean click distance in target widths", fill = "")
+  scale_color_manual(name = "Smooth method", 
+                     breaks = c("A", "B", "C", "D", "E"),
+                     values = c("#c6d325", "#00b1ea", "#29485d", "#9D3BBD", "#F71C8D"),
+                     labels = c("linear", "quadratic", "cubic", "loess", "splines (k=5)")) +
+  labs(x = "Age in years", y = "Mean click distance in target widths")
 
-prediction_plot
+lifespan_smooths
 
-# saveRDS(prediction_plot, file = "../saves/lifespan_modelplot.rds")
-# ggsave("../figures/lifespan_modelplot.png", width = 10, height = 6, scale = 0.7, bg = "white")
+saveRDS(lifespan_smooths, file = "../saves/lifespan_smooths.rds")
+ggsave("../figures/lifespan_smooths.png", width = 10, height = 6, scale = 0.7, bg = "white")
 ```
+
