@@ -53,7 +53,7 @@ saveRDS(lifespan_sample, "../saves/lifespan_sample.rds")
 ```
 
 ```{r plot}
-lifespan <- lifespan_data %>% 
+lifespan_plot <- lifespan_data %>% 
   group_by(subj_id, age, age_group) %>%
   summarise(mean = mean(click_dist_balloons, na.rm = TRUE)) %>% 
   ggplot(., aes(x = age, y = mean)) +
@@ -63,8 +63,8 @@ lifespan <- lifespan_data %>%
   scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
   labs(x = "Age in years", y = "Average imprecision in target widths") 
   
-ggsave("../figures/lifespan.png", width = 8, height = 4, scale = 1.2)
-saveRDS(lifespan, "../saves/lifespan.rds")
+# ggsave("../figures/lifespan.png", width = 8, height = 4, scale = 1.2)
+saveRDS(lifespan_plot, "../saves/lifespan_plot.rds")
 ```
 
 ```{r models, message=FALSE, warning=FALSE}
@@ -84,8 +84,8 @@ mlinear
 
 pp_check(mlinear) 
 
-write.csv(mlinear, "../saves/mlinear.csv", quote = F, row.names = F)
-saveRDS(mlinear, "../saves/mlinear.rds")
+write.csv(mlinear, "../saves/lifespan_mlinear.csv", quote = F, row.names = F)
+saveRDS(mlinear, "../saves/lifespan_mlinear.rds")
 
 ## quadratic age
 mquadratic <- brm(mean_dist ~ 1 + age_centered + I(age_centered^2),
@@ -106,8 +106,8 @@ pp_check(mquadratic)
 conditional_effects(mquadratic, ndraws = 200, spaghetti = TRUE) %>% 
   plot(points = T)
 
-write.csv(mquadratic, "../saves/mquadratic.csv", quote = F, row.names = F)
-saveRDS(mquadratic, "../saves/mquadratic.rds")
+write.csv(mquadratic, "../saves/lifespan_mquadratic.csv", quote = F, row.names = F)
+saveRDS(mquadratic, "../saves/lifespan_mquadratic.rds")
 
 ## cubic age
 mcubic <- brm(mean_dist ~ 1 + age_centered + I(age_centered^2) + I(age_centered^3),
@@ -130,8 +130,8 @@ plot(mcubic)
 conditional_effects(mcubic, ndraws = 200, spaghetti = TRUE) %>% 
   plot(points = T)
 
-write.csv(mcubic, "../saves/mcubic.csv", quote = F, row.names = F)
-saveRDS(mcubic, "../saves/mcubic.rds")
+write.csv(mcubic, "../saves/lifespan_mcubic.csv", quote = F, row.names = F)
+saveRDS(mcubic, "../saves/lifespan_mcubic.rds")
 
 ## gaussian process model
 mgaussianprocess <- brm(mean_dist ~ gp(age_centered, k=50, c=5/4, scale=TRUE),
@@ -152,8 +152,8 @@ pp_check(mgaussianprocess)
 conditional_effects(mgaussianprocess, ndraws = 200, spaghetti = TRUE) %>% 
   plot(points = T)
 
-write.csv(mgaussianprocess, "../saves/mgaussianprocess.csv", quote = F, row.names = F)
-saveRDS(mgaussianprocess, "../saves/mgaussianprocess.rds")
+write.csv(mgaussianprocess, "../saves/lifespan_mgaussianprocess.csv", quote = F, row.names = F)
+saveRDS(mgaussianprocess, "../saves/lifespan_mgaussianprocess.rds")
 
 ## spline model
 # https://discourse.mc-stan.org/t/smooth-spline-modeling-with-brm/6364/2
@@ -175,10 +175,8 @@ pp_check(msplines)
 conditional_effects(msplines, ndraws = 200, spaghetti = TRUE) %>% 
   plot(points = T)
 
-conditional_smooths(msplines2, effects = "weight")
-
-write.csv(msplines, "../saves/msplines.csv", quote = F, row.names = F)
-saveRDS(msplines, "../saves/msplines.rds")
+write.csv(msplines, "../saves/lifespan_msplines.csv", quote = F, row.names = F)
+saveRDS(msplines, "../saves/lifespan_msplines.rds")
 
 ## playing around with parameters
 msplines2 <- brm(mean_dist ~ s(age_centered, k = 2),
@@ -195,8 +193,8 @@ msplines2 <- brm(mean_dist ~ s(age_centered, k = 2),
 conditional_effects(msplines2, ndraws = 200, spaghetti = TRUE) %>% 
   plot(points = T)
 
-write.csv(msplines2, "../saves/msplines2.csv", quote = F, row.names = F)
-saveRDS(msplines2, "../saves/msplines2.rds")
+write.csv(msplines2, "../saves/lifespan_msplines2.csv", quote = F, row.names = F)
+saveRDS(msplines2, "../saves/lifespan_msplines2.rds")
 
 # 3
 msplines3 <- brm(mean_dist ~ s(age_centered, k = 3),
@@ -213,8 +211,8 @@ msplines3 <- brm(mean_dist ~ s(age_centered, k = 3),
 conditional_effects(msplines3, ndraws = 200, spaghetti = TRUE) %>% 
   plot(points = T)
 
-write.csv(msplines3, "../saves/msplines3.csv", quote = F, row.names = F)
-saveRDS(msplines3, "../saves/msplines3.rds")
+write.csv(msplines3, "../saves/lifespan_msplines3.csv", quote = F, row.names = F)
+saveRDS(msplines3, "../saves/lifespan_msplines3.rds")
 
 
 # 4
@@ -232,8 +230,8 @@ msplines4 <- brm(mean_dist ~ s(age_centered, k = 4),
 conditional_effects(msplines4, ndraws = 200, spaghetti = TRUE) %>% 
   plot(points = T)
 
-write.csv(msplines4, "../saves/msplines4.csv", quote = F, row.names = F)
-saveRDS(msplines4, "../saves/msplines4.rds")
+write.csv(msplines4, "../saves/lifespan_msplines4.csv", quote = F, row.names = F)
+saveRDS(msplines4, "../saves/lifespan_msplines4.rds")
 
 # 5
 msplines5 <- brm(mean_dist ~ s(age_centered, k = 5),
@@ -250,16 +248,16 @@ msplines5 <- brm(mean_dist ~ s(age_centered, k = 5),
 conditional_effects(msplines5, ndraws = 200, spaghetti = TRUE) %>% 
   plot(points = T)
 
-write.csv(msplines5, "../saves/msplines5.csv", quote = F, row.names = F)
-saveRDS(msplines5, "../saves/msplines5.rds")
+write.csv(msplines5, "../saves/lifespan_msplines5.csv", quote = F, row.names = F)
+saveRDS(msplines5, "../saves/lifespan_msplines5.rds")
 ```
 
 ```{r lifespan_modelcomparison}
-# mlinear <- readRDS("../saves/mlinear.rds")
-# mquadratic <- readRDS("../saves/mquadratic.rds")
-# mcubic <- readRDS("../saves/mcubic.rds")
-# mgaussianprocess <- readRDS("../saves/mgaussianprocess.rds")
-# msplines <- readRDS("../saves/msplines.rds")
+# mlinear <- readRDS("../saves/lifespan_mlinear.rds")
+# mquadratic <- readRDS("../saves/lifespan_mquadratic.rds")
+# mcubic <- readRDS("../saves/lifespan_mcubic.rds")
+# mgaussianprocess <- readRDS("../saves/lifespan_mgaussianprocess.rds")
+# msplines <- readRDS("../saves/lifespan_msplines.rds")
 
 mcomparison <- loo_compare(mlinear, mquadratic, mcubic, mgaussianprocess, msplines, msplines2, msplines3, msplines4, msplines5, criterion = "waic") %>% 
   as_tibble(rownames = "model") %>%
@@ -270,18 +268,29 @@ mcomparison %>%
   select(-c(se_elpd_waic, p_waic, se_p_waic)) %>% 
   mutate(across(where(is.numeric), round, 4))
 
-write.csv(mcomparison, "../saves/mcomparison.csv", quote = F, row.names = F)
-saveRDS(mcomparison, "../saves/mcomparison.rds")
+write.csv(mcomparison, "../saves/lifespan_mcomparison.csv", quote = F, row.names = F)
+saveRDS(mcomparison, "../saves/lifespan_mcomparison.rds")
 ```
 
 ```{r prediction_plot_winning_model}
-prediction_plot <- mdata %>%
-  add_predicted_draws(msplines) %>%  # adding the posterior distribution
-  ggplot(aes(x = age_centered, y = mean_dist)) +  
-  geom_jitter(data = mdata, colour = "grey", size = 1.5, alpha = 0.8) + 
-  stat_lineribbon(aes(y = .prediction), .width = c(.95, .80), alpha = 0.5, colour = "black") +
+ mdraws <- mdata %>%
+  add_predicted_draws(msplines) %>% 
+  ungroup() %>% 
+  select(-c(.row, .chain, .iteration)) %>%
+  rename(draw = .draw, predicted_value = .prediction)
+
+write.csv(mdraws, "../saves/lifespan_mdraws.csv", quote = F, row.names = F)
+saveRDS(mdraws, "../saves/lifespan_mdraws.rds")
+
+prediction_plot <- mdraws %>%
+  ggplot(aes(x = age)) +  
+  geom_jitter(aes(y = mean_dist), colour = "grey", size = 1.5, alpha = 0.8) + 
+  stat_lineribbon(aes(y = predicted_value), .width = c(.95), colour = "#006c66") +
   scale_fill_brewer(palette = "Greys") + 
-  scale_y_continuous(limits = c(0,4))
+  scale_x_continuous(limits = c(0,80), breaks = seq(0, 80, 5)) + 
+  scale_y_continuous(limits = c(0,4)) + 
+  guides(fill = "none") +
+  labs(x = "Age in years", y = "Mean click distance in target widths", fill = "")
 
 prediction_plot
 
