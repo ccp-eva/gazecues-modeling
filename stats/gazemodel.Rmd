@@ -21,11 +21,13 @@ set.seed(42)
 ```
 
 ```{r load_data}
-gaze_data <- readRDS("../data/tango-model.rds")
+gaze_data_kids <- readRDS("../data/tango-model-kids.rds")
+gaze_data_adults <- readRDS("../data/tango-model-adults.rds") %>% mutate(age_group = 18)
+gaze_data <- full_join(gaze_data_kids, gaze_data_adults)
 ```
 
 ```{r sample}
-gazemodel_sample <- gaze_data %>% 
+gazemodel_sample_kids <- gaze_data_kids %>% 
   group_by(age_group) %>%
   mutate(female = ifelse(gender == "f", 1, 0)) %>% 
   summarise(
@@ -37,14 +39,28 @@ gazemodel_sample <- gaze_data %>%
     n_females = ceiling(sum(female/15)),
   )
 
-gazemodel_sample
+gazemodel_sample_kids
+
+gazemodel_sample_adults <- gaze_data_adults %>% 
+  mutate(female = ifelse(gender == "f", 1, 0)) %>% 
+  summarise(
+    n_total = n_distinct(subj_id), 
+    age_mean = mean(age, na.rm = T) %>% round(2),
+    age_sd = sd(age, na.rm = T) %>% round(2),
+    age_min = min(age, na.rm = T),
+    age_max = max(age, na.rm = T),
+    n_females = ceiling(sum(female/15)),
+  ) %>% 
+  mutate(age_group = 18)
+
+gazemodel_sample <- gazemodel_sample_kids %>% full_join(gazemodel_sample_adults)
 
 write.csv(gazemodel_sample, "../saves/gazemodel_sample.csv", quote = F, row.names = F)
 saveRDS(gazemodel_sample, "../saves/gazemodel_sample.rds")
 ```
 
 ```{r plot}
-dev_plot <- gaze_data %>% 
+dev_plot <- gaze_data_kids %>% 
   group_by(subj_id, age, age_group) %>%
   summarise(mean = mean(click_dist_balloons, na.rm = TRUE)) %>% 
   ggplot(., aes(x = age, y = mean)) +
@@ -74,12 +90,12 @@ gazefunnel <- ggplot() +
   geom_pointrange(data = target_position_imprecision, aes(x = target_position, y = mean, ymin = ci_lower, ymax = ci_upper, col = as.factor(age_group)), pch = 18,  size = 1, position = position_dodge(width = .3)) +
 
   scale_y_continuous(limits = c(0, 7), breaks = seq(0, 7, 1)) +
-  scale_color_manual(values = c("#c6d325", "#00b1ea", "#29485d"), breaks = c("3", "4", "5"), labels = c("3-year-olds", "4-year-olds", "5-year-olds")) +
+  scale_color_manual(values = c("#c6d325", "#00b1ea", "#29485d", "darkgrey"), breaks = c("3", "4", "5", "18"), labels = c("3-year-olds", "4-year-olds", "5-year-olds", "Adults")) +
     labs(x = "Target position (binned)", y = "Average imprecision in target widths", col = "Age in years")
 
 gazefunnel
 
-# ggsave("../figures/gazefunnel.png", width = 6, height = 4, scale = 1.2)
-# saveRDS(gazefunnel, "../saves/gazefunnel.rds")
+ggsave("../figures/gazefunnel.png", width = 6, height = 4, scale = 1.2)
+saveRDS(gazefunnel, "../saves/gazefunnel.rds")
 ```
 
