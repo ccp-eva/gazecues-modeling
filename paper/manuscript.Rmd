@@ -78,6 +78,7 @@ editor_options:
 library("tidyverse")
 library("papaja")
 library("kableExtra")
+library("brms")
 
 theme_set(theme_classic())
 ```
@@ -217,9 +218,9 @@ Children and teenagers received a personalized link to the study website. Caregi
 
 All test trials without voice-over description were included in our analyses. We ran all analyses in `r R.version$version.string` [@rcoreteam2022language]. Regression models were fit as Bayesian generalized linear mixed models (GLMMs) with default priors for all analyses, using the function `brm` from the package `brms` [@burkner2017brms; @burkner2018advanced].
 
-To estimate the developmental trajectory of gaze understanding and the effect of data collection mode, we fit a GLMM predicting the task performance in each trial by age (in months, z-transformed) and data collection mode (reference category: in-person supervised). The model included random intercepts for each participant and each target position, and a random slope for symmetric target position within participants (model notation in `R: performance ~ age + datacollection + (symmetricPosition | subjID) + (1 | targetPosition)`). Here, `targetPosition` refers to the exact bin/box of the target, while `symmetricPosition` refers to the absolute distance from the stimulus center (i.e., smaller value meaning more central target position). We expected that trials could differ in their difficulty depending on the target centrality and that these item effects could vary between participants.
+To estimate the developmental trajectory of gaze understanding and the effect of data collection mode, we fit a GLMM predicting the task performance in each trial by age (in months, z-transformed), in `R: imprecision ~ age_centered`).
 
-For the hedge version, performance was defined as the absolute click distance between the target center and the click X coordinate, scaled according to target widths, and modeled by a `lognormal` distribution. For the box version, the model predicted correct responses (0/1) using a `Bernoulli` distribution with a logit link function. We inspected the posterior distribution (mean and 95% Confidence Interval (CI)) for the age and data collection estimates.
+Imprecision was defined as the absolute click distance between the target center and the click X coordinate, scaled according to target widths, and modeled by a `lognormal` distribution. We inspected the posterior distribution (mean and 95% Confidence Interval (CI)) for the age and data collection estimates.
 
 ## Results
 
@@ -239,9 +240,7 @@ The performance of the youngest children seems more consistent with performance 
 
 # Computational cognitive model
 
--   model auch für warum ältere Erwachsene schlecht? anders schlecht als kinder?
--   entwicklungsperspektive basierend auf model
--   dann prozess-ebene = magnet
+Task design, data collection, and sample sizes were pre-registered: https://osf.io/r3bhn. The study design and procedure obtained ethical clearance by the MPG Ethics commission Munich, Germany, falling under a packaged ethics application (Appl. No. 2021_45), and was approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology. The research adheres to the legal requirements of psychological research with children in Germany. Data were collected between May and August 2021.
 
 ```{r gazemodel_sample}
 gazemodel_sample <- readRDS("../saves/gazemodel_sample.rds")
@@ -249,11 +248,20 @@ gazemodel_sample <- readRDS("../saves/gazemodel_sample.rds")
 
 ## Participants
 
-The sample included the `r sum(gazemodel_sample$n_total[gazemodel_sample$age_group < 6])` three- to five-year-old children and `r sum(gazemodel_sample$n_total[gazemodel_sample$age_group == 18])` adults from our Lifespan study. For age distributions, see Participant section of the Lifespan Study.
+The sample included `r sum(gazemodel_sample$n_total[gazemodel_sample$age_group < 6])` children consisting of
+`r gazemodel_sample$n_total[gazemodel_sample$age_group == 3]` three-year-olds (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 3]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 3]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 3]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 3]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 3]` girls), 
+`r gazemodel_sample$n_total[gazemodel_sample$age_group == 4]` four-year-olds (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 4]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 4]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 4]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 4]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 4]` girls), 
+`r gazemodel_sample$n_total[gazemodel_sample$age_group == 5]` five-year-olds (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 5]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 5]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 5]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 5]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 5]` girls), and 
+`r gazemodel_sample$n_total[gazemodel_sample$age_group == 18]` adults from our Lifespan study (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 18]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 18]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 18]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 18]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 18]` female). 
 
-out of convenience, we only used ... since developmental chnage was minimial in adutls we used ...
+Data of children was collected in kindergartens located in Leipzig, Germany. The children within each kindergarten were recruited via an internal database, where each parent priorly consented to child development studies. 
+Adults were recruited over *Prolific*  [@palan2018prolific]. 
+
+Since developmental change was minimal in our adult sample (see Lifespan study) and the cognitive models were computationally heavy, we decided to only include the first 50 adults that completed the study. 
 
 ## Procedure
+As in the previous study, participants completed the continuous version of the TANGO [@prein2022tango]. Children were tested in a quiet room in their kindergarten, while an experimenter guided the child through the study on a tablet.
+
 
 ## Analysis
 
@@ -283,7 +291,7 @@ Task design, data collection, and sample sizes were pre-registered: <https://osf
 magnet_sample <- readRDS("../saves/magnet_sample.rds")
 ```
 
-Testing took place in kindergartens in Leipzig, Germany. The sample consisted of `r magnet_sample$n_total` children (mean age = `r magnet_sample$age_mean` years, SD = `r sum(magnet_sample$age_sd)`, range = `r magnet_sample$age_min` - `r magnet_sample$age_max`, `r magnet_sample$n_females` girls).
+Testing took place in kindergartens in Leipzig, Germany. The sample consisted of `r magnet_sample$n_total` children (mean age = `r magnet_sample$age_mean` years, SD = `r magnet_sample$age_sd`, range = `r magnet_sample$age_min` - `r magnet_sample$age_max`, `r magnet_sample$n_females` girls).
 
 ## Procedure
 
@@ -307,17 +315,30 @@ As in the two previously reported studies, we presented children with the contin
 
 ## Analysis
 
-By design, both the gaze understanding task as well as the non-social vector estimation task involve vector estimation. On the basis of the results from our computational cognitive model, we expected that children's performance in both tasks correlate significantly. For these two tasks, we calculated the mean level of imprecision for each subject. We correlated these two scores using *Pearson's* correlation coefficients.
+By design, both the gaze understanding task as well as the non-social vector estimation task involve vector estimation. On the basis of the results from our computational cognitive model, we expected that children's performance in both tasks correlate with each other. For each of these two tasks, we calculated the mean level of imprecision for each subject. We then correlated these two scores using *Pearson's* correlation coefficients.
 
-Regarding the relationship between the two vector estimation tasks and the ToM measures, we can imagine two possible scenarios: (A) If gaze understanding recruits a general social-cognitive ability beyond vector estimation, we expect that gaze understanding and ToM measures are more strongly correlated than non-social vector estimation and ToM measures. (B) If gaze understanding relies purely on task-specific processes, then the correlation between gaze understanding and ToM measures will be comparable to the correlation between non-social vector estimation and the ToM measures. For the association between the aggregate ToM scores and the gaze understanding / non-social vector estimation tasks, we used *Spearman's* rank correlation coefficient.
+Regarding the relationship between the two vector estimation tasks and the ToM measures, we could imagine two possible scenarios: (A) If gaze understanding recruits a general social-cognitive ability beyond vector estimation, we expected that gaze understanding and ToM measures would correlate more strongly with each other than non-social vector estimation and ToM measures. (B) If gaze understanding relies purely on task-specific processes, then the correlation between gaze understanding and ToM measures would be comparable to the correlation between non-social vector estimation and the ToM measures. For the association between the aggregate ToM scores and the gaze understanding / non-social vector estimation tasks, we used *Spearman's* rank correlation coefficients. 
 
-Furthermore, to estimate which components contribute to gaze understanding, we conducted a model comparison with GLMMs predicting the mean imprecision in gaze understanding by age, non-social vector estimation, the ToM aggregate score, or the aggregate of the two perspective-taking tasks (subset of ToM battery; example of model notation in\`R: tango_mean \~ age_centered + magnet_scaled + perspective_scaled\`). The outcome variable was modeled by a lognormal distribution. With this analysis, we wanted to assess whether the ToM aggregate score or the singled-out perspective-taking score added additional explanatory value.
+We compared the correlation between gaze understanding and ToM measures and the correlation between non-social vector estimation and ToM measures by using the Williams' test from the function `cocor.dep.groups.overlap` (designed for two dependent overlapping correlations) from the package `cocor` [@diedenhofen2015cocor]. 
+
+Furthermore, to estimate which components contribute to gaze understanding, we conducted a model comparison with GLMMs predicting the mean imprecision in gaze understanding by age, non-social vector estimation, the ToM aggregate score, or the aggregate of the two perspective-taking tasks (subset of ToM battery; example of model notation in `R: tango_mean ~ age_centered + magnet_scaled + perspective_scaled`). The outcome variable was modeled by a lognormal distribution. With this analysis, we wanted to assess whether the ToM aggregate score or the singled-out perspective-taking score added additional explanatory value when predicting the gaze understanding score.
 
 ## Results
 
-As expected, we found that gaze understanding as a social vector estimation task correlated with the non-social vector estimation task. Importantly, however, the two vector estimation tasks were not redundant: only a part of the variance in gaze understanding could be explained by non-social vector estimation.
+```{r magnet_results}
+magnet_williamsttest_tom <- readRDS("../saves/williams_tom.rds")
+magnet_williamsttest_perspective <- readRDS("../saves/williams_perspective.rds")
+magnet_cormatrix <- readRDS("../saves/magnet_cormatrix.rds")
+magnet_model <- readRDS("../saves/magnet_winningmodel.rds")
+```
 
-Our model comparison corroborated this: evidently, gaze understanding was best predicted by non-social vector estimation and perspective-taking. This shows that the gaze understanding task recruits social-cognitive abilities beyond vector estimation.
+As expected, we found that gaze understanding as a social vector estimation task correlated with the non-social vector estimation task, *r* = `r magnet_cormatrix$r[magnet_cormatrix$Correlation == "Tango x Magnet"]`, 95%CI [`r magnet_cormatrix$lower[magnet_cormatrix$Correlation == "Tango x Magnet"]`, `r magnet_cormatrix$upper[magnet_cormatrix$Correlation == "Tango x Magnet"]`]. Importantly, however, the two vector estimation tasks were not redundant: only a part of the variance in gaze understanding could be explained by non-social vector estimation.
+
+Gaze understanding and perspective-taking showed a *Spearman* correlation coefficient of $\rho$ = `r magnet_cormatrix$r[magnet_cormatrix$Correlation == "Tango x Perspective-taking"]`, 95%CI [`r magnet_cormatrix$lower[magnet_cormatrix$Correlation == "Tango x Perspective-taking"]`, `r magnet_cormatrix$upper[magnet_cormatrix$Correlation == "Tango x Perspective-taking"]`], while non-social vector estimation and perspective-taking showed a correlation of $\rho$ = `r magnet_cormatrix$r[magnet_cormatrix$Correlation == "Magnet x Perspective-taking"]`, 95%CI [`r magnet_cormatrix$lower[magnet_cormatrix$Correlation == "Magnet x Perspective-taking"]`, `r magnet_cormatrix$upper[magnet_cormatrix$Correlation == "Magnet x Perspective-taking"]`]. According to the Williams' test, these two correlations did not differ significantly from each other, *t*(`r magnet_williamsttest_perspective$parameter`) = `r round(magnet_williamsttest_perspective$statistic, 2)`, *p* = `r round(magnet_williamsttest_perspective$p.value, 2)`.
+
+Our model comparison revealed that gaze understanding was best predicted by a model including non-social vector estimation ($\beta$ = `r fixef(magnet_model)["magnet_scaled", "Estimate"]`, 95% CrI [`r fixef(magnet_model)["magnet_scaled", "Q2.5"]`; `r fixef(magnet_model)["magnet_scaled", "Q97.5"]`]) and perspective-taking ($\beta$ = `r fixef(magnet_model)["perspective_scaled", "Estimate"]`; 95% CrI [`r fixef(magnet_model)["perspective_scaled", "Q2.5"]`, `r fixef(magnet_model)["perspective_scaled", "Q97.5"]`]), even when controlling for age ($\beta$ = `r fixef(magnet_model)["age_centered", "Estimate"]`, 95% CrI [`r fixef(magnet_model)["age_centered", "Q2.5"]`, `r fixef(magnet_model)["age_centered", "Q97.5"]`]). 
+
+Taken together, this shows that the gaze understanding task recruited social-cognitive abilities beyond vector estimation. Evidently, it shared some of its variance with other level 2 perspective-taking tasks, while the overall ToM aggregate score did not add explanatory power. 
 
 (ref:figlab4) **Components of gaze understanding**
 

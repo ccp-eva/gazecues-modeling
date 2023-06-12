@@ -17,6 +17,8 @@ library(tidybayes) # modeling
 library(ggpubr) # stat_cor 
 library(corrplot) # corr plot
 library(apaTables) # as name says
+library(cocor) # compare correlations
+library(magrittr) # extract list elements
 
 options(scipen = 999)
 theme_set(theme_classic())
@@ -103,7 +105,12 @@ cor_matrix <- cor_matrix %>%
   select(Correlation, r, lower, upper, p)
 
 # apa table function only supports pearson corr so far
-magnet_data %>% select(tango_mean, magnet_mean, tom_aggregate, perspective_aggregate) %>% apa.cor.table(filename = "../saves/magnet_corrtable.doc", table.number=1)
+# magnet_data %>% select(tango_mean, magnet_mean, tom_aggregate, perspective_aggregate) %>% apa.cor.table(filename = "../saves/magnet_corrtable.doc", table.number=1)
+
+cor_matrix
+
+write.csv(cor_matrix, "../saves/magnet_cormatrix.csv", quote = F, row.names = F)
+saveRDS(cor_matrix, "../saves/magnet_cormatrix.rds")
 ```
 
 ```{r plot_cor_ci}
@@ -203,6 +210,9 @@ model_results <- mcomparison %>%
 
 write.csv(model_results, "../saves/magnet_modelresults.csv", quote = F, row.names = F)
 saveRDS(model_results, "../saves/magnet_modelresults.rds")
+
+write.csv(mmagnet_perspective, "../saves/magnet_winningmodel.csv", quote = F, row.names = F)
+saveRDS(mmagnet_perspective, "../saves/magnet_winningmodel.rds")
 ```
 
 ```{r magnet_draws}
@@ -249,5 +259,29 @@ arrangedplot <- ggarrange(
 
 saveRDS(arrangedplot, file = "../saves/magnet_arrangedplot.rds")
 ggsave("../figures/magnet_arrangedplot.png", width = 6, height = 2, scale = 1.75, bg = "white")
+```
+
+```{r williamstest}
+williams_tom <- cocor.dep.groups.overlap(
+                         r.jk = cor_matrix$r[cor_matrix$Correlation == "Tango x ToM"], 
+                         r.jh = cor_matrix$r[cor_matrix$Correlation == "Magnet x ToM"], 
+                         r.kh = cor_matrix$r[cor_matrix$Correlation == "Tango x Magnet"], 
+                         n = nrow(magnet_data), 
+                         alternative="two.sided", alpha=0.05, conf.level=0.95, null.value=0, 
+                         return.htest = T) %>% 
+                       extract2("williams1959")
+
+saveRDS(williams_tom, "../saves/williams_tom.rds")
+
+williams_perspective <- cocor.dep.groups.overlap(
+                         r.jk = cor_matrix$r[cor_matrix$Correlation == "Tango x Perspective-taking"], 
+                         r.jh = cor_matrix$r[cor_matrix$Correlation == "Magnet x Perspective-taking"], 
+                         r.kh = cor_matrix$r[cor_matrix$Correlation == "Tango x Magnet"], 
+                         n = nrow(magnet_data), 
+                         alternative="two.sided", alpha=0.05, conf.level=0.95, null.value=0, 
+                         return.htest = T) %>% 
+                       extract2("williams1959")
+
+saveRDS(williams_perspective, "../saves/williams_perspective.rds")
 ```
 
