@@ -1,0 +1,94 @@
+---
+title: "Supplementary analysis"
+author: "Julia Prein"
+date: "06/13/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse) # data handling etc.
+library(tidybayes) # for stat_halfeye, add_predictive_draws
+library(janitor)
+library(brms) # modeling
+library(cmdstanr) # modeling
+check_cmdstan_toolchain(fix = TRUE, quiet = TRUE)
+
+options(scipen = 999)
+theme_set(theme_classic())
+
+# Seed for random number generation
+set.seed(42)
+```
+
+```{r load_data}
+tango_humans <- readRDS("../data/magnet-tango-data.rds") %>% 
+  mutate(target_position = as.factor(target_position), stimuli = "humans")
+
+tango_animals <- readRDS("../data/tango-lifespan.rds") %>%
+  filter(age >= min(tango_humans$age) & age <= max(tango_humans$age)) %>% 
+  mutate(stimuli = "animals")
+  
+combined_data <- full_join(tango_humans, tango_animals) %>% 
+  remove_empty(which = "cols") %>% 
+  mutate(
+    age_centered = age - min(age)
+  )
+```
+
+```{r exploratory_plots}
+combined_data %>% 
+  ggplot(., aes(x = agent, y = click_dist_balloons)) +
+  geom_count()
+```
+
+```{r models, message=FALSE, warning=FALSE}
+mdata <- combined_data %>% 
+  mutate(
+    # scaled (centered around mean, SD = 1, i.e., z-transformed)
+    age_scaled = scale(age), 
+    symmetric_position = scale(symmetric_position),
+    trial_nr = trial_nr - min(trial_nr), 
+    click = abs(click_dist_from_target_center_x), 
+  ) %>% 
+  select(subj_id, age, age_scaled, stimuli, agent, symmetric_position, trial_nr, click) %>% 
+  filter(click > 0)
+
+mstimuli <- brm(click ~ age_scaled + stimuli + symmetric_position + trial_nr + (1 + symmetric_position + trial_nr | subj_id),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000, 
+                    iter   = 6000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+mstimuli
+
+pp_check(mstimuli) 
+
+magent <- brm(click ~ age_scaled + agent + symmetric_position + trial_nr + (1 + symmetric_position + trial_nr | subj_id),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 2000, 
+                    iter   = 6000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+
+
+magent
+
+pp_check(magent)
+
+saveRDS(mstimuli, "../saves/supplements_magnet_mstimuli.rds")
+saveRDS(magent, "../saves/supplements_magnet_magent.rds")
+```
+
