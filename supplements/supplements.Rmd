@@ -66,6 +66,18 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 \newpage
 
+## Model comparison
+
+```{r magnet_modelcomparison}
+magnet_modelcomparison <- readRDS("../saves/magnet_modelresults.rds") %>%
+  mutate(across(c(WAIC, Weight, ELPD_DIFF, SE_ELPD_DIFF), as.numeric)) %>%
+  mutate_if(is.numeric, round, 2)
+
+knitr::kable(magnet_modelcomparison, format = "latex", booktabs = TRUE) %>% 
+  kable_styling(latex_options = c("scale_down", "HOLD_position"))
+```
+
+
 # References
 
 ```{=tex}

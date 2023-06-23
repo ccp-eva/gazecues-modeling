@@ -5,16 +5,19 @@
 \documentclass[
   man,floatsintext]{apa6}
 \usepackage{amsmath,amssymb}
-\usepackage{lmodern}
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
 \else % if luatex or xetex
-  \usepackage{unicode-math}
+  \usepackage{unicode-math} % this also loads fontspec
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -167,7 +170,7 @@
 \fi
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{same} % disable monospaced font for URLs
+\urlstyle{same}
 \hypersetup{
   pdftitle={Variation in gaze understanding across the life span: A process-level perspective},
   pdfauthor={Julia Prein1, Manuel Bohn1,2, Luke Maurits1, Annika Werwach1, \& Daniel B. M. Haun1},
@@ -368,48 +371,38 @@ Age group & \multicolumn{1}{c}{n} & \multicolumn{1}{c}{Age mean} & \multicolumn{
 We collected data from a remote child, teenager and adult sample.
 For the remote child and teenager sample, we recruited participants via an internal database consisting of families living in Leipzig, Germany, who volunteered to participate in child development studies and indicated an interest in online studies.
 
-The remote child and teenager sample consisted of 471 children, including 19 3-year-olds (mean = 3.62 years, SD = 0.31, range = 3.04 - 3.99, 7 girls), 17 4-year-olds (mean = 4.45 years, SD = 0.30, range = 4.05 - 4.91, 9 girls), 22 5-year-olds (mean = 5.56 years, SD = 0.31, range = 5.08 - 5.99, 13 girls), 24 6-year-olds (mean = 6.50 years, SD = 0.28, range = 6.10 - 6.99, 16 girls), 39 7-year-olds (mean = 7.48 years, SD = 0.25, range = 7.04 - 7.95, 20 girls), 41 8-year-olds (mean = 8.46 years, SD = 0.27, range = 8.03 - 8.98, 20 girls), 56 9-year-olds (mean = 9.46 years, SD = 0.28, range = 9.01 - 9.96, 29 girls), 35 10-year-olds (mean = 10.49 years, SD = 0.28, range = 10.01 - 11, 22 girls), 54 11-year-olds (mean = 11.43 years, SD = 0.28, range = 11.01 - 11.96, 26 girls), 43 12-year-olds (mean = 12.41 years, SD = 0.30, range = 12.01 - 12.99, 19 girls), 42 13-year-olds (mean = 13.50 years, SD = 0.27, range = 13.09 - 13.99, 19 girls), 20 14-year-olds (mean = 14.37 years, SD = 0.23, range = 14.05 - 14.98, 14 girls), 21 15-year-olds (mean = 15.56 years, SD = 0.30, range = 15.05 - 15.98, 11 girls), 19 16-year-olds (mean = 16.51 years, SD = 0.24, range = 16.17 - 16.97, 10 girls), 19 17-year-olds (mean = 17.53 years, SD = 0.28, range = 17.01 - 17.95, 10 girls), 2 17-year-olds (mean = 18 years, SD = 0, range = 18 - 18, 0 girls),
-5 17-year-olds (mean = 19 years, SD = 0, range = 19 - 19, 4 girls).
-
+The remote child and teenager sample consisted of 471 participants.
 Children and teenagers in our sample grow up in an industrialized, urban Central-European context.
 Information on socioeconomic status was not formally recorded, although the majority of families come from mixed, mainly mid to high socioeconomic backgrounds with high levels of parental education.
 
-Adults were recruited via \emph{Prolific} (Palan \& Schitter, 2018). \emph{Prolific} is an online participant recruitment service from the University of Oxford with a predominantly European and US-American subject pool. Participants consisted of 240 English-speaking adults that reported to have normal or corrected-to-normal vision. The sample included 40 20- to 29-year-olds (mean = 23.02 years, SD = 2.77, range = 20 - 29, 25 female),
-40 30- to 39-year-olds (mean = 34.42 years, SD = 3, range = 30 - 39, 21 female),
-40 40- to 49-year-olds (mean = 44.17 years, SD = 2.92, range = 40 - 49, 24 female),
-40 50- to 59-year-olds (mean = 54.38 years, SD = 3.04, range = 50 - 59, 21 female),
-40 60- to 69-year-olds (mean = 63.73 years, SD = 2.56, range = 60 - 69, 21 female), and
-40 70- to 79-year-olds (mean = 72.75 years, SD = 2.44, range = 70 - 79, 20 female).
+Adults were recruited via \emph{Prolific} (Palan \& Schitter, 2018).
+\emph{Prolific} is an online participant recruitment service from the University of Oxford with a predominantly European and US-American subject pool.
+Participants consisted of 240 English-speaking adults that reported to have normal or corrected-to-normal vision.
+For further information on age and gender of participants, see Table 1.
 
 For completing the study, subjects were paid above the fixed minimum wage (on average £10.00 per hour; see Supplements for further detail).
 
 \hypertarget{materials}{%
 \subsection{Materials}\label{materials}}
 
-We used the TANGO task (Prein, Bohn, Kalinke, \& Haun, 2022).
+We used the continuous version of the TANGO (Prein, Bohn, Kalinke, \& Haun, 2022).
 The task was presented as an interactive web application (see Figure \ref{fig:fig1}; live demo \href{https://ccp-odc.eva.mpg.de/tango-demo/.}{https://ccp-odc.eva.mpg.de/tango-demo/}; source code \url{https://github.com/ccp-eva/tango-demo}).
-The TANGO showed satisfactory internal consistency and retest reliability {[}with reliability estimates \emph{Pearson's r} ranging from .5 to .8 for the categorical task version and .7 to .8 for the continuous task version; Prein et al. (2022){]}.
+The TANGO showed satisfactory internal consistency and retest reliability {[}with reliability estimates \emph{Pearson's r} ranging from .7 to .8 for the continuous task version; Prein et al. (2022){]}.
 
 Each trial presented an agent standing in a window, watching a balloon (\emph{i.e.}, target) falling to the ground.
-Depending on the task version, the target either fell into a box (categorical task version) or behind a hedge (continuous task version).
+The target then fell behind a hedge (continuous task version).
 The agent's gaze followed the target's trajectory: pupil and iris moved so that their center aligned with the target center.
-The target flight was covered so that participants could not see where the target landed.
+In test trials, the target flight was covered so that participants could not see where the target landed.
 Participants' task was to locate the target by tracking the agent's gaze.
-They could respond by clicking or touching on the screen.
+They could respond by touching on the screen.
 
 Four familiarization trials ensured that participants understood the task and felt comfortable with the response format.
 Then, 15 test trials followed.
 Completing the 19 trials took approximately 5-10 minutes.
 
-The outcome measure depended on the task version.
-In the continuous \emph{hedge version}, we assessed imprecision defined as the absolute difference between the target center and the x coordinate of the participant's click.
-In the discrete \emph{box version}, we calculated the proportion of correct responses.
-
-The randomization of the final target location also depended on the task version.
-In the hedge version, the screen width was divided into ten bins, while exact coordinates within each bin were randomly generated during runtime.
-In the box version, the target randomly landed in one of the boxes.
-We adjusted the task difficulty according to participants' age: children were presented with five boxes while adults were presented with eight boxes.
-Each bin/box, as well as all agents and target colors, occurred equally often and and did not appear in more than two consecutive trials.
+The outcome measure was imprecision, defined as the absolute difference between the target center and the x coordinate of the participant's click.
+Target coordinates were randomly generated during runtime.
+Each target bin, as well as all agents and target colors, occurred equally often and and did not appear in more than two consecutive trials.
 
 
 
@@ -419,51 +412,26 @@ Each bin/box, as well as all agents and target colors, occurred equally often an
 
 }
 
-\caption{\textbf{Setup of the TANGO}. (A) Infrastructure for online testing. (i) Subjects aged 3 -- 99+ can participate. Data collection can take place anywhere: online, in kindergartens, or research labs. (ii) The task is presented as a website that works across devices. (iii) The scripts for the website and the recorded data are stored on secure local servers. (B) Hedge version (continuous) of the gaze understanding task. (i) The agent stands in a window with the target in front of them. (ii) A hedge grows and covers the target. (iii) The target falls to a random location on the ground. The agent's eyes track the movement of the target. (C) Box version (discrete) of the gaze understanding task. Number of boxes (min. 1; max. 8) as potential hiding locations can be set according to the researcher's need.}\label{fig:fig1}
+\caption{\textbf{Setup of the TANGO and Magnet tasks}. (A) TANGO: Gaze understanding task. The agent stands in a window with the target in front of them. A hedge grows and covers the target. The target falls to a random location on the ground. The agent's eyes track the movement of the target. (B) Magnet task: non-social vector estimation.}\label{fig:fig1}
 \end{figure}
 
 \hypertarget{procedure}{%
 \subsection{Procedure}\label{procedure}}
 
-In the in-person sample, children were tested on a tablet in a quiet room in their kindergarten.
-An experimenter guided the child through the study.
-Half of the sample completed the continuous task version, while the other half completed the discrete task version.
-
-In the remote sample, children and teenagers received a personalized link to the study website.
+Children and teenagers received a personalized link to the study website.
 Caregivers were asked to provide technical support whenever needed, while explicitly being reminded to not help their children in responding.
 Webcam videos were recorded whenever consented and technically feasible, in order to monitor whether children and teenagers responded on their own.
 
-In the remote sample for children from three to five years old, the family's presentation device determined the task version.
-Whenever a touchscreen was available, the continuous task version was presented.
-For families using a computer without touchscreen, the discrete task version was shown.
-Here, children were asked to point to the screen while the caregivers should execute the clicking for their children.
-
-The number of teenagers in our internal database for recruiting families substantially decreased by age.
-To avoid small sample sizes, we decided to only employ the continuous task version for our 7- to 17-year-olds.
-Hence, children aged 7 years+ completed the continuous task version, independently from their presentation device.
-
-The remote adult sample was equally distributed across the two task versions.
-
 \hypertarget{analysis}{%
 \subsection{Analysis}\label{analysis}}
-
-\begin{itemize}
-\tightlist
-\item
-  TODO: non-linear model for development
-\end{itemize}
 
 All test trials without voice-over description were included in our analyses.
 We ran all analyses in R version 4.3.0 (2023-04-21) (R Core Team, 2022).
 Regression models were fit as Bayesian generalized linear mixed models (GLMMs) with default priors for all analyses, using the function \texttt{brm} from the package \texttt{brms} (Bürkner, 2017, 2018).
 
-To estimate the developmental trajectory of gaze understanding and the effect of data collection mode, we fit a GLMM predicting the task performance in each trial by age (in months, z-transformed) and data collection mode (reference category: in-person supervised).
-The model included random intercepts for each participant and each target position, and a random slope for symmetric target position within participants (model notation in \texttt{R:\ performance\ \textasciitilde{}\ age\ +\ datacollection\ +\ (symmetricPosition\ \textbar{}\ subjID)\ +\ (1\ \textbar{}\ targetPosition)}).
-Here, \texttt{targetPosition} refers to the exact bin/box of the target, while \texttt{symmetricPosition} refers to the absolute distance from the stimulus center (i.e., smaller value meaning more central target position).
-We expected that trials could differ in their difficulty depending on the target centrality and that these item effects could vary between participants.
+To estimate the developmental trajectory of gaze understanding and the effect of data collection mode, we fit a GLMM predicting the task performance in each trial by age (in months, z-transformed), in \texttt{R:\ imprecision\ \textasciitilde{}\ age\_centered}).
 
-For the hedge version, performance was defined as the absolute click distance between the target center and the click X coordinate, scaled according to target widths, and modeled by a \texttt{lognormal} distribution.
-For the box version, the model predicted correct responses (0/1) using a \texttt{Bernoulli} distribution with a logit link function.
+Imprecision was defined as the absolute click distance between the target center and the click X coordinate, scaled according to target widths, and modeled by a \texttt{lognormal} distribution.
 We inspected the posterior distribution (mean and 95\% Confidence Interval (CI)) for the age and data collection estimates.
 
 \hypertarget{results}{%
@@ -497,26 +465,125 @@ The performance of the youngest children seems more consistent with performance 
 \hypertarget{computational-cognitive-model}{%
 \section{Computational cognitive model}\label{computational-cognitive-model}}
 
-\begin{itemize}
-\tightlist
-\item
-  model auch für warum ältere Erwachsene schlecht? anders schlecht als kinder?
-\item
-  entwicklungsperspektive basierend auf model
-\item
-  dann prozess-ebene = magnet
-\end{itemize}
+In a previous study, we have shown that the inter-individual variation in gaze understanding is reliable (Prein et al. (2022)).
+Now, we asked ourselves what varies between participants on a process-level and how this changes with age.
+To answer this question, we aimed to formalize the process of gaze understanding in a computational cognitive model.
+The model seeks to explain how participants solve the TANGO task.
+
+Computational modeling frameworks allow researcher to establish mechanistic explanations of psychological phenomena and form testable predictions (Grahek, Schaller, \& Tackett, 2021).
+As formal, mathematical accounts of the psychological process in question, they force researchers to accurately and comprehensively state all underlying assumptions (Simmering, Triesch, Deák, \& Spencer, 2010).
+In addition, models can be used to simulate and predict behavior as it would be expected in novel experimental manipulations.
+This can then in turn be compared to empirically observed behavior and can, for example, demonstrate assumptions of the model to be false.
+
+The model assumes that participants estimate the agent's eye center and observe the current location of the pupil center.
+These two point estimates are then used to calculate a vector that points towards the attentional focus of the agent.
+Our model assumes that participants sample from a distribution around the true gaze vector.
+Individual differences could now be explained as more narrow or wider distribution around the true gaze vector (i.e., amount of deviation).
+This could represent participants' level of uncertainty in estimating the agent's attentional focus: the wider the distribution around the true gaze vector, the less precise participants estimate the focus of attention.
+This is the key parameter in our model: this so-called inferential component describes how accurately the participant infers the attentional focus based upon the state of the agent's pupil.
+
+However, participants who are very imprecise in locating the attentional focus of the agent could be less likely to make use of the eye information in the first place.
+To accomodate this, we created an alternative model that estimates the probability that a participant engages in random guessing.
+
+With this approach, we can formalize whether (A) a participant makes use of the available gaze information at all, and (B) how accurate they are, if they do pay attention to the agent's eyes.
+We expect a dual developmental process.
+The older children get, the more likely they are to use the gaze cues and the more precise they get in doing so.
+
+The geometry of the estimated gaze vector and the sampling of a distribution around this vector lead to interesting, testable group-level predictions.
+As the pupil location varies, a fixed amount of uncertainty about the eye angle corresponds to a varying amount of uncertainty in the estimated focus of attention (i.e., the target location).
+This could be thought of as a ``headlight distribution'': when the agent's eye gaze is directed centrally to the ground in front of them, the distribution from which participants sample is comparatively more narrow then when the agent's eye gaze is directed to the side.
+A similar phenomenon can be observed when you direct a torch light straight onto the ground or when you direct it at a further distance away from you.
+It leads the model to predict that our trials vary in difficulty: participants' clicks should be more imprecise, the further out the target x coordinate is.
+
+Task design, data collection, and sample sizes were pre-registered: \url{https://osf.io/r3bhn}.
+The study design and procedure obtained ethical clearance by the MPG Ethics commission Munich, Germany, falling under a packaged ethics application (Appl. No.~2021\_45), and was approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology.
+The research adheres to the legal requirements of psychological research with children in Germany.
+Data were collected between May and August 2021.
 
 \hypertarget{participants-1}{%
 \subsection{Participants}\label{participants-1}}
 
-The sample included the 58 three- to five-year-old children and 240 adults from our Lifespan study. For age distributions, see Participant section of the Lifespan Study.
+The sample included 60 children consisting of 20 three-year-olds (mean age = 3.47 years, SD = 0.34, range = 3.07 - 3.97, 11 girls), 20 four-year-olds (mean age = 4.61 years, SD = 0.26, range = 4.09 - 4.98, 10 girls), 20 five-year-olds (mean age = 5.66 years, SD = 0.24, range = 5.01 - 5.96, 12 girls), and 50 adults from our Lifespan study (mean age = 31.92 years, SD = 12.15, range = 18 - 63, 36 female).
 
-\hypertarget{non-social-vector-following}{%
-\section{Non-social vector following}\label{non-social-vector-following}}
+Data of children was collected in kindergartens located in Leipzig, Germany.
+The children within each kindergarten were recruited via an internal database, where each parent priorly consented to child development studies.
+Adults were recruited over \emph{Prolific} (Palan \& Schitter, 2018).
+Since developmental change was minimal in our adult sample (see Lifespan study) and the cognitive models were computationally heavy, we decided to only include the first 50 adults that completed the study.
+
+\hypertarget{procedure-1}{%
+\subsection{Procedure}\label{procedure-1}}
+
+As in the previous study, participants completed the continuous version of the TANGO (Prein et al., 2022).
+Children were tested in a quiet room in their kindergarten, while an experimenter guided the child through the study on a tablet.
+Adults participated online.
+
+\hypertarget{analysis-1}{%
+\subsection{Analysis}\label{analysis-1}}
+
+Our cognitive model attempts to explain the behavior of participants as being generated by one of two possible approaches.
+At each trial, a weighted coin toss determines whether the participant solves the task by "guessing" (sampling a clicking coordination from a uniform distribution over all possible coordinates) or by applying a gaze following model described below.
+Each participant has their own "guessing probability", determining the mixture of strategies they use.
+These per-participant parameters are modeled as having a Beta distribution over the population of participants.
+
+Our proposed gaze understanding model is a simplification of an originally three-component model, which consisted of: (1) a perceptual component, whereby the participant produces a noisy observation of the angle of each of the agent's eyes, (2) an inferential component, whereby the participant produces an estimate of the coordinate the agent is looking at based on the above noisy observations of eye angles and a model of how agents direct their eyes relative to where they are looking, and (3) a motor component, whereby the participant samples a location to click at from a distribution centered around the above estimate of where the agent is looking.
+Simulation studies suggested it was difficult to disentangle the independent noise terms from these three components and so the model was simplified to include only the inferential component
+
+In the inferential component, the participant assumes that the agent\textquotesingle s attention is focused on a single point coordinate and that the agent\textquotesingle s left and right eyes are positioned by sampling (independently for each eye) eye angles from Normal distributions centered on the unique angle such that a line subtended from the center of the agent\textquotesingle s eye through the center of its pupil will meet the attentional focal point (i.e.~the modal behavior is to direct both eyes directly toward the focal point).
+The standard deviation of these distributions (equal for each eye) is a parameter that varies per participant, with higher values increasing the expected imprecision.
+When interpreted strictly as a model of inferring attentional focus, this standard deviation corresponds to the participant\textquotesingle s assumptions about how wide an area of the agent\textquotesingle s visual field their attention occupies.
+
+Because of the geometry of the situation (where a fixed amount of uncertainty about the agent\textquotesingle s eye angle corresponds to a varying amount of uncertainty in the underlying point of attention as the eye angle varies), and because the participant integrates information from two eyes, the resulting posterior distribution (which the participant\textquotesingle s mouse click is modeled as a sample from) does not belong to a standard parametric family, but can be easily numerically approximated as part of the inference process.
+
+We will compare this model against two models which represent alternatives about how participants' responses are generated.
+The "random guessing" model simply assumes that participants ignore the agent's gaze and randomly click on the screen (cf.~coin toss, sampling a coordination from a uniform distribution over all possible coordinates).
+The "motor noise" model assumes that participants have no uncertainty about where the agent is looking but that their responses (clicks on the screen) come with a small amount of random noise (cf.~motor component of our originally proposed model).
+We will then directly compare the three models via BayesFactors computed based on the marginal log-likelihood of the data under each model.
+The models make different predictions about how participants\textquotesingle{} clicks will be distributed for different locations of the target.
+We will visualise and evaluate these differences using correlations between the model predictions and the data.
+
+\hypertarget{results-1}{%
+\subsection{Results}\label{results-1}}
+
+A big advantage of using a computational modeling framework is that it can disentangle where people's errors come from.
+Our computational model can explain what varies between precise and imprecise individuals.
+There are two sources of errors: (1) do you actually use the eye gaze information?
+and (2) how accurate are you at estimating the focus point when you do pay attention to the agent's eyes?
+This way, we can track developmental changes in gaze understanding in a more fine-tuned way.
+
+In addition, our model was able to recover ``signature patterns'' in the data.
+Both the model predictions and the actual raw data show that precision levels drop as the agent's gaze moves further away from the center.
+Future research could use this signature in the data as evidence whether diverse communities employ the same mechanism to solve the task.
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{../figures/gazefunnel_combined} 
+
+}
+
+\caption{\textbf{Gaze funnel}}\label{fig:fig3}
+\end{figure}
+
+\hypertarget{discussion-1}{%
+\subsection{Discussion}\label{discussion-1}}
+
+\hypertarget{components-of-gaze-understanding}{%
+\section{Components of gaze understanding}\label{components-of-gaze-understanding}}
+
+Our computational cognitive model assumes that the ability to engage in vector estimation is a crucial component of mastering gaze understanding.
+In this study, we sought to experimentally isolate the physical vector estimation component.
+In addition, we inquired whether there are any other cognitive processes outside the vector estimation that constitute gaze understanding.
+We aimed to assess whether there are exclusively task-specific processes at hand or whether gaze understanding recruits a general social-cognitive ability that is shared among other social-cognitive tasks.
+
+First, we aimed to isolate the vector estimation component of the gaze understanding task.
+We designed a new non-social vector estimation task that shared all crucial design features of the gaze understanding task.
+Second, we assessed children's social-cognitive abilities by administering a ToM task battery, comprising four tasks from the ToM scale by Wellman and Liu (Wellman and Liu (2004)) and two additional perspective-taking tasks (Flavell, Everett, Croft, \& Flavell, 1981; Flavell, Flavell, Green, \& Wilcox, 1981).
+
+Our reasoning was that the gaze understanding task shares task demands with the non-social vector estimation task, while it shares its social context with the ToM tasks.
+This way, we can disentangle what components comprise gaze understanding.
 
 Task design, data collection, and sample sizes were pre-registered: \url{https://osf.io/xsqkt}.
-
 The study design and procedure obtained ethical clearance by the MPG Ethics commission Munich, Germany, falling under a packaged ethics application (Appl. No.~2021\_45), and was approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology.
 The research adheres to the legal requirements of psychological research with children in Germany.
 Data were collected between February and March 2023.
@@ -524,33 +591,138 @@ Data were collected between February and March 2023.
 \hypertarget{participants-2}{%
 \subsection{Participants}\label{participants-2}}
 
-The sample consisted of 102 children (mean age = 4.54 years, SD = 0.31, range = 3.99 - 5.03, 54 girls),
+Testing took place in kindergartens in Leipzig, Germany.
+The sample consisted of 102 children (mean age = 4.54 years, SD = 0.31, range = 3.99 - 5.03, 54 girls).
+Information on individual socio-economic status was not formally recorded.
+Children in our sample live in an industrialized, urban Central-European city with approximately 600,000 inhabitants.
+Households often consist of nuclear families with few household members.
+The majority of families in our data base come from mainly mid to high socio-economic backgrounds with high levels of parental education.
 
-\begin{itemize}
-\item
-  gut, dass unser maß ind diff messen kann, das nutzen wir jetzt
-\item
-  zsmhang mit vector following, aber nicht redundant
-\item
-  perspective-taking auch, aber auch nicht relevant, nicht theory of mind score
-\item
-  diskutieren dass die maße auch nict ind diff maße sind
-\item
-  model vergleich: welche komponente stecken in gafo drin?,
-  welchen beitrag liefern die um score zu erklären?
-  welche wichtiger, tom oder nur perspective taking
-\item
-  magnet versuch das vector following zu isolieren.
-  ist da noch was anderes außerhalb vector-following?
-\item
-  aggregierte messungen immer besser, nur indikatoren für konstrukt
-\end{itemize}
+\hypertarget{procedure-2}{%
+\subsection{Procedure}\label{procedure-2}}
+
+Children were tested in a quiet room in their kindergarten.
+An experimenter guided the child through the study.
+Since our research questions related to individual differences and we wanted maximum control of extraneous participant variables, we employed a within-subjects study design.
+All participants performed the following tasks in a fixed order: (1) non-social vector estimation task, (2) ToM task battery, (3) gaze understanding task.
+Several reasons motivated this decision.
+First, we decided on a fixed order to be able to compare participants' performance straight-forwardly with each other.
+Second, to increase participant engagement and decrease fatigue or fuzziness, we switched from a tablet task to tasks with personal interaction back to a tablet task.
+Third, we showed the non-social vector estimation task before the gaze understanding task so that participants would not be biased to interpret the presented stimuli as ``eye- /''agent-like''.
+
+\hypertarget{non-social-vector-estimation}{%
+\subsubsection{Non-social vector estimation}\label{non-social-vector-estimation}}
+
+Modeling the setup and structure of the previously applied gaze understanding task, we designed a non-social vector estimation task.
+This task was also presented as a webapp on a tablet and made use of the concept of magnetism.
+The setup looked as follows.
+On the upper part of the screen, there was a tube with a gearwheel located in a circular window.
+On the floor, there lay a magnet.
+The magnet then got switched on (making a cartoon-like sound), whereupon the gearwheel moved towards the magnet.
+The gearwheel moved in a way that its center aligned with the center of the magnet, while staying inside the circular window.
+Participants were then asked to locate the magnet.
+Access to the magnet's true location was manipulated by a wooden wall: participants either had full, partial, or no visual access to the true magnet location.
+When no information about the magnet location was accessible, participants were expected to use the gearwheel inside the window as a non-social cue to locate the magnet.
+
+As in the TANGO, there were three different trial types depending on the visual access to the true magnet location.
+In full visual access trials, the magnet's location was presented without impediment (i.e., no wooden wall).
+In partial visual access trials, the wooden wall was moved in front of the target after the magnet's location had already been visible.
+In test trials, participants had no visual access to the magnet's location because the wall covered the magnet from the beginning of the trial.
+
+Children received 19 trials with one full visual access trial, two partial visual access trials, and 16 test trials.
+The first trial of each type comprised a voice-over description of the presented events.
+We conducted our analysis with 15 test trials (excluding the voice-over trial).
+The outcome variable was imprecision, defined as the absolute difference between the magnet's x coordinate and the x coordinate of the participant's click.
+Magnet coordinates were generated as follows.
+The full width of the screen was divided into ten bins.
+Each bin occurred equally often, while the same bin could occur in two consecutive trials.
+Exact coordinates within each bin were randomly generated.
+
+\hypertarget{theory-of-mind-task-battery}{%
+\subsubsection{Theory of Mind task battery}\label{theory-of-mind-task-battery}}
+
+We administered four tasks from the Wellman and Liu (2004) Theory of Mind scale.
+We excluded three tasks: the Diverse Desires task in order to avoid ceiling effects; and both tasks involving emotions (Belief Emotion and Real-Apparent Emotion), as we aimed at assessing the ``cold, cognitive'' (as compared to the ``emotional'') aspects of social cognition.
+Instead, we added two perspective-taking level-2 tasks (Flavell, Everett, et al., 1981; Flavell, Flavell, et al., 1981).
+We added the perspective-taking tasks (1) with the aim of increasing the task battery's difficulty, and (2) since we hypothesized that perspective-taking would rely on similar mechanisms than gaze understanding.
+The dependent variable was the aggregate score of all solved ToM tasks (see Supplements for further detail).
+In an exploratory analysis, we investigated if gaze understanding was more strongly associated with the two perspective-taking tasks compared to the other ToM tasks, as perspective-taking seems most closely theoretically related to gaze understanding (i.e., in both cases the participant is asked to judge another person's point of view).
+
+\hypertarget{gaze-understanding}{%
+\subsubsection{Gaze understanding}\label{gaze-understanding}}
+
+As in the two previously reported studies, we presented children with the continuous version of the TANGO (Prein et al., 2022).
+To accentuate the social aspect of the gaze understanding task, we exchanged the animal agents (used in the previous two studies) with human faces, which were modeled after the local population in appearance (already created for another project on cross-cultural similarities in gaze understanding (\url{https://osf.io/tdsvc})).
+This further highlighted the contrast (i.e., social vs.~non-social context) to the non-social vector estimation task.\footnote{In an exploratory analysis, we compared children's imprecision levels in the TANGO task with animal vs.~human agents.
+  Based on a GLMM analysis, we conclude that there was no evidence of a stable effect of stimulus choice (human vs.~animal).
+  See Supplements for further detail.}
+
+\hypertarget{analysis-2}{%
+\subsection{Analysis}\label{analysis-2}}
+
+By design, both the gaze understanding task as well as the non-social vector estimation task involve vector estimation.
+On the basis of the results from our computational cognitive model, we expected that children's performance in both tasks correlate with each other.
+For each of these two tasks, we calculated the mean level of imprecision for each subject.
+We then correlated these two scores using \emph{Pearson's} correlation coefficients.
+
+Regarding the relationship between the two vector estimation tasks and the ToM measures, we could imagine two possible scenarios: (A) If gaze understanding recruits a general social-cognitive ability beyond vector estimation, we expected that gaze understanding and ToM measures would correlate more strongly with each other than non-social vector estimation and ToM measures.
+(B) If gaze understanding relies purely on task-specific processes, then the correlation between gaze understanding and ToM measures would be comparable to the correlation between non-social vector estimation and the ToM measures.
+For the association between the aggregate ToM scores and the gaze understanding / non-social vector estimation tasks, we used \emph{Spearman's} rank correlation coefficients.
+
+We compared the correlation between gaze understanding and ToM measures and the correlation between non-social vector estimation and ToM measures by using the Williams' test from the function \texttt{cocor.dep.groups.overlap} (designed for two dependent overlapping correlations) from the package \texttt{cocor} (Diedenhofen \& Musch, 2015).
+
+Furthermore, to estimate which components best explain the gaze understanding score, we conducted a model comparison with GLMMs predicting the mean imprecision in gaze understanding by age, imprecision in non-social vector estimation, the ToM aggregate score, or the aggregate of the two perspective-taking tasks (subset of ToM battery; example of model notation in \texttt{R:\ tango\_mean\ \textasciitilde{}\ age\_centered\ +\ magnet\_scaled\ +\ perspective\_scaled}).
+We wanted to assess whether the ToM aggregate score or the singled-out perspective-taking score added additional explanatory value when predicting the gaze understanding score.
+The outcome variable was modeled by a lognormal distribution.
+
+\hypertarget{results-2}{%
+\subsection{Results}\label{results-2}}
+
+As expected, we found that gaze understanding as a social vector estimation task correlated with the non-social vector estimation task, \emph{r} = 0.38, 95\%CI {[}0.20, 0.53{]}.
+Importantly, however, the two vector estimation tasks were not redundant: only a part of the variance in gaze understanding could be explained by non-social vector estimation.
+
+Gaze understanding and perspective-taking showed a \emph{Spearman} correlation coefficient of \(\rho\) = -0.29, 95\%CI {[}-0.46, -0.10{]}, while non-social vector estimation and perspective-taking did not correlate, \(\rho\) = -0.09, 95\%CI {[}-0.28, 0.10{]}.
+According to the Williams' test, these two correlations did not differ significantly from each other, \emph{t}(99) = -1.86, \emph{p} = 0.07.
+
+Our model comparison revealed that gaze understanding was best predicted by a model including non-social vector estimation (\(\beta\) = 0.14, 95\% CrI {[}0.06; 0.21{]}) and perspective-taking (\(\beta\) = -0.10; 95\% CrI {[}-0.17, -0.03{]}), even when controlling for age (\(\beta\) = -0.14, 95\% CrI {[}-0.38, 0.10{]}).
+See Supplements for further detail of the model comparison.
+
+Taken together, this shows that the gaze understanding task recruited social-cognitive abilities beyond vector estimation.
+Evidently, it shared some of its variance with other level 2 perspective-taking tasks, while the overall ToM aggregate score did not add explanatory power.
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{../figures/magnet_arrangedplot} 
+
+}
+
+\caption{\textbf{Components of gaze understanding.} (A) Correlations between gaze understanding, physical vector estimation, ToM, and perspective-taking. Dots show the correlation coefficients, while error bars represent 95\% CIs. (B) Influence of perspective-taking and physical vector estimation on gaze understanding. The graph show the posterior distributions for the respective predictor. Black dots represent means, thicker black lines 80\% CrI and thinner black lines 95\% CrI.}\label{fig:fig4}
+\end{figure}
+
+\hypertarget{discussion-2}{%
+\subsection{Discussion}\label{discussion-2}}
+
+By carefully isolating physical vector estimation experimentally, we could show that gaze understanding does indeed, to a certain degree, rely on this component.
+This is in line with our computational cognitive framework that assumes vector calculations on a process-level.
+However, physical vector estimation alone did not suffice to explain gaze understanding.
+In addition, perspective-taking proved to be a relevant social-cognitive ability.
+
+In previous work, we could establish that the TANGO is suited as an individual differences measure (Prein et al., 2022).
+Capturing meaningful variability in performance is a crucial task feature when we are interested in revealing the relationship between different cognitive abilities.
+Importantly, the tasks we used to measure ToM abilities were not designed to capture individual differences: they relied on an aggregate score of dichotomous measures.
+These sum scores can only capture limited variance, which may obscure potential correlations.
+However, since these tasks are the gold standard in the social-cognitive literature and continuous measures with satisfying psychometric properties are, to the best of our knowledge, still scarce, we nonetheless relied on them in this study.
+It seems noteworthy to point out that lower correlations between ToM abilities and gaze understanding could be grounded in the design features of the applied ToM tasks.
+We already stated this concern in the Pre-registration (\url{https://osf.io/xsqkt}).
+The development of new measures to capture individual differences in social-cognitive abilities like false-belief understanding seems desirable and essential to move this line of research further.
+
+\hypertarget{general-discussion}{%
+\section{General discussion}\label{general-discussion}}
 
 \hypertarget{limitations}{%
 \section{Limitations}\label{limitations}}
-
-\hypertarget{discussion-1}{%
-\section{Discussion}\label{discussion-1}}
 
 \hypertarget{conclusion}{%
 \section{Conclusion}\label{conclusion}}
@@ -610,7 +782,7 @@ Behne, T., Carpenter, M., \& Tomasello, M. (2005). One-year-olds comprehend the 
 Brooks, R., \& Meltzoff, A. N. (2002). The importance of eyes: {How} infants interpret adult looking behavior. \emph{Developmental Psychology}, \emph{38}(6), 958--966. \url{https://doi.org/10.1037/0012-1649.38.6.958}
 
 \leavevmode\vadjust pre{\hypertarget{ref-burkner2017brms}{}}%
-Bürkner, P.-C. (2017). Brms: {An R Package} for {Bayesian Multilevel Models Using Stan}. \emph{Journal of Statistical Software}, \emph{80}(1). \url{https://doi.org/10.18637/jss.v080.i01}
+Bürkner, P.-C. (2017). Brms: {An R Package} for {Bayesian Multilevel Models Using Stan}. \emph{Journal of Statistical Software}, \emph{80}(1), 1--28. \url{https://doi.org/10.18637/jss.v080.i01}
 
 \leavevmode\vadjust pre{\hypertarget{ref-burkner2018advanced}{}}%
 Bürkner, P.-C. (2018). Advanced {Bayesian Multilevel Modeling} with the {R Package} brms. \emph{The R Journal}, \emph{10}(1), 395. \url{https://doi.org/10.32614/RJ-2018-017}
@@ -630,11 +802,23 @@ Colombo, J. (2001). The development of visual attention in infancy. \emph{Annual
 \leavevmode\vadjust pre{\hypertarget{ref-dentremont1997demonstration}{}}%
 D'Entremont, B., Hains, S. M. J., \& Muir, D. W. (1997). A demonstration of gaze following in 3- to 6-month-olds. \emph{Infant Behavior and Development}, \emph{20}(4), 569--572. \url{https://doi.org/10.1016/S0163-6383(97)90048-5}
 
+\leavevmode\vadjust pre{\hypertarget{ref-diedenhofen2015cocor}{}}%
+Diedenhofen, B., \& Musch, J. (2015). Cocor: {A Comprehensive Solution} for the {Statistical Comparison} of {Correlations}. \emph{PLoS ONE}, \emph{10}(4), e0121945. \url{https://doi.org/10.1371/journal.pone.0121945}
+
+\leavevmode\vadjust pre{\hypertarget{ref-flavell1981younga}{}}%
+Flavell, J. H., Everett, B. A., Croft, K., \& Flavell, E. R. (1981). Young children's knowledge about visual perception: {Further} evidence for the {Level} 1\textendash{{Level}} 2 distinction. \emph{Developmental Psychology}, \emph{17}, 99--103. \url{https://doi.org/10.1037/0012-1649.17.1.99}
+
+\leavevmode\vadjust pre{\hypertarget{ref-flavell1981development}{}}%
+Flavell, J. H., Flavell, E. R., Green, F. L., \& Wilcox, S. A. (1981). The {Development} of {Three Spatial Perspective-Taking Rules}. \emph{Child Development}, \emph{52}(1), 356--358. \url{https://doi.org/10.2307/1129250}
+
 \leavevmode\vadjust pre{\hypertarget{ref-frischen2007gaze}{}}%
 Frischen, A., Bayliss, A. P., \& Tipper, S. P. (2007). Gaze cueing of attention: {Visual} attention, social cognition, and individual differences. \emph{Psychological Bulletin}, \emph{133}(4), 694--724. \url{https://doi.org/10.1037/0033-2909.133.4.694}
 
 \leavevmode\vadjust pre{\hypertarget{ref-gathercole2004structure}{}}%
 Gathercole, S. E., Pickering, S. J., Ambridge, B., \& Wearing, H. (2004). The {Structure} of {Working Memory From} 4 to 15 {Years} of {Age}. \emph{Developmental Psychology}, \emph{40}, 177--190. \url{https://doi.org/10.1037/0012-1649.40.2.177}
+
+\leavevmode\vadjust pre{\hypertarget{ref-grahek2021anatomy}{}}%
+Grahek, I., Schaller, M., \& Tackett, J. L. (2021). Anatomy of a {Psychological Theory}: {Integrating Construct-Validation} and {Computational-Modeling Methods} to {Advance Theorizing}. \emph{Perspectives on Psychological Science}, \emph{16}(4), 803--815. \url{https://doi.org/10.1177/1745691620966794}
 
 \leavevmode\vadjust pre{\hypertarget{ref-itakura1998use}{}}%
 Itakura, S., \& Tanaka, M. (1998). Use of experimenter-given cues during object-choice tasks by chimpanzees ({Pan} troglodytes), an orangutan ({Pongo} pygmaeus), and human infants ({Homo} sapiens). \emph{Journal of Comparative Psychology}, \emph{112}(2), 119--126. \url{https://doi.org/10.1037/0735-7036.112.2.119}
@@ -669,8 +853,14 @@ Scaife, M., \& Bruner, J. S. (1975). The capacity for joint visual attention in 
 \leavevmode\vadjust pre{\hypertarget{ref-silverstein2021infants}{}}%
 Silverstein, P., Feng, J., Westermann, G., Parise, E., \& Twomey, K. E. (2021). Infants {Learn} to {Follow Gaze} in {Stages}: {Evidence Confirming} a {Robotic Prediction}. \emph{Open Mind}, \emph{5}, 174--188. \url{https://doi.org/10.1162/opmi_a_00049}
 
+\leavevmode\vadjust pre{\hypertarget{ref-simmering2010dialogue}{}}%
+Simmering, V. R., Triesch, J., Deák, G. O., \& Spencer, J. P. (2010). A {Dialogue} on the {Role} of {Computational Modeling} in {Developmental Science}. \emph{Child Development Perspectives}, \emph{4}(2), 152--158. \url{https://doi.org/10.1111/j.1750-8606.2010.00134.x}
+
 \leavevmode\vadjust pre{\hypertarget{ref-tomasello2007reliance}{}}%
 Tomasello, M., Hare, B., Lehmann, H., \& Call, J. (2007). Reliance on head versus eyes in the gaze following of great apes and human infants: The cooperative eye hypothesis. \emph{Journal of Human Evolution}, \emph{52}(3), 314--320. \url{https://doi.org/10.1016/j.jhevol.2006.10.001}
+
+\leavevmode\vadjust pre{\hypertarget{ref-wellman2004scaling}{}}%
+Wellman, H. M., \& Liu, D. (2004). Scaling of {Theory-of-Mind Tasks}. \emph{Child Development}, \emph{75}(2), 523--541. \url{https://doi.org/10.1111/j.1467-8624.2004.00691.x}
 
 \leavevmode\vadjust pre{\hypertarget{ref-zhang2019role}{}}%
 Zhang, X., Zhang, Z., Zhang, Z., Tang, Y., \& Liu, W. (2019). The role of the motion cue in the dynamic gaze-cueing effect: {A} study of the lateralized {ERPs}. \emph{Neuropsychologia}, \emph{124}, 151--160. \url{https://doi.org/10.1016/j.neuropsychologia.2018.12.016}
