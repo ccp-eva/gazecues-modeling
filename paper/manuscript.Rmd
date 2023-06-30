@@ -3,7 +3,7 @@ title: "Variation in gaze understanding across the life span: A process-level pe
 shorttitle: "modeling variation in gaze understanding"
 author: 
   
-  - name          : "Julia Prein"
+  - name          : "Julia Christin Prein"
     affiliation   : "1"
     corresponding : yes    # Define only one corresponding author
     address       : "Max Planck Institute for Evolutionary Anthropology, Deutscher Platz 6, 04103 Leipzig, Germany"
@@ -13,14 +13,6 @@ author:
       - Methodology
       - Software
       - Investigation
-      - Formal Analysis
-      - Writing - Original Draft Preparation
-      - Writing - Review & Editing
-    
-  - name          : "Manuel Bohn"
-    affiliation   : "1,2"
-    role          :
-      - Conceptualization
       - Formal Analysis
       - Writing - Original Draft Preparation
       - Writing - Review & Editing
@@ -39,29 +31,42 @@ author:
       - Writing - Review & Editing  
       
   - name          : "Daniel B. M. Haun"
-    affiliation   : "1"
+    affiliation   : "1,*"
     role          :
       - Supervision
+      - Writing - Review & Editing
+      
+  - name          : "Manuel Bohn"
+    affiliation   : "1,2,*"
+    role          :
+      - Conceptualization
+      - Formal Analysis
+      - Writing - Original Draft Preparation
       - Writing - Review & Editing
     
 affiliation:
   - id            : "1"
     institution   : "Department of Comparative Cultural Psychology, Max Planck Institute for Evolutionary Anthropology, Leipzig, Germany"
   - id            : "2"
-    institution   : "Institute of Psychology, Leuphana University Lüneburg, Germany"  
+    institution   : "Institute of Psychology, Leuphana University Lüneburg, Germany"
+  - id            : "*"
+    institution   : "Shared senior authorship" 
 authornote: |
-abstract: |
-  Abstract
+highlights: |
+  Abstract max 250 words
   
-keywords          : "social cognition, individual differences, gaze cues, cognitive modeling"
-wordcount         : "xxx"
+abstract: |
+  Abstract max 250 words
+  
+keywords          : "social-cognitive development, theory of mind, gaze cues, individual differences, cognitive modeling, lifespan"
+wordcount         : "xxx max 8000"
 bibliography      : ["../../references.bib"]
 floatsintext      : yes
 figurelist        : no
 tablelist         : no
 footnotelist      : no
 linenumbers       : yes
-mask              : no
+mask              : yes 
 draft             : no
 documentclass     : "apa6"
 classoption       : "man"
@@ -88,6 +93,38 @@ theme_set(theme_classic())
 set.seed(42)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
+
+# Variation in gaze understanding across the life span: A process-level perspective
+
+**Authors:** Julia Christin Prein^1^, Luke Maurits^1^, Annika Werwach^1^, & Daniel B. M. Haun^1,\*^, Manuel Bohn^1,2,\*^
+
+**Affiliations:** ^1^ Department of Comparative Cultural Psychology, Max Planck Institute for Evolutionary Anthropology, Leipzig, Germany.
+^2^ Institute of Psychology, Leuphana University Lüneburg, Germany.
+^\*^ shared senior authorship
+
+**ORCiD**: *Julia Christin Prein* <https://orcid.org/0000-0002-3154-6167>
+
+**Conflicts of interest:** The authors declare that they have no conflict of interest.
+
+**Data availability statement:** The web application (<https://ccp-odc.eva.mpg.de/tango-demo/>) described here is open source (<https://github.com/ccp-eva/tango-demo>).
+The data sets generated during and/or analysed during the current study are available in the [gazecues-modeling] repository (<https://github.com/ccp-eva/gazecues-modeling>).
+All experiments were pre-registered (<https://osf.io/zjhsc/>).
+
+**Acknowledgements:** We thank Jana Jurkat for her help with data collection and participant recruitment.
+We would also like to thank Steven Kalinke for his technical programming support.
+
+**Funding:** This study was funded by the Max Planck Society for the Advancement of Science, a noncommercial, publicly financed scientific organization (no grant number).
+We thank all the children, caregivers, and adults who participated in the study.
+
+**Ethical statement:** The studies were approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology, Leipzig, Germany.Informed consent was obtained from all individual participants or their legal guardians.
+
+\newpage
+
+# Research highlights
+
+-   up to four bulleted points outlining the key contributions to research the paper makes.
+-   The Research Highlights should be placed before the abstract.
+-   Each research highlight should not be longer than 25 words.
 
 # Introduction
 
@@ -205,6 +242,13 @@ apa_table(lifespan_table)
 
 ## Participants
 
+Children came from ethnically homogeneous, mixed socioeconomic backgrounds with mid to high parental education levels.
+They lived in an industrialized, urban Central-European context in a mid-size German city (∼600,000 inhabitants; median individual monthly net income \~ 1,600€ as of 2021).
+Most were raised monolingually in a nuclear two-generational family setting.
+Information on demographics and socioeconomic status was not formally recorded on a participant level.
+The study was approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology.
+Data was collected between May 2021 and April 2023.
+
 We collected data from a remote child, teenager and adult sample.
 For the remote child and teenager sample, we recruited participants via an internal database consisting of families living in Leipzig, Germany, who volunteered to participate in child development studies and indicated an interest in online studies.
 
@@ -286,35 +330,69 @@ The performance of the youngest children seems more consistent with performance 
 
 # Computational cognitive model
 
-In a previous study, we have shown that the inter-individual variation in gaze understanding is reliable (@prein2022tango).
-Now, we asked ourselves what varies between participants on a process-level and how this changes with age.
-To answer this question, we aimed to formalize the process of gaze understanding in a computational cognitive model.
-The model seeks to explain how participants solve the TANGO task.
+Our lifespan study showed that gaze understanding develops throughout childhood, and variation between individuals appears in all age groups.
+The TANGO has previously been proven reliable for capturing inter-individual differences in gaze understanding [@prein2022tango].
+The variation between participants is thus likely genuine and not due to random noise.
+Now, we aim to understand what explains the developmental change and the variation across participants on a process level.
+Therefore, we formalized the process of gaze understanding in a computational cognitive model.
+Computational modeling frameworks allow researchers to establish mechanistic explanations of psychological phenomena [@grahek2021anatomy].
+As formal, mathematical accounts of the psychological process in question, they force researchers to accurately and comprehensively state all their underlying assumptions [@simmering2010dialogue].
+In addition, models can be used to simulate behavior and form testable predictions.
+The expected patterns can then, in turn, be compared to the empirically observed behavior.
 
-Computational modeling frameworks allow researcher to establish mechanistic explanations of psychological phenomena and form testable predictions [@grahek2021anatomy].
-As formal, mathematical accounts of the psychological process in question, they force researchers to accurately and comprehensively state all underlying assumptions [@simmering2010dialogue].
-In addition, models can be used to simulate and predict behavior as it would be expected in novel experimental manipulations.
-This can then in turn be compared to empirically observed behavior and can, for example, demonstrate assumptions of the model to be false.
+With our model, we seek to explain how participants solved the TANGO.
+Our modeling framework consists of three mutually exclusive models: (1) a gaze model, (2) a random guessing model, and (3) a center bias model.
+We gauge which model can best explain our data by conducting a model comparison.
 
-The model assumes that participants estimate the agent's eye center and observe the current location of the pupil center.
-These two point estimates are then used to calculate a vector that points towards the attentional focus of the agent.
-Our model assumes that participants sample from a distribution around the true gaze vector.
-Individual differences could now be explained as more narrow or wider distribution around the true gaze vector (i.e., amount of deviation).
-This could represent participants' level of uncertainty in estimating the agent's attentional focus: the wider the distribution around the true gaze vector, the less precise participants estimate the focus of attention.
-This is the key parameter in our model: this so-called inferential component describes how accurately the participant infers the attentional focus based upon the state of the agent's pupil.
+\-\-- explanation based on online experiment logic:
 
-However, participants who are very imprecise in locating the attentional focus of the agent could be less likely to make use of the eye information in the first place.
-To accomodate this, we created an alternative model that estimates the probability that a participant engages in random guessing.
+The gaze model mirrors the logic of the TANGO programming code.
+In the online experiment, we read out the center point coordinates of the target and the agent's eyeball (i.e., the SVG coordinates).
+We then calculate a line between these two points: this is our gaze vector.
+Now, we also know the eyeball radius and, hence, the eyeball boundary.
+We then calculate the point of intersection at which the gaze vector meets the eyeball boundary.
+Finally, the agent's pupil moves from the center of the eyeball along the gaze vector to the intersection point.
+This way, the agent "looks at" the target.
 
-With this approach, we can formalize whether (A) a participant makes use of the available gaze information at all, and (B) how accurate they are, if they do pay attention to the agent's eyes.
-We expect a dual developmental process.
-The older children get, the more likely they are to use the gaze cues and the more precise they get in doing so.
+In the computational gaze model, we assume that participants need to go through these steps in reversed order.
+The only information that they have readily available is the boundary of the eyeball and the final location of the agent's pupil (i.e., the intersection point).
+Now, we assume that participants estimate the center point of the agent's eyeball and then, estimate a line from the center point to the intersection point: this will serve as the gaze vector.
+Participants are then thought to extend this gaze vector until it reaches the ground.
+They apply this procedure to both eyes and integrate the information.
+This way, they can estimate the final target location.
 
-The geometry of the estimated gaze vector and the sampling of a distribution around this vector lead to interesting, testable group-level predictions.
-As the pupil location varies, a fixed amount of uncertainty about the eye angle corresponds to a varying amount of uncertainty in the estimated focus of attention (i.e., the target location).
-This could be thought of as a "headlight distribution": when the agent's eye gaze is directed centrally to the ground in front of them, the distribution from which participants sample is comparatively more narrow then when the agent's eye gaze is directed to the side.
-A similar phenomenon can be observed when you direct a torch light straight onto the ground or when you direct it at a further distance away from you.
-It leads the model to predict that our trials vary in difficulty: participants' clicks should be more imprecise, the further out the target x coordinate is.
+\-\-- explanation based on pre-reg:
+
+The gaze model assumes that the agent focuses their attention on a single point coordinate and that the agent's left and right eyes are positioned by sampling (independently for each eye) gaze vectors from Normal distributions centered on the unique vector that extends from the center of the agent's eye through the center of its pupil to finally meet the attentional focal point (i.e., the modal behavior is to direct both eyes directly toward the focal point).
+The standard deviation of these distributions (equal for each eye) is estimated for each individual participant, with higher values increasing the expected imprecision.
+When interpreted strictly as a model of inferring attentional focus, this standard deviation corresponds to the participant's assumptions about how wide an area of the agent's visual field their attention occupies.
+
+\-\-- alternative explanation:
+
+The gaze model assumes participants use the agent's gaze as a cue to locate the target.
+Participants are assumed to observe the current location of the pupil and estimate the agent's eye center.
+These two point estimates are sufficient to calculate a vector that points toward the attentional focus of the agent.
+Extending this gaze vector to the ground points to the target's location.
+Participants are thought to sample from a normal distribution around the true gaze vector.
+Individuals would differ in how wide their distribution around the true gaze vector is.
+The wider the distribution around the true gaze vector, the more uncertain participants are in estimating the agent's focus of attention.
+The so-called inferential component in our model describes this distribution width and represents how accurately the participant infers the target location based on the agent's pupil location.
+
+The geometry of sampling from a distribution around the gaze vector leads to an interesting, testable group-level prediction.
+As the pupil location varies, a fixed amount of uncertainty around the gaze vector corresponds to a varying degree of uncertainty in the estimated target location.
+We describe this as a "headlight distribution": when the agent directs their gaze toward the very left or right side, the distribution around the gaze vector from which participants sample is comparatively wider than when the agent gazes centrally to the ground in front of them (Imagine a similar phenomenon: pointing a torch light to the ground. When one directs the light straight onto the ground, the light beam is clearly defined and smaller than when one points the torch light further away from oneself).
+Therefore, our gaze model predicts that our trials vary in difficulty: participants should be more imprecise in locating the target the further out it lands.
+If our data matches the pattern of this model prediction, this speaks for the gaze model.
+
+However, participants who are overall very imprecise in locating the target might be less likely to use the agent's gaze as a cue at all.
+To accommodate this, we designed two models that represent alternatives about how participants solve the TANGO, ignoring the agent's gaze.
+One alternative model estimates how likely a participant engages in random guessing.
+This acts like a coin toss, as sampling from a uniform distribution over all possible coordinates.
+The other alternative model explores the possibility of a center bias: it estimates how likely a participant shows a bias toward the center of the screen.
+Partipants' clicks could be drawn toward the center since the agent and the starting point of the balloon are located here.
+
+With our modeling framework, we can formalize whether a participant (A) uses the available gaze information at all and (B) how accurately they are in using this gaze information.
+Regarding developmental change, we hypothesize that a dual process could explain the development of gaze understanding: The older children are, the more likely they are to use gaze as a cue, and the more precise they become at it.
 
 Task design, data collection, and sample sizes were pre-registered: <https://osf.io/r3bhn>.
 The study design and procedure obtained ethical clearance by the MPG Ethics commission Munich, Germany, falling under a packaged ethics application (Appl. No. 2021_45), and was approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology.
@@ -342,39 +420,11 @@ Adults participated online.
 
 ## Analysis
 
-Our cognitive model attempts to explain the behavior of participants as being generated by one of two possible approaches.
-At each trial, a weighted coin toss determines whether the participant solves the task by \"guessing\" (sampling a clicking coordination from a uniform distribution over all possible coordinates) or by applying a gaze following model described below.
-Each participant has their own \"guessing probability\", determining the mixture of strategies they use.
-These per-participant parameters are modeled as having a Beta distribution over the population of participants.
-
-Our proposed gaze understanding model is a simplification of an originally three-component model, which consisted of: (1) a perceptual component, whereby the participant produces a noisy observation of the angle of each of the agent's eyes, (2) an inferential component, whereby the participant produces an estimate of the coordinate the agent is looking at based on the above noisy observations of eye angles and a model of how agents direct their eyes relative to where they are looking, and (3) a motor component, whereby the participant samples a location to click at from a distribution centered around the above estimate of where the agent is looking.
-Simulation studies suggested it was difficult to disentangle the independent noise terms from these three components and so the model was simplified to include only the inferential component
-
-In the inferential component, the participant assumes that the agent\'s attention is focused on a single point coordinate and that the agent\'s left and right eyes are positioned by sampling (independently for each eye) eye angles from Normal distributions centered on the unique angle such that a line subtended from the center of the agent\'s eye through the center of its pupil will meet the attentional focal point (i.e. the modal behavior is to direct both eyes directly toward the focal point).
-The standard deviation of these distributions (equal for each eye) is a parameter that varies per participant, with higher values increasing the expected imprecision.
-When interpreted strictly as a model of inferring attentional focus, this standard deviation corresponds to the participant\'s assumptions about how wide an area of the agent\'s visual field their attention occupies.
-
-Because of the geometry of the situation (where a fixed amount of uncertainty about the agent\'s eye angle corresponds to a varying amount of uncertainty in the underlying point of attention as the eye angle varies), and because the participant integrates information from two eyes, the resulting posterior distribution (which the participant\'s mouse click is modeled as a sample from) does not belong to a standard parametric family, but can be easily numerically approximated as part of the inference process.
-
-
-We will compare this model against two models which represent alternatives about how participants' responses are generated.
-The \"random guessing\" model simply assumes that participants ignore the agent's gaze and randomly click on the screen (cf. coin toss, sampling a coordination from a uniform distribution over all possible coordinates).
-The \"motor noise\" model assumes that participants have no uncertainty about where the agent is looking but that their responses (clicks on the screen) come with a small amount of random noise (cf. motor component of our originally proposed model).
-We will then directly compare the three models via BayesFactors computed based on the marginal log-likelihood of the data under each model.
-The models make different predictions about how participants\' clicks will be distributed for different locations of the target.
-We will visualise and evaluate these differences using correlations between the model predictions and the data.
+We compare the three models via BayesFactors computed based on the marginal log-likelihood of the data under each model.
+The models make different predictions about how participants' clicks will be distributed for different target locations.
+We visualize and evaluate these differences using correlations between the model predictions and the data.
 
 ## Results
-
-A big advantage of using a computational modeling framework is that it can disentangle where people's errors come from.
-Our computational model can explain what varies between precise and imprecise individuals.
-There are two sources of errors: (1) do you actually use the eye gaze information?
-and (2) how accurate are you at estimating the focus point when you do pay attention to the agent's eyes?
-This way, we can track developmental changes in gaze understanding in a more fine-tuned way.
-
-In addition, our model was able to recover "signature patterns" in the data.
-Both the model predictions and the actual raw data show that precision levels drop as the agent's gaze moves further away from the center.
-Future research could use this signature in the data as evidence whether diverse communities employ the same mechanism to solve the task.
 
 (ref:figlab3) **Gaze funnel**
 
@@ -383,6 +433,20 @@ knitr::include_graphics("../figures/gazefunnel_combined.png")
 ```
 
 ## Discussion
+
+A big advantage of using a computational modeling framework is that it can disentangle where people's errors come from.
+Our computational model can explain what varies between precise and imprecise individuals.
+There are two sources of errors: (1) do you actually use the eye gaze information?
+and (2) how accurate are you at estimating the focus point when you do pay attention to the agent's eyes?
+This way, we can track developmental changes in gaze understanding in a more fine-tuned way.
+
+In addition, our model was able to recover "signature patterns" in the data.
+Both the model predictions and the observed data show that precision levels drop as the agent's gaze moves further away from the center.
+Future research could use this signature in the data as evidence whether diverse communities employ the same mechanism to solve the task.
+
+A limitation of our model is that we cannot disentangle how much of the participant's uncertainty comes from a noisy estimate of the agent's attentional focus and how much is due to imprecise clicking (e.g., wanting to click somewhere but experiencing motor issues at aiming, adding random noise to the click).
+Initially, our proposed gaze model consisted of three components: (1) A perceptual component, whereby the participant produces a noisy observation of the agent's eye angle, (2) an inferential component, whereby the participant estimates the agent's point of attention based on the above perceptual component, and (3) a motor component, whereby the participant samples a click location from a distribution centered around the above estimate of the agent's attentional focus.
+Simulation studies suggested it was difficult to disentangle the independent noise terms from these three components, so we simplified the gaze model to include only the inferential component.
 
 # Components of gaze understanding
 
@@ -543,29 +607,7 @@ The development of new measures to capture individual differences in social-cogn
 
 # Declarations
 
-## Open practices statement
-
-The web application (<https://ccp-odc.eva.mpg.de/tango-demo/>) described here is open source (<https://github.com/ccp-eva/tango-demo>).
-The data sets generated during and/or analysed during the current study are available in the [gazecues-modeling] repository (<https://github.com/ccp-eva/gazecues-modeling>).
-All experiments were pre-registered (<https://osf.io/zjhsc/>).
-
-## Funding
-
-This study was funded by the Max Planck Society for the Advancement of Science, a noncommercial, publicly financed scientific organization (no grant number).
-We thank all the children, caregivers, and adults who participated in the study.
-We thank Jana Jurkat for her help with data collection.
-
-## Conflicts of interest
-
-The authors declare that they have no conflict of interest.
-
-## Consent to participate
-
-Informed consent was obtained from all individual participants included in the study or their legal guardians.
-
-## Authors' contributions
-
-The authors made the following contributions: \### TODO
+... can be found on the title page.
 
 \newpage
 
@@ -582,4 +624,3 @@ The authors made the following contributions: \### TODO
 ```{=tex}
 \endgroup
 ```
-\newpage
