@@ -96,7 +96,7 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 # Variation in gaze understanding across the life span: A process-level perspective
 
-**Authors:** Julia Christin Prein^1^, Luke Maurits^1^, Annika Werwach^1^, & Daniel B. M. Haun^1,\*^, Manuel Bohn^1,2,\*^
+**Authors:** Julia Christin Prein^1^, Luke Maurits^1^, Annika Werwach^1^, Daniel B. M. Haun^1,\*^, Manuel Bohn^1,2,\*^
 
 **Affiliations:** ^1^ Department of Comparative Cultural Psychology, Max Planck Institute for Evolutionary Anthropology, Leipzig, Germany.
 ^2^ Institute of Psychology, Leuphana University Lüneburg, Germany.
@@ -216,9 +216,19 @@ We could circumvent these issues by applying the exact same task for the entire 
 
 # Lifespan
 
--   development & individual differences in gaze understanding
--   verweis methods paper reliable differences kinder & adults.
--   kontinuerliche, systematische variation, wodrin? =\> model
+We aimed at assessing the developmental trajectory of gaze understanding across the lifespan.
+First, we were interested in how this ability changes with age: Is the ability to understand gaze fully developed once emerged in infancy and stays stable across the lifetime?
+Or do we fine-tune our already existing ability in early adulthood?
+Do we then potentially even notice an age decay later in adulthood?
+Second, we were interested in individual differences across the age groups.
+Does the variation between individuals decrease, the older they get?
+Do all adults reach the same level of precision in gaze understanding?
+
+Due to the sheer number of participants, we restricted this analysis to a remote sample.
+Pre-registrations can be found here: <https://osf.io/snju6> (child sample) and <https://osf.io/6yjz3> (adult sample).
+The study obtained ethical clearance by the MPG Ethics commission Munich, Germany, falling under an umbrella ethics application (Appl. No. 2021_45), and was approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology.
+The research adheres to the legal requirements of psychological research with children in Germany.
+Data was collected between May 2021 and April 2023.
 
 <https://osf.io/6yjz3>
 
@@ -242,26 +252,20 @@ apa_table(lifespan_table)
 
 ## Participants
 
-Children came from ethnically homogeneous, mixed socioeconomic backgrounds with mid to high parental education levels.
+We collected data from a remote child, teenager and adult sample, reaching from 3 to 80 years of age.
+
+The child and teenager sample consisted of `r sum(lifespan_sample$n_total[lifespan_sample$age_group < 18])` participants.
+We recruited participants via an internal database consisting of families living in Leipzig, Germany, who volunteered to participate in child development studies and indicated an interest in online studies.
+Participants came from ethnically homogeneous, mixed socioeconomic backgrounds with mid to high parental education levels.
 They lived in an industrialized, urban Central-European context in a mid-size German city (∼600,000 inhabitants; median individual monthly net income \~ 1,600€ as of 2021).
 Most were raised monolingually in a nuclear two-generational family setting.
 Information on demographics and socioeconomic status was not formally recorded on a participant level.
-The study was approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology.
-Data was collected between May 2021 and April 2023.
-
-We collected data from a remote child, teenager and adult sample.
-For the remote child and teenager sample, we recruited participants via an internal database consisting of families living in Leipzig, Germany, who volunteered to participate in child development studies and indicated an interest in online studies.
-
-The remote child and teenager sample consisted of `r sum(lifespan_sample$n_total[lifespan_sample$age_group < 18])` participants.
-Children and teenagers in our sample grow up in an industrialized, urban Central-European context.
-Information on socioeconomic status was not formally recorded, although the majority of families come from mixed, mainly mid to high socioeconomic backgrounds with high levels of parental education.
 
 Adults were recruited via *Prolific* [@palan2018prolific].
 *Prolific* is an online participant recruitment service from the University of Oxford with a predominantly European and US-American subject pool.
 Participants consisted of `r sum(lifespan_sample$n_total[lifespan_sample$age_group >= 20])` English-speaking adults that reported to have normal or corrected-to-normal vision.
+For completing the study, subjects were paid above the fixed minimum wage (on average £10.00 per hour).
 For further information on age and gender of participants, see Table 1.
-
-For completing the study, subjects were paid above the fixed minimum wage (on average £10.00 per hour; see Supplements for further detail).
 
 ## Materials
 
@@ -270,10 +274,9 @@ The task was presented as an interactive web application (see Figure \@ref(fig:f
 The TANGO showed satisfactory internal consistency and retest reliability [with reliability estimates *Pearson's r* ranging from .7 to .8 for the continuous task version; @prein2022tango].
 
 Each trial presented an agent standing in a window, watching a balloon (*i.e.*, target) falling to the ground.
-The target then fell behind a hedge (continuous task version).
-The agent's gaze followed the target's trajectory: pupil and iris moved so that their center aligned with the target center.
+The target fell behind a hedge, while the agent's gaze followed the target's trajectory: pupil and iris moved so that their center aligned with the target center.
 In test trials, the target flight was covered so that participants could not see where the target landed.
-Participants' task was to locate the target by tracking the agent's gaze.
+Participant were tasked to locate the target by tracking the agent's gaze.
 They could respond by touching on the screen.
 
 Four familiarization trials ensured that participants understood the task and felt comfortable with the response format.
@@ -296,16 +299,19 @@ Children and teenagers received a personalized link to the study website.
 Caregivers were asked to provide technical support whenever needed, while explicitly being reminded to not help their children in responding.
 Webcam videos were recorded whenever consented and technically feasible, in order to monitor whether children and teenagers responded on their own.
 
+Adults completed the online study unsupervised.
+
 ## Analysis
 
-All test trials without voice-over description were included in our analyses.
 We ran all analyses in `r R.version$version.string` [@rcoreteam2022language].
 Regression models were fit as Bayesian generalized linear mixed models (GLMMs) with default priors for all analyses, using the function `brm` from the package `brms` [@burkner2017brms; @burkner2018advanced].
 
-To estimate the developmental trajectory of gaze understanding and the effect of data collection mode, we fit a GLMM predicting the task performance in each trial by age (in months, z-transformed), in `R: imprecision ~ age_centered`).
+To estimate the effect of age on gaze understanding, we fit GLMMs that make different assumptions about the developmental trajectory, modeling the relationship as linear, quadratic, cubic.
+In addition, we applied spline-based smooths splines [@burkner2017brms] and examined nonlinearity. 
 
+The models predict the imprecision in each trial by age and include random effects for participant and symmetric target position: `performance ~ age + symmetricPosition + trialNr + (1 + symmetricPosition + trialNr | subjID)`.
 Imprecision was defined as the absolute click distance between the target center and the click X coordinate, scaled according to target widths, and modeled by a `lognormal` distribution.
-We inspected the posterior distribution (mean and 95% Confidence Interval (CI)) for the age and data collection estimates.
+We inspect the posterior distributions (mean and 95% Credible Interval (CrI)) for the age estimates and compare models using LOO and WAIC scores and model weights.
 
 ## Results
 
@@ -315,18 +321,26 @@ We inspected the posterior distribution (mean and 95% Confidence Interval (CI)) 
 knitr::include_graphics(c("../figures/lifespan_plot.png"))
 ```
 
+We found a clear non-linear development in gaze understanding across the lifespan. Early in childhood, children quickly enhance their level of proficiency. Performance peaks around early adulthood. There is a minor decay in elderly adulthood. 
+Our Gaussian Process model indicated non-linearity: XXX. 
+The Bayesian changepoint analysis revealed two major shifts in gaze understanding during the lifespan. 
+
 ## Discussion
 
 Three-year-olds were surprisingly inaccurate in their responses.
 One possible explanation could be that they simply lacked the ability to complete the task, potentially due to issues in gaze following.
 Contrasting our results with previous findings on infant gaze following, this explanation is unlikely.
 A more likely explanation would be that children were able to follow the agent's gaze but struggled to translate this implicit understanding into active behavior.
-
 Another point to keep in mind is that we used subtle eye movements as cues.
 Many existing studies let the agents move eye and head in parallel, therefore establishing a confound with greater (head) movement.
 Relying exclusively on the eye movement might be trickier for children than when presented with a combined eye and head orientation.
-
 The performance of the youngest children seems more consistent with performance demands than with a failure in gaze following.
+
+Regarding the sample of elderly adults, there is most likely a sampling bias present.
+Elderly which know how to participate in *Prolific* studies certainly might show greater cognitive fitness compared to their offline counterparts.
+
+Methodological challenges arise when trying to compare data across ages from qualitatively and quantitatively different study tasks.
+We could circumvent these issues by applying the exact same task for the entire life span.
 
 # Computational cognitive model
 
@@ -334,7 +348,7 @@ Our lifespan study showed that gaze understanding develops throughout childhood,
 The TANGO has previously been proven reliable for capturing inter-individual differences in gaze understanding [@prein2022tango].
 The variation between participants is thus likely genuine and not due to random noise.
 Now, we aim to understand what explains the developmental change and the variation across participants on a process level.
-Therefore, we formalized the process of gaze understanding in a computational cognitive model.
+We formalized the process of gaze understanding in a computational cognitive model.
 Computational modeling frameworks allow researchers to establish mechanistic explanations of psychological phenomena [@grahek2021anatomy].
 As formal, mathematical accounts of the psychological process in question, they force researchers to accurately and comprehensively state all their underlying assumptions [@simmering2010dialogue].
 In addition, models can be used to simulate behavior and form testable predictions.
@@ -344,55 +358,42 @@ With our model, we seek to explain how participants solved the TANGO.
 Our modeling framework consists of three mutually exclusive models: (1) a gaze model, (2) a random guessing model, and (3) a center bias model.
 We gauge which model can best explain our data by conducting a model comparison.
 
-\-\-- explanation based on online experiment logic:
-
-The gaze model mirrors the logic of the TANGO programming code.
+The gaze model assumes participants use the agent's gaze as a cue to locate the target.
+This model mirrors the logic of the TANGO programming code.
 In the online experiment, we read out the center point coordinates of the target and the agent's eyeball (i.e., the SVG coordinates).
 We then calculate a line between these two points: this is our gaze vector.
-Now, we also know the eyeball radius and, hence, the eyeball boundary.
-We then calculate the point of intersection at which the gaze vector meets the eyeball boundary.
+Now, knowing the eyeball radius, we calculate the point of intersection at which the gaze vector meets the eyeball boundary.
 Finally, the agent's pupil moves from the center of the eyeball along the gaze vector to the intersection point.
-This way, the agent "looks at" the target.
+This way, the agent is animated to "look at" the target.
 
-In the computational gaze model, we assume that participants need to go through these steps in reversed order.
-The only information that they have readily available is the boundary of the eyeball and the final location of the agent's pupil (i.e., the intersection point).
-Now, we assume that participants estimate the center point of the agent's eyeball and then, estimate a line from the center point to the intersection point: this will serve as the gaze vector.
-Participants are then thought to extend this gaze vector until it reaches the ground.
-They apply this procedure to both eyes and integrate the information.
-This way, they can estimate the final target location.
+In the gaze model, we assume participants go through these steps in reverse order.
+Participants are assumed to observe the current location of the pupil and estimate the center of the agent's eyeball.
+Connecting these two point estimates as a line yields the true gaze vector: the unique vector that extends from the center of the agent's eyeball through the center of the pupil to the attentional focal point.
+Participants are assumed to sample gaze vectors from a Normal distribution centered around this true gaze vector.
+They are assumed to do this independently for the left and right eye and then integrate the information to estimate the target's location.
 
-\-\-- explanation based on pre-reg:
-
-The gaze model assumes that the agent focuses their attention on a single point coordinate and that the agent's left and right eyes are positioned by sampling (independently for each eye) gaze vectors from Normal distributions centered on the unique vector that extends from the center of the agent's eye through the center of its pupil to finally meet the attentional focal point (i.e., the modal behavior is to direct both eyes directly toward the focal point).
-The standard deviation of these distributions (equal for each eye) is estimated for each individual participant, with higher values increasing the expected imprecision.
-When interpreted strictly as a model of inferring attentional focus, this standard deviation corresponds to the participant's assumptions about how wide an area of the agent's visual field their attention occupies.
-
-\-\-- alternative explanation:
-
-The gaze model assumes participants use the agent's gaze as a cue to locate the target.
-Participants are assumed to observe the current location of the pupil and estimate the agent's eye center.
-These two point estimates are sufficient to calculate a vector that points toward the attentional focus of the agent.
-Extending this gaze vector to the ground points to the target's location.
-Participants are thought to sample from a normal distribution around the true gaze vector.
-Individuals would differ in how wide their distribution around the true gaze vector is.
-The wider the distribution around the true gaze vector, the more uncertain participants are in estimating the agent's focus of attention.
-The so-called inferential component in our model describes this distribution width and represents how accurately the participant infers the target location based on the agent's pupil location.
+Individuals differ in how wide their distribution around the true gaze vector is.
+The model's inferential component estimates the standard deviation of these distributions for each individual participant.
+With higher standard deviations, participants are expected to show increasing imprecision in estimating the target location.
 
 The geometry of sampling from a distribution around the gaze vector leads to an interesting, testable group-level prediction.
 As the pupil location varies, a fixed amount of uncertainty around the gaze vector corresponds to a varying degree of uncertainty in the estimated target location.
-We describe this as a "headlight distribution": when the agent directs their gaze toward the very left or right side, the distribution around the gaze vector from which participants sample is comparatively wider than when the agent gazes centrally to the ground in front of them (Imagine a similar phenomenon: pointing a torch light to the ground. When one directs the light straight onto the ground, the light beam is clearly defined and smaller than when one points the torch light further away from oneself).
+We describe this as a "headlight distribution": when the agent directs their gaze toward the very left or right side, the distribution around the gaze vector from which participants sample is comparatively wider than when the agent gazes centrally to the ground in front of them.
+For illustrative purposes, imagine a similar phenomenon: pointing a torch light to the ground.
+When one directs the torch light straight onto the ground, the light beam is clearly defined and smaller than when one points the torch light further away from oneself.
 Therefore, our gaze model predicts that our trials vary in difficulty: participants should be more imprecise in locating the target the further out it lands.
 If our data matches the pattern of this model prediction, this speaks for the gaze model.
 
 However, participants who are overall very imprecise in locating the target might be less likely to use the agent's gaze as a cue at all.
-To accommodate this, we designed two models that represent alternatives about how participants solve the TANGO, ignoring the agent's gaze.
+To accommodate this, we designed two models that represent alternatives about how participants solve the TANGO when ignoring the agent's gaze.
 One alternative model estimates how likely a participant engages in random guessing.
-This acts like a coin toss, as sampling from a uniform distribution over all possible coordinates.
-The other alternative model explores the possibility of a center bias: it estimates how likely a participant shows a bias toward the center of the screen.
-Partipants' clicks could be drawn toward the center since the agent and the starting point of the balloon are located here.
+This behaves like a coin toss, sampling from a uniform distribution over all possible coordinates (i.e., 0 - 1920).
+The other alternative model estimates how likely a participant shows a center bias.
+This is implemented as sampling from a Normal distribution with the center of the screen as the mean and one target width as the standard deviation.
+Partipants' clicks could be drawn toward the center since the agent and the starting point of the balloon are located there.
 
-With our modeling framework, we can formalize whether a participant (A) uses the available gaze information at all and (B) how accurately they are in using this gaze information.
-Regarding developmental change, we hypothesize that a dual process could explain the development of gaze understanding: The older children are, the more likely they are to use gaze as a cue, and the more precise they become at it.
+With our modeling framework, we can formalize whether a participant (A) uses the available gaze information at all and (B) how accurately they are in using this gaze information to locate the target.
+Regarding developmental change, we hypothesize that a dual process could explain the development of gaze understanding: The older children are, the more likely they are to use gaze as a cue, and the more precise they become at using it to locate the target.
 
 Task design, data collection, and sample sizes were pre-registered: <https://osf.io/r3bhn>.
 The study design and procedure obtained ethical clearance by the MPG Ethics commission Munich, Germany, falling under a packaged ethics application (Appl. No. 2021_45), and was approved by an internal ethics committee at the Max Planck Institute for Evolutionary Anthropology.
@@ -405,16 +406,17 @@ gazemodel_sample <- readRDS("../saves/gazemodel_sample.rds")
 
 ## Participants
 
-The sample included `r sum(gazemodel_sample$n_total[gazemodel_sample$age_group < 6])` children consisting of `r gazemodel_sample$n_total[gazemodel_sample$age_group == 3]` three-year-olds (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 3]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 3]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 3]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 3]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 3]` girls), `r gazemodel_sample$n_total[gazemodel_sample$age_group == 4]` four-year-olds (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 4]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 4]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 4]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 4]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 4]` girls), `r gazemodel_sample$n_total[gazemodel_sample$age_group == 5]` five-year-olds (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 5]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 5]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 5]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 5]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 5]` girls), and `r gazemodel_sample$n_total[gazemodel_sample$age_group == 18]` adults from our Lifespan study (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 18]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 18]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 18]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 18]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 18]` female).
-
+The sample consisted of `r sum(gazemodel_sample$n_total[gazemodel_sample$age_group < 6])` children, including `r gazemodel_sample$n_total[gazemodel_sample$age_group == 3]` three-year-olds (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 3]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 3]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 3]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 3]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 3]` girls), `r gazemodel_sample$n_total[gazemodel_sample$age_group == 4]` four-year-olds (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 4]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 4]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 4]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 4]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 4]` girls), `r gazemodel_sample$n_total[gazemodel_sample$age_group == 5]` five-year-olds (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 5]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 5]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 5]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 5]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 5]` girls).
 Data of children was collected in kindergartens located in Leipzig, Germany.
 The children within each kindergarten were recruited via an internal database, where each parent priorly consented to child development studies.
+
+In addition, we included `r gazemodel_sample$n_total[gazemodel_sample$age_group == 18]` adults from our Lifespan study (mean age = `r gazemodel_sample$age_mean[gazemodel_sample$age_group == 18]` years, SD = `r gazemodel_sample$age_sd[gazemodel_sample$age_group == 18]`, range = `r gazemodel_sample$age_min[gazemodel_sample$age_group == 18]` - `r gazemodel_sample$age_max[gazemodel_sample$age_group == 18]`, `r gazemodel_sample$n_females[gazemodel_sample$age_group == 18]` female).
 Adults were recruited over *Prolific* [@palan2018prolific].
-Since developmental change was minimal in our adult sample (see Lifespan study) and the cognitive models were computationally heavy, we decided to only include the first 50 adults that completed the study.
+Since developmental change was minimal in our adult sample (see Lifespan study) and the cognitive models were computationally heavy, we decided to only include the first 50 adults that had completed the study.
 
 ## Procedure
 
-As in the previous study, participants completed the continuous version of the TANGO [@prein2022tango].
+We applied exactly the same procedure as in the first study, employing the continuous version of the TANGO [@prein2022tango].
 Children were tested in a quiet room in their kindergarten, while an experimenter guided the child through the study on a tablet.
 Adults participated online.
 
@@ -442,10 +444,10 @@ This way, we can track developmental changes in gaze understanding in a more fin
 
 In addition, our model was able to recover "signature patterns" in the data.
 Both the model predictions and the observed data show that precision levels drop as the agent's gaze moves further away from the center.
-Future research could use this signature in the data as evidence whether diverse communities employ the same mechanism to solve the task.
+Future research could use this signature in the data as evidence of whether diverse communities employ the same mechanism to solve the task.
 
-A limitation of our model is that we cannot disentangle how much of the participant's uncertainty comes from a noisy estimate of the agent's attentional focus and how much is due to imprecise clicking (e.g., wanting to click somewhere but experiencing motor issues at aiming, adding random noise to the click).
-Initially, our proposed gaze model consisted of three components: (1) A perceptual component, whereby the participant produces a noisy observation of the agent's eye angle, (2) an inferential component, whereby the participant estimates the agent's point of attention based on the above perceptual component, and (3) a motor component, whereby the participant samples a click location from a distribution centered around the above estimate of the agent's attentional focus.
+A limitation of our model is that we cannot disentangle how much of the participants' uncertainty comes from a noisy estimate of the agent's attentional focus and how much is due to imprecise clicking (e.g., wanting to click somewhere but experiencing motor issues at aiming, adding random noise to the click).
+Initially, our proposed gaze model consisted of three components: (1) a perceptual component, whereby the participant produces a noisy observation of the agent's eye angle, (2) an inferential component, whereby the participant estimates the agent's point of attention based on the above perceptual component, and (3) a motor component, whereby the participant samples a click location from a distribution centered around the above estimate of the agent's attentional focus.
 Simulation studies suggested it was difficult to disentangle the independent noise terms from these three components, so we simplified the gaze model to include only the inferential component.
 
 # Components of gaze understanding

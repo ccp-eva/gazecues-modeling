@@ -157,102 +157,6 @@ conditional_effects(mgaussianprocess, ndraws = 200, spaghetti = TRUE) %>%
 
 write.csv(mgaussianprocess, "../saves/lifespan_mgaussianprocess.csv", quote = F, row.names = F)
 saveRDS(mgaussianprocess, "../saves/lifespan_mgaussianprocess.rds")
-
-## spline model
-# https://discourse.mc-stan.org/t/smooth-spline-modeling-with-brm/6364/2
-msplines <- brm(mean_dist ~ s(age_centered),
-                    data = mdata,
-                    family = lognormal(),
-                    warmup = 2000,
-                    iter   = 6000,
-                    chains = 4,
-                    cores  = 4,
-                    threads = threading(8),
-                    control = list(adapt_delta = 0.95),
-                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
-
-msplines
-
-pp_check(msplines)
-
-conditional_effects(msplines, ndraws = 200, spaghetti = TRUE) %>% 
-  plot(points = T)
-
-write.csv(msplines, "../saves/lifespan_msplines.csv", quote = F, row.names = F)
-saveRDS(msplines, "../saves/lifespan_msplines.rds")
-
-## playing around with parameters
-msplines2 <- brm(mean_dist ~ s(age_centered, k = 2),
-                    data = mdata,
-                    family = lognormal(),
-                    warmup = 2000,
-                    iter   = 6000,
-                    chains = 4,
-                    cores  = 4,
-                    threads = threading(8),
-                    control = list(adapt_delta = 0.95),
-                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
-
-conditional_effects(msplines2, ndraws = 200, spaghetti = TRUE) %>% 
-  plot(points = T)
-
-write.csv(msplines2, "../saves/lifespan_msplines2.csv", quote = F, row.names = F)
-saveRDS(msplines2, "../saves/lifespan_msplines2.rds")
-
-# 3
-msplines3 <- brm(mean_dist ~ s(age_centered, k = 3),
-                    data = mdata,
-                    family = lognormal(),
-                    warmup = 2000,
-                    iter   = 6000,
-                    chains = 4,
-                    cores  = 4,
-                    threads = threading(8),
-                    control = list(adapt_delta = 0.95),
-                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
-
-conditional_effects(msplines3, ndraws = 200, spaghetti = TRUE) %>% 
-  plot(points = T)
-
-write.csv(msplines3, "../saves/lifespan_msplines3.csv", quote = F, row.names = F)
-saveRDS(msplines3, "../saves/lifespan_msplines3.rds")
-
-
-# 4
-msplines4 <- brm(mean_dist ~ s(age_centered, k = 4),
-                    data = mdata,
-                    family = lognormal(),
-                    warmup = 2000,
-                    iter   = 6000,
-                    chains = 4,
-                    cores  = 4,
-                    threads = threading(8),
-                    control = list(adapt_delta = 0.95),
-                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
-
-conditional_effects(msplines4, ndraws = 200, spaghetti = TRUE) %>% 
-  plot(points = T)
-
-write.csv(msplines4, "../saves/lifespan_msplines4.csv", quote = F, row.names = F)
-saveRDS(msplines4, "../saves/lifespan_msplines4.rds")
-
-# 5
-msplines5 <- brm(mean_dist ~ s(age_centered, k = 5),
-                    data = mdata,
-                    family = lognormal(),
-                    warmup = 2000,
-                    iter   = 6000,
-                    chains = 4,
-                    cores  = 4,
-                    threads = threading(8),
-                    control = list(adapt_delta = 0.95),
-                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
-
-conditional_effects(msplines5, ndraws = 200, spaghetti = TRUE) %>% 
-  plot(points = T)
-
-write.csv(msplines5, "../saves/lifespan_msplines5.csv", quote = F, row.names = F)
-saveRDS(msplines5, "../saves/lifespan_msplines5.rds")
 ```
 
 ```{r lifespan_modelcomparison}
@@ -260,11 +164,10 @@ saveRDS(msplines5, "../saves/lifespan_msplines5.rds")
 # mquadratic <- readRDS("../saves/lifespan_mquadratic.rds")
 # mcubic <- readRDS("../saves/lifespan_mcubic.rds")
 # mgaussianprocess <- readRDS("../saves/lifespan_mgaussianprocess.rds")
-# msplines <- readRDS("../saves/lifespan_msplines.rds")
 
-mcomparison <- loo_compare(mlinear, mquadratic, mcubic, mgaussianprocess, msplines, msplines2, msplines3, msplines4, msplines5, criterion = "waic") %>% 
+mcomparison <- loo_compare(mlinear, mquadratic, mcubic, mgaussianprocess, criterion = "waic") %>% 
   as_tibble(rownames = "model") %>%
-  left_join(as_tibble(model_weights(mlinear, mquadratic, mcubic, mgaussianprocess, msplines, msplines2, msplines3, msplines4, msplines5, weights = "waic"), rownames = "model")) %>% 
+  left_join(as_tibble(model_weights(mlinear, mquadratic, mcubic, mgaussianprocess, weights = "waic"), rownames = "model")) %>% 
   rename(modelweight = value)
 
 mcomparison %>% 
@@ -276,10 +179,10 @@ saveRDS(mcomparison, "../saves/lifespan_mcomparison.rds")
 ```
 
 ```{r draws_winning_model}
-msplines <- readRDS("../saves/lifespan_msplines.rds")
+# mgaussianprocess <- readRDS("../saves/lifespan_mgaussianprocess.rds")
 
 mdraws <- mdata %>%
-  add_predicted_draws(msplines) %>% 
+  add_predicted_draws(mgaussianprocess) %>% 
   ungroup() %>% 
   select(-c(.row, .chain, .iteration)) %>%
   rename(draw = .draw, predicted_value = .prediction)
@@ -301,10 +204,43 @@ mdraws %>%
   scale_y_continuous(limits = c(0,4)) +
   labs(x = "Age in years", y = "Mean click distance in target widths")
 
-# prediction_plot
-
 # saveRDS(prediction_plot, file = "../saves/lifespan_modelplot.rds")
 ggsave("../figures/lifespan_modelplot.png", width = 8, height = 5, scale = 1, bg = "white")
+```
+
+```{r playground}
+# mgaussianprocess <- readRDS("../saves/lifespan_mgaussianprocess.rds")
+
+# model checks: 
+# density plot overlay of the original response values (the thick black line) with 10 draws from the posterior distribution of the model
+pp_check(mgaussianprocess)
+
+# empirical cumulative distribution function of the observations and random draws from the model posterior:
+pp_check(mgaussianprocess, type = "ecdf_overlay")
+
+# plots distribution of estimates & chains converging
+plot(mgaussianprocess)
+
+# model plotting
+spline_plot_data <- fitted(mgaussianprocess) %>% 
+  data.frame() %>% 
+  bind_cols(mdata)
+  
+spline_plot_data %>% 
+  ggplot(aes(x = age, y = mean_dist, ymin = Q2.5, ymax = Q97.5)) + 
+  geom_hline(yintercept = fixef(mgaussianprocess)[1, 1], linetype = 2) +
+  geom_point(color = "steelblue") +
+  geom_ribbon(alpha = 2/3) +
+  labs(x = "Age",
+       y = "Imprecision") +
+  theme_classic()
+
+# predictions & actual raw data underneath
+conditional_effects(mgaussianprocess, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+
+# get intercepts
+posterior_summary(mgaussianprocess)
 ```
 
 ```{r smooths}
@@ -316,13 +252,14 @@ lifespan_smooths <- mdata %>%
   geom_smooth(method = lm, formula = y ~ poly(x, 3), se = F, aes(colour = "C")) +
   geom_smooth(method = loess, se = F, aes(colour = "D")) +
   geom_smooth(method = lm, formula = y ~ splines::bs(x, 5), se = F, aes(colour = "E")) +
+  geom_smooth(method = gam, formula = y ~ s(x), se = F, aes(colour = "F")) +
   scale_fill_brewer(palette = "Greys") + 
   scale_x_continuous(limits = c(0,80), breaks = seq(0, 80, 5)) + 
   scale_y_continuous(limits = c(0,4)) + 
   scale_color_manual(name = "Smooth method", 
-                     breaks = c("A", "B", "C", "D", "E"),
-                     values = c("#c6d325", "#00b1ea", "#29485d", "#9D3BBD", "#F71C8D"),
-                     labels = c("linear", "quadratic", "cubic", "loess", "splines (k=5)")) +
+                     breaks = c("A", "B", "C", "D", "E", "F"),
+                     values = c("#c6d325", "#00b1ea", "#29485d", "#9D3BBD", "#F71C8D", "orange"),
+                     labels = c("linear", "quadratic", "cubic", "loess", "splines (k=5)", "splines (default)")) +
   labs(x = "Age in years", y = "Mean click distance in target widths")
 
 lifespan_smooths

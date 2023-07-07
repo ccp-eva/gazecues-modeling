@@ -1,0 +1,97 @@
+---
+title: "Gaussian process"
+author: "Julia Prein"
+date: "2023-07-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse) # data handling etc.
+library(tidybayes) # for stat_halfeye, add_predictive_draws
+library(tidyboot) # for bootstrapped CIs
+library(brms) # modeling
+library(cmdstanr) # modeling
+check_cmdstan_toolchain(fix = TRUE, quiet = TRUE)
+
+options(scipen = 999)
+theme_set(theme_classic())
+
+# Seed for random number generation
+set.seed(42)
+```
+
+```{r load_data}
+lifespan_data <- readRDS("../data/tango-lifespan.rds")
+
+mdata <- lifespan_data %>% 
+  mutate(
+    symmetric_position = abs(960 - target_center_x),
+    symmetric_position = scale(symmetric_position) %>% round(2),
+    trial_nr = trial_nr - min(trial_nr), 
+    imprecision = click_dist_balloons + 0.005,
+  ) %>% 
+  select(subj_id, age, age_centered, symmetric_position, trial_nr, click_dist_balloons, imprecision)
+```
+
+```{r model_triallevel}
+mgp_triallevel <- brm(imprecision ~ gp(age_centered, k=50, c=5/4, scale=TRUE) + symmetric_position + trial_nr + (1 + symmetric_position + trial_nr | subj_id),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 5000, 
+                    iter   = 20000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr")
+
+mgp_triallevel <- mgp_triallevel %>% add_criterion(c("loo","waic"))
+
+write.csv(mgp_triallevel, "../saves/mgp_triallevel.csv", quote = F, row.names = F)
+saveRDS(mgp_triallevel, "../saves/mgp_triallevel.rds")
+```
+
+```{r plot_triallevel}
+mgp_triallevel
+
+pp_check(mgp_triallevel)
+
+conditional_effects(mgp_triallevel, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+```
+
+
+```{r model_aggregated}
+mdata_aggregated <- mdata %>% 
+  group_by(subj_id, age, age_centered) %>% 
+  summarize(mean_imprecision = mean(click_dist_balloons, na.rm = TRUE))
+
+mgp_aggregated <- brm(mean_imprecision ~ gp(age_centered, k=50, c=5/4, scale=TRUE),
+                    data = mdata,
+                    family = lognormal(),
+                    warmup = 5000, 
+                    iter   = 20000, 
+                    chains = 4, 
+                    cores  = 4, 
+                    threads = threading(8), 
+                    control = list(adapt_delta = 0.95), 
+                    backend = "cmdstanr")
+
+mgp_aggregated <- mgp_aggregated %>% add_criterion(c("loo","waic"))
+
+write.csv(mgp_aggregated, "../saves/mgp_aggregated.csv", quote = F, row.names = F)
+saveRDS(mgp_aggregated, "../saves/mgp_aggregated.rds")
+```
+
+```{r plot_aggregated}
+mgp_aggregated
+
+pp_check(mgp_aggregated)
+
+conditional_effects(mgp_aggregated, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T)
+```
