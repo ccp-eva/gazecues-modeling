@@ -15,6 +15,7 @@ library(tidybayes) # for stat_halfeye, add_predictive_draws
 library(tidyboot) # for bootstrapped CIs
 library(brms) # modeling
 library(cmdstanr) # modeling
+library(Rbeast) # Bayesian change point analysis
 check_cmdstan_toolchain(fix = TRUE, quiet = TRUE)
 
 options(scipen = 999)
@@ -31,7 +32,7 @@ lifespan_data <- readRDS("../data/tango-lifespan.rds")
 ```{r prepare_modeldata}
 mdata <- lifespan_data %>% 
   group_by(subj_id, age, age_centered) %>% 
-  summarize(mean_dist = mean(click_dist_balloons, na.rm = TRUE))
+  summarize(mean_imprecision = mean(click_dist_balloons, na.rm = TRUE))
 ```
 
 ```{r sample}
@@ -70,9 +71,11 @@ ggsave("../figures/lifespan_plot.png", width = 8, height = 4, scale = 1.2)
 saveRDS(lifespan_plot, "../saves/lifespan_plot.rds")
 ```
 
+# MODEL COMPARISON FOR DEVELOPMENTAL TRAJECTORY
+
 ```{r models, message=FALSE, warning=FALSE}
 # linear age
-mlinear <- brm(mean_dist ~ age_centered,
+mlinear <- brm(mean_imprecision ~ age_centered,
                     data = mdata,
                     family = lognormal(),
                     warmup = 2000, 
@@ -91,7 +94,7 @@ write.csv(mlinear, "../saves/lifespan_mlinear.csv", quote = F, row.names = F)
 saveRDS(mlinear, "../saves/lifespan_mlinear.rds")
 
 ## quadratic age
-mquadratic <- brm(mean_dist ~ 1 + age_centered + I(age_centered^2),
+mquadratic <- brm(mean_imprecision ~ 1 + age_centered + I(age_centered^2),
                     data = mdata,
                     family = lognormal(),
                     warmup = 2000, 
@@ -113,7 +116,7 @@ write.csv(mquadratic, "../saves/lifespan_mquadratic.csv", quote = F, row.names =
 saveRDS(mquadratic, "../saves/lifespan_mquadratic.rds")
 
 ## cubic age
-mcubic <- brm(mean_dist ~ 1 + age_centered + I(age_centered^2) + I(age_centered^3),
+mcubic <- brm(mean_imprecision ~ 1 + age_centered + I(age_centered^2) + I(age_centered^3),
                     data = mdata,
                     family = lognormal(),
                     warmup = 2000, 
@@ -137,18 +140,18 @@ write.csv(mcubic, "../saves/lifespan_mcubic.csv", quote = F, row.names = F)
 saveRDS(mcubic, "../saves/lifespan_mcubic.rds")
 
 ## gaussian process model
-mgaussianprocess <- brm(mean_dist ~ gp(age_centered, k=50, c=5/4, scale=TRUE),
+mgaussianprocess <- brm(mean_imprecision ~ gp(age_centered, k=50, c=5/4, scale=TRUE),
                     data = mdata,
                     family = lognormal(),
-                    warmup = 2000, 
-                    iter   = 6000, 
+                    warmup = 5000, 
+                    iter   = 20000, 
                     chains = 4, 
                     cores  = 4, 
                     threads = threading(8), 
                     control = list(adapt_delta = 0.95), 
-                    backend = "cmdstanr") %>% add_criterion(c("loo","waic"))
+                    backend = "cmdstanr")
 
-mgaussianprocess
+mgaussianprocess <- mgaussianprocess %>% add_criterion(c("loo","waic"))
 
 pp_check(mgaussianprocess)
 
@@ -159,7 +162,7 @@ write.csv(mgaussianprocess, "../saves/lifespan_mgaussianprocess.csv", quote = F,
 saveRDS(mgaussianprocess, "../saves/lifespan_mgaussianprocess.rds")
 ```
 
-```{r lifespan_modelcomparison}
+```{r modelcomparison}
 # mlinear <- readRDS("../saves/lifespan_mlinear.rds")
 # mquadratic <- readRDS("../saves/lifespan_mquadratic.rds")
 # mcubic <- readRDS("../saves/lifespan_mcubic.rds")
@@ -178,93 +181,64 @@ write.csv(mcomparison, "../saves/lifespan_mcomparison.csv", quote = F, row.names
 saveRDS(mcomparison, "../saves/lifespan_mcomparison.rds")
 ```
 
-```{r draws_winning_model}
+```{r draws_winningmodel}
 # mgaussianprocess <- readRDS("../saves/lifespan_mgaussianprocess.rds")
 
-mdraws <- mdata %>%
-  add_predicted_draws(mgaussianprocess) %>% 
-  ungroup() %>% 
-  select(-c(.row, .chain, .iteration)) %>%
-  rename(draw = .draw, predicted_value = .prediction)
+# mdraws <- mdata %>%
+#   add_predicted_draws(mgaussianprocess) %>% 
+#   ungroup() %>% 
+#   select(-c(.row, .chain, .iteration)) %>%
+#   rename(draw = .draw, predicted_value = .prediction)
+# 
+# write.csv(mdraws, "../saves/lifespan_mdraws.csv", quote = F, row.names = F)
+# saveRDS(mdraws, "../saves/lifespan_mdraws.rds")
 
-write.csv(mdraws, "../saves/lifespan_mdraws.csv", quote = F, row.names = F)
-saveRDS(mdraws, "../saves/lifespan_mdraws.rds")
+nd <- mdata %>% 
+  select(-c(mean_imprecision))
+
+pred <- fitted(mgaussianprocess, newdata = nd, re_formula = NA) %>% as_tibble() %>% bind_cols(nd) 
 ```
 
-```{r prediction_plot_winning_model}
-### this sections takes a while to run
+# CHANGE POINT ANALYSIS
 
-# mdraws <- readRDS("../saves/lifespan_mdraws.rds")
+```{r changepoints}
+x <- mdata %>% arrange(age) %>% pull(age)
+y <- mdata %>% arrange(age) %>% pull(mean_imprecision)
 
-mdraws %>%
-  ggplot(aes(x = age)) +
-  stat_lineribbon(aes(y = predicted_value), .width = c(.95), colour = "#006c66", fill = "lightgrey") +
-  geom_jitter(aes(y = mean_dist), colour = "darkgrey", size = 1.5, alpha = 0.8) +
-  scale_x_continuous(limits = c(0,80), breaks = seq(0, 80, 5)) +
-  scale_y_continuous(limits = c(0,4)) +
-  labs(x = "Age in years", y = "Mean click distance in target widths")
+## irregular time intervals
+ibeast <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0), # for constant
+            tcp.minmax = c(0, 5), # we assume 3, allow some room for exploration
+            tseg.min = 10, 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
 
-# saveRDS(prediction_plot, file = "../saves/lifespan_modelplot.rds")
-ggsave("../figures/lifespan_modelplot.png", width = 8, height = 5, scale = 1, bg = "white")
+print(ibeast)
+plot(ibeast)
+
+ibeast$trend$cp
 ```
 
-```{r playground}
-# mgaussianprocess <- readRDS("../saves/lifespan_mgaussianprocess.rds")
+# PLOT
 
-# model checks: 
-# density plot overlay of the original response values (the thick black line) with 10 draws from the posterior distribution of the model
-pp_check(mgaussianprocess)
+```{r plot}
+ggplot() +
 
-# empirical cumulative distribution function of the observations and random draws from the model posterior:
-pp_check(mgaussianprocess, type = "ecdf_overlay")
-
-# plots distribution of estimates & chains converging
-plot(mgaussianprocess)
-
-# model plotting
-spline_plot_data <- fitted(mgaussianprocess) %>% 
-  data.frame() %>% 
-  bind_cols(mdata)
+  geom_jitter(
+    data = mdata, 
+    aes(x = age, y = mean_imprecision), 
+    col = "darkgrey", alpha = 0.75
+  ) + 
   
-spline_plot_data %>% 
-  ggplot(aes(x = age, y = mean_dist, ymin = Q2.5, ymax = Q97.5)) + 
-  geom_hline(yintercept = fixef(mgaussianprocess)[1, 1], linetype = 2) +
-  geom_point(color = "steelblue") +
-  geom_ribbon(alpha = 2/3) +
-  labs(x = "Age",
-       y = "Imprecision") +
-  theme_classic()
-
-# predictions & actual raw data underneath
-conditional_effects(mgaussianprocess, ndraws = 200, spaghetti = TRUE) %>% 
-  plot(points = T)
-
-# get intercepts
-posterior_summary(mgaussianprocess)
+  geom_smooth(
+    data = pred, 
+    aes(x = age, y = Estimate, ymin = Q2.5, ymax = Q97.5), 
+    stat = "identity", size = 1, alpha = 0.15, fill = "#006C66", col = "#006C66",
+  ) + 
+  
+  # TODO: add lines where changepoints
+  scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) + 
+  scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
+  
+  labs(x = "Age in years", y = "Average imprecision in target width")
 ```
-
-```{r smooths}
-lifespan_smooths <- mdata %>%
-  ggplot(aes(x = age, y = mean_dist)) +  
-  geom_jitter(colour = "grey", size = 1.5, alpha = 0.8) + 
-  geom_smooth(method = lm, se = F, aes(colour = "A")) +
-  geom_smooth(method = lm, formula = y ~ poly(x, 2), se = F, aes(colour = "B")) +
-  geom_smooth(method = lm, formula = y ~ poly(x, 3), se = F, aes(colour = "C")) +
-  geom_smooth(method = loess, se = F, aes(colour = "D")) +
-  geom_smooth(method = lm, formula = y ~ splines::bs(x, 5), se = F, aes(colour = "E")) +
-  geom_smooth(method = gam, formula = y ~ s(x), se = F, aes(colour = "F")) +
-  scale_fill_brewer(palette = "Greys") + 
-  scale_x_continuous(limits = c(0,80), breaks = seq(0, 80, 5)) + 
-  scale_y_continuous(limits = c(0,4)) + 
-  scale_color_manual(name = "Smooth method", 
-                     breaks = c("A", "B", "C", "D", "E", "F"),
-                     values = c("#c6d325", "#00b1ea", "#29485d", "#9D3BBD", "#F71C8D", "orange"),
-                     labels = c("linear", "quadratic", "cubic", "loess", "splines (k=5)", "splines (default)")) +
-  labs(x = "Age in years", y = "Mean click distance in target widths")
-
-lifespan_smooths
-
-saveRDS(lifespan_smooths, file = "../saves/lifespan_smooths.rds")
-ggsave("../figures/lifespan_smooths.png", width = 10, height = 6, scale = 0.7, bg = "white")
-```
-
