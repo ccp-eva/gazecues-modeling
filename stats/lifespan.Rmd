@@ -54,23 +54,6 @@ write.csv(lifespan_sample, "../saves/lifespan_sample.csv", quote = F, row.names 
 saveRDS(lifespan_sample, "../saves/lifespan_sample.rds")
 ```
 
-```{r plot}
-lifespan_plot <- lifespan_data %>% 
-  group_by(subj_id, age, age_group) %>%
-  summarise(mean = mean(click_dist_balloons, na.rm = TRUE)) %>% 
-  ggplot(., aes(x = age, y = mean)) +
-  geom_point(color = "darkgrey", alpha = 0.5) +
-  geom_smooth(method = "loess", size = 1, se = T, color = "#006c66", fill = "#006c66") + 
-  scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) + 
-  scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
-  labs(x = "Age in years", y = "Average imprecision in target widths") 
- 
-lifespan_plot
-
-ggsave("../figures/lifespan_plot.png", width = 8, height = 4, scale = 1.2)
-saveRDS(lifespan_plot, "../saves/lifespan_plot.rds")
-```
-
 # MODEL COMPARISON FOR DEVELOPMENTAL TRAJECTORY
 
 ```{r models, message=FALSE, warning=FALSE}
@@ -134,7 +117,7 @@ pp_check(mcubic)
 plot(mcubic)
 
 conditional_effects(mcubic, ndraws = 200, spaghetti = TRUE) %>% 
-  plot(points = T)
+  plot(points = T, yaxp = c(0,4,1))
 
 write.csv(mcubic, "../saves/lifespan_mcubic.csv", quote = F, row.names = F)
 saveRDS(mcubic, "../saves/lifespan_mcubic.rds")
@@ -184,19 +167,13 @@ saveRDS(mcomparison, "../saves/lifespan_mcomparison.rds")
 ```{r draws_winningmodel}
 # mgaussianprocess <- readRDS("../saves/lifespan_mgaussianprocess.rds")
 
-# mdraws <- mdata %>%
-#   add_predicted_draws(mgaussianprocess) %>% 
-#   ungroup() %>% 
-#   select(-c(.row, .chain, .iteration)) %>%
-#   rename(draw = .draw, predicted_value = .prediction)
-# 
-# write.csv(mdraws, "../saves/lifespan_mdraws.csv", quote = F, row.names = F)
-# saveRDS(mdraws, "../saves/lifespan_mdraws.rds")
-
 nd <- mdata %>% 
   select(-c(mean_imprecision))
 
 pred <- fitted(mgaussianprocess, newdata = nd, re_formula = NA) %>% as_tibble() %>% bind_cols(nd) 
+
+write.csv(pred, "../saves/lifespan_mgpdraws.csv", quote = F, row.names = F)
+saveRDS(pred, "../saves/lifespan_mgpdraws.rds")
 ```
 
 # CHANGE POINT ANALYSIS
@@ -216,7 +193,23 @@ ibeast <- beast.irreg(y = y, time = x, season = "none",
 print(ibeast)
 plot(ibeast)
 
+# how many changepoints?
+ibeast$trend$ncp_median
+
+# location of changepoints
 ibeast$trend$cp
+
+# pull out all relevant change points
+cps <- tibble(
+          cp = ibeast$trend$cp[1:ibeast$trend$ncp_median], 
+          lowerCrI = ibeast$trend$cpCI[1:ibeast$trend$ncp_median,1], 
+          upperCrI = ibeast$trend$cpCI[1:ibeast$trend$ncp_median,2]
+       )
+
+saveRDS(ibeast, "../saves/lifespan_ibeast.rds")
+
+write.csv(cps, "../saves/lifespan_ibeast_cps.csv", quote = F, row.names = F)
+saveRDS(cps, "../saves/lifespan_ibeast_cps.rds")
 ```
 
 # PLOT
@@ -236,9 +229,37 @@ ggplot() +
     stat = "identity", size = 1, alpha = 0.15, fill = "#006C66", col = "#006C66",
   ) + 
   
-  # TODO: add lines where changepoints
+  geom_vline(xintercept = cps$cp, linetype = "dashed", alpha = 0.75, size = 1) +
+  # geom_vline(xintercept = cps$lowerCrI, linetype = "dotted", alpha = 0.5, size = 1) +
+  # geom_vline(xintercept = cps$upperCrI, linetype = "dotted", alpha = 0.5, size = 1) +
+
   scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) + 
   scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
   
+  labs(x = "Age in years", y = "Average imprecision in target width")
+
+
+# ZOOM IN
+ggplot() +
+
+  geom_jitter(
+    data = mdata, 
+    aes(x = age, y = mean_imprecision), 
+    col = "darkgrey", alpha = 0.75
+  ) + 
+  
+  geom_smooth(
+    data = pred, 
+    aes(x = age, y = Estimate, ymin = Q2.5, ymax = Q97.5), 
+    stat = "identity", size = 1, alpha = 0.15, fill = "#006C66", col = "#006C66",
+  ) + 
+  
+  geom_vline(xintercept = cps$cp, linetype = "dashed", alpha = 0.75, size = 1) + 
+
+  scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 0.5)) + 
+  scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
+  
+  coord_cartesian(xlim = c(3, 10), ) +
+
   labs(x = "Age in years", y = "Average imprecision in target width")
 ```
