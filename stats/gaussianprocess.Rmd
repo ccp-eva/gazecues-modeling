@@ -71,7 +71,7 @@ mdata_aggregated <- mdata %>%
   summarize(mean_imprecision = mean(click_dist_balloons, na.rm = TRUE))
 
 mgp_aggregated <- brm(mean_imprecision ~ gp(age_centered, k=50, c=5/4, scale=TRUE),
-                    data = mdata,
+                    data = mdata_aggregated,
                     family = lognormal(),
                     warmup = 5000, 
                     iter   = 20000, 
@@ -94,4 +94,52 @@ pp_check(mgp_aggregated)
 
 conditional_effects(mgp_aggregated, ndraws = 200, spaghetti = TRUE) %>% 
   plot(points = T)
+```
+
+```{r compare_models}
+nd_triallevel <- mdata %>% 
+  select(-c(imprecision, click_dist_balloons)) %>% 
+  mutate(symmetric_position = 0, trial_nr = 0)
+
+pred_triallevel <- fitted(mgp_triallevel, newdata = nd_triallevel, re_formula = NA) %>% as_tibble() %>% bind_cols(nd_triallevel) 
+
+# same for aggregate
+
+nd_aggregated <- mdata_aggregated %>% 
+  select(-c(mean_imprecision))
+
+pred_aggregated <- fitted(mgp_aggregated, newdata = nd_aggregated, re_formula = NA) %>% as_tibble() %>% bind_cols(nd_aggregated) 
+
+pred_combined <-full_join(pred_aggregated %>% mutate(model = "subject level"), pred_triallevel %>% mutate(model = "trial level"))
+
+# plot
+
+ggplot() +
+  
+  geom_smooth(
+    data = pred_combined, 
+    aes(x = age, y = Estimate, ymin = Q2.5, ymax = Q97.5, group = model, col = model), 
+    stat = "identity", size = 0.5, alpha = 0.15
+  ) 
+```
+
+```{r aggregated_plot}
+ggplot() +
+
+  geom_jitter(
+    data = mdata_aggregated, 
+    aes(x = age, y = mean_imprecision), 
+    col = "darkgrey", alpha = 0.75
+  ) + 
+  
+  geom_smooth(
+    data = pred_aggregated, 
+    aes(x = age, y = Estimate, ymin = Q2.5, ymax = Q97.5), 
+    stat = "identity", size = 1, alpha = 0.15, fill = "#006C66", col = "#006C66",
+  ) + 
+  
+  scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) + 
+  scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
+  
+  labs(x = "Age in years", y = "Average imprecision in target width")
 ```
