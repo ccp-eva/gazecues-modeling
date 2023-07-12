@@ -1,0 +1,185 @@
+---
+title: "Change point analysis"
+author: "Julia Prein"
+date: "03/21/2023"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse) # data handling etc.
+library(tidybayes) # for stat_halfeye, add_predictive_draws
+library(tidyboot) # for bootstrapped CIs
+library(brms) # modeling
+library(cmdstanr) # modeling
+library(Rbeast) # Bayesian change point analysis
+check_cmdstan_toolchain(fix = TRUE, quiet = TRUE)
+
+options(scipen = 999)
+theme_set(theme_classic())
+
+# Seed for random number generation
+set.seed(42)
+```
+
+### Data preparation
+
+```{r load_data}
+lifespan_data <- readRDS("../data/tango-lifespan.rds")
+```
+
+```{r prepare_modeldata}
+mdata <- lifespan_data %>% 
+  group_by(subj_id, age, age_centered) %>% 
+  summarize(mean_imprecision = mean(click_dist_balloons, na.rm = TRUE))
+
+x <- mdata %>% arrange(age) %>% pull(age)
+y <- mdata %>% arrange(age) %>% pull(mean_imprecision)
+```
+
+### BEASTs
+
+```{r run_beasts, echo=T, message=FALSE, warning=FALSE, results=FALSE}
+b1 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0), 
+            tcp.minmax = c(0, 5),
+            tseg.min = 10, 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+
+b2 <- beast.irreg(y = y, time = x, season = "none", 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+
+b3 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0),
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+
+b4 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0),
+            tcp.minmax = c(0, 10), 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+
+b5 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0),
+            tcp.minmax = c(0, 10), 
+            tseg.min = 50, 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+
+b6 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0),
+            tcp.minmax = c(0, 10), 
+            tseg.min = 100, 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+
+b7 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0),
+            tcp.minmax = c(0, 3), 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+
+b8 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0),
+            tcp.minmax = c(0, 20), 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+
+b9 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0),
+            tcp.minmax = c(0, 100), 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+
+
+b10 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0),
+            tcp.minmax = c(0, 100), 
+            tseg.min = 100, 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+```
+
+```{r fct_printbeasts}
+showBeast <- function(beast) {
+  
+  print(beast)
+  plot(beast)
+  print("...continuing to next beast")
+}
+```
+
+```{r actually_printbeasts}
+beasts <- list(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10)
+
+counter = 1
+
+for (i in beasts) {
+  print("")
+  print("This is the BEAST...")
+  print(counter)
+  print("")
+  
+  showBeast(i)
+  counter = counter + 1 
+}
+```
+
+### Searching for reasonable minimum nr between change points 
+
+```{r}
+mdata <- mdata %>% 
+  ungroup() %>% 
+  arrange(age) %>% 
+  mutate(
+    age_diff = lead(age) - age, 
+    age_years = floor(age), 
+    three_year_bins = case_match(age_years %% 3, 
+                                 0 ~ age_years,
+                                 1 ~ age_years-1,
+                                 2 ~ age_years-2),
+  ) %>% 
+  select(-age_years)
+
+
+mean_age_diff <- mean(mdata$age_diff, na.rm = T) %>% round(2)
+
+mean_n_per_3y <- mdata %>% 
+  group_by(three_year_bins) %>% 
+  summarize(n_per_bin = n()) %>% 
+  summarize(mean_n_per_3y = mean(n_per_bin) %>% round(2)) %>% 
+  pull(mean_n_per_3y)
+
+mean_age_diff * mean_n_per_3y * 3
+
+3/mean_age_diff
+```
+
+```{r final_beast, message=FALSE, warning=FALSE}
+bfinal <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0), 
+            tcp.minmax = c(0, 5),
+            tseg.min = mean_age_diff * mean_n_per_3y * 3, 
+            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            ci = TRUE)
+```
+
+```{r final_beast}
+showBeast(bfinal)
+
+# pull out all relevant change points
+cps <- tibble(
+          cp = bfinal$trend$cp[1:bfinal$trend$ncp_median], 
+          lowerCrI = bfinal$trend$cpCI[1:bfinal$trend$ncp_median,1], 
+          upperCrI = bfinal$trend$cpCI[1:bfinal$trend$ncp_median,2]
+       )
+```
+

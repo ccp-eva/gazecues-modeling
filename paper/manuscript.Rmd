@@ -60,7 +60,6 @@ abstract: |
   
 keywords          : "social-cognitive development, theory of mind, gaze cues, individual differences, cognitive modeling, lifespan"
 wordcount         : "xxx max 8000"
-bibliography      : ["../../references.bib"]
 floatsintext      : yes
 figurelist        : no
 tablelist         : no
@@ -71,12 +70,13 @@ draft             : no
 documentclass     : "apa6"
 classoption       : "man"
 output            : papaja::apa6_word
-header-includes:
+header-includes   :
   - \usepackage{setspace}
   - \captionsetup[figure]{font={stretch=1}}
-editor_options: 
+editor_options    : 
   markdown: 
     wrap: sentence
+bibliography      : "../../references.bib"
 ---
 
 ```{r setup, include = FALSE}
@@ -214,7 +214,7 @@ A unique contribution of this study is the richness of the data set.
 Methodological challenges arise when trying to compare data across ages from qualitatively and quantitatively different study tasks.
 We could circumvent these issues by applying the exact same task for the entire life span.
 
-# Lifespan
+# Study 1: Gaze understanding across the lifespan
 
 We aimed at assessing the developmental trajectory of gaze understanding across the lifespan.
 First, we were interested in how this ability changes with age: Is the ability to understand gaze fully developed once emerged in infancy and stays stable across the lifetime?
@@ -269,9 +269,9 @@ For further information on age and gender of participants, see Table 1.
 
 ## Materials
 
-We used the continuous version of the TANGO [@prein2022tango].
+We used the continuous version of the TANGO [@prein2023tango].
 The task was presented as an interactive web application (see Figure \@ref(fig:fig1); live demo [https://ccp-odc.eva.mpg.de/tango-demo/](https://ccp-odc.eva.mpg.de/tango-demo/.); source code <https://github.com/ccp-eva/tango-demo>).
-The TANGO showed satisfactory internal consistency and retest reliability [with reliability estimates *Pearson's r* ranging from .7 to .8 for the continuous task version; @prein2022tango].
+The TANGO showed satisfactory internal consistency and retest reliability [with reliability estimates *Pearson's r* ranging from .7 to .8 for the continuous task version; @prein2023tango].
 
 Each trial presented an agent standing in a window, watching a balloon (*i.e.*, target) falling to the ground.
 The target fell behind a hedge, while the agent's gaze followed the target's trajectory: pupil and iris moved so that their center aligned with the target center.
@@ -307,11 +307,24 @@ We ran all analyses in `r R.version$version.string` [@rcoreteam2022language].
 Regression models were fit as Bayesian generalized linear mixed models (GLMMs) with default priors for all analyses, using the function `brm` from the package `brms` [@burkner2017brms; @burkner2018advanced].
 
 To estimate the effect of age on gaze understanding, we fit GLMMs that make different assumptions about the developmental trajectory, modeling the relationship as linear, quadratic, cubic.
-In addition, we applied spline-based smooths splines [@burkner2017brms] and examined nonlinearity. 
+In addition, we applied a Gaussian Process model [@burkner2017brms] and examined nonlinearity.
+The models predicted imprecision by age (continuous).
+[^1] Imprecision was defined as the absolute click distance between the target center and the click X coordinate, scaled according to target widths, aggregated across trials, and modeled by a `lognormal` distribution.
+We inspected the posterior distributions (mean and 95% Credible Interval (CrI)) for the age estimates and compared models using LOO and WAIC scores and model weights.
 
-The models predict the imprecision in each trial by age and include random effects for participant and symmetric target position: `performance ~ age + symmetricPosition + trialNr + (1 + symmetricPosition + trialNr | subjID)`.
-Imprecision was defined as the absolute click distance between the target center and the click X coordinate, scaled according to target widths, and modeled by a `lognormal` distribution.
-We inspect the posterior distributions (mean and 95% Credible Interval (CrI)) for the age estimates and compare models using LOO and WAIC scores and model weights.
+[^1]: Originally, our models implemented the following structure: `performance ~ age + symmetricPosition + trialNr + (1 + symmetricPosition + trialNr | subjID)`.
+    However, the Gaussian Process model was computationally heavy.
+    To circumvent issues of convergence and for practicability, we simplified the model structure to include only age as an effect.
+    In the Supplements, you can find a comparison between the original and the here reported model structures.
+    Essentially, the model predictions did not differ notably.
+
+To further assess developmental change, we performed a Bayesian change-point analysis, using the package `RBeast` [@zhao2019detecting].
+The function `beast.irreg` handled the irregular nature of our series, which did not have the same number of data points for each year in age.
+We were interested in finding the most prominent, most likely change-points in our data, assuming a constant mean (i.e., a flat line) within each segment.
+Additionally, we wanted to avoid "overreactions" to individual outlying data points.
+Therefore, we restricted our search to a maximum number of five change-points and a minimum length of 9.1245 data points between change-points (corresponding to the product of mean age difference between consecutive points \* mean number of data points within 3 years \* 3).
+We inspected the probability of number of change-points and the locations of these change-points (mean and 95% CrI).
+See Supplements for change-point analyses with differently set parameters.
 
 ## Results
 
@@ -321,15 +334,20 @@ We inspect the posterior distributions (mean and 95% Credible Interval (CrI)) fo
 knitr::include_graphics(c("../figures/lifespan_plot.png"))
 ```
 
-We found a clear non-linear development in gaze understanding across the lifespan. Early in childhood, children quickly enhance their level of proficiency. Performance peaks around early adulthood. There is a minor decay in elderly adulthood. 
-Our Gaussian Process model indicated non-linearity: XXX. 
-The Bayesian changepoint analysis revealed two major shifts in gaze understanding during the lifespan. 
+[TODO] report model comparison
+
+We found a clear non-linear development in gaze understanding across the lifespan.
+Early in childhood, children quickly enhanced their level of proficiency.
+Performance peaked around early adulthood.
+There was a minor decay in elderly adulthood.
+Our Gaussian Process model indicated non-linearity: XXX.
+The Bayesian change-point analysis revealed four major shifts in gaze understanding during the lifespan: We see a very rapid initial improvement in early childhood (3 change-points in rapid succession), followed by a long period of minor, very slow change with slightly increasing levels of imprecision toward the eldest in our sample.
 
 ## Discussion
 
 Three-year-olds were surprisingly inaccurate in their responses.
-One possible explanation could be that they simply lacked the ability to complete the task, potentially due to issues in gaze following.
-Contrasting our results with previous findings on infant gaze following, this explanation is unlikely.
+One possible explanation could be that they simply lacked the ability to complete the task, potentially due to issues in gaze-following.
+Contrasting our results with previous findings on infant gaze-following, this explanation is unlikely.
 A more likely explanation would be that children were able to follow the agent's gaze but struggled to translate this implicit understanding into active behavior.
 Another point to keep in mind is that we used subtle eye movements as cues.
 Many existing studies let the agents move eye and head in parallel, therefore establishing a confound with greater (head) movement.
@@ -342,55 +360,25 @@ Elderly which know how to participate in *Prolific* studies certainly might show
 Methodological challenges arise when trying to compare data across ages from qualitatively and quantitatively different study tasks.
 We could circumvent these issues by applying the exact same task for the entire life span.
 
-# Computational cognitive model
+# Study 2: Computational cognitive model
 
 Our lifespan study showed that gaze understanding develops throughout childhood, and variation between individuals appears in all age groups.
-The TANGO has previously been proven reliable for capturing inter-individual differences in gaze understanding [@prein2022tango].
+The TANGO has previously been proven reliable for capturing inter-individual differences in gaze understanding [@prein2023tango].
 The variation between participants is thus likely genuine and not due to random noise.
 Now, we aim to understand what explains the developmental change and the variation across participants on a process level.
-We formalized the process of gaze understanding in a computational cognitive model.
+We present a theory of gaze understanding that explains how children use all available information to make inferences about the agent's gaze and its attentional focus, which leads them to correctly identify the target position.
+We formalize this inference process in a computational cognitive model.
+
 Computational modeling frameworks allow researchers to establish mechanistic explanations of psychological phenomena [@grahek2021anatomy].
 As formal, mathematical accounts of the psychological process in question, they force researchers to accurately and comprehensively state all their underlying assumptions [@simmering2010dialogue].
 In addition, models can be used to simulate behavior and form testable predictions.
 The expected patterns can then, in turn, be compared to the empirically observed behavior.
 
-With our model, we seek to explain how participants solved the TANGO.
-Our modeling framework consists of three mutually exclusive models: (1) a gaze model, (2) a random guessing model, and (3) a center bias model.
+We seek to explain how participants solved the TANGO.
+Our gaze model assumes that participants use available gaze information to infer the target location.
+We quantify how well our model explains the gaze understanding process by comparing it to two alternative models that make different assumptions of which information children use and where they consequently click to locate the target.
+Therefore, our modeling framework consists of three mutually exclusive models: (1) a gaze model, (2) a random guessing model, and (3) a center bias model.
 We gauge which model can best explain our data by conducting a model comparison.
-
-The gaze model assumes participants use the agent's gaze as a cue to locate the target.
-This model mirrors the logic of the TANGO programming code.
-In the online experiment, we read out the center point coordinates of the target and the agent's eyeball (i.e., the SVG coordinates).
-We then calculate a line between these two points: this is our gaze vector.
-Now, knowing the eyeball radius, we calculate the point of intersection at which the gaze vector meets the eyeball boundary.
-Finally, the agent's pupil moves from the center of the eyeball along the gaze vector to the intersection point.
-This way, the agent is animated to "look at" the target.
-
-In the gaze model, we assume participants go through these steps in reverse order.
-Participants are assumed to observe the current location of the pupil and estimate the center of the agent's eyeball.
-Connecting these two point estimates as a line yields the true gaze vector: the unique vector that extends from the center of the agent's eyeball through the center of the pupil to the attentional focal point.
-Participants are assumed to sample gaze vectors from a Normal distribution centered around this true gaze vector.
-They are assumed to do this independently for the left and right eye and then integrate the information to estimate the target's location.
-
-Individuals differ in how wide their distribution around the true gaze vector is.
-The model's inferential component estimates the standard deviation of these distributions for each individual participant.
-With higher standard deviations, participants are expected to show increasing imprecision in estimating the target location.
-
-The geometry of sampling from a distribution around the gaze vector leads to an interesting, testable group-level prediction.
-As the pupil location varies, a fixed amount of uncertainty around the gaze vector corresponds to a varying degree of uncertainty in the estimated target location.
-We describe this as a "headlight distribution": when the agent directs their gaze toward the very left or right side, the distribution around the gaze vector from which participants sample is comparatively wider than when the agent gazes centrally to the ground in front of them.
-For illustrative purposes, imagine a similar phenomenon: pointing a torch light to the ground.
-When one directs the torch light straight onto the ground, the light beam is clearly defined and smaller than when one points the torch light further away from oneself.
-Therefore, our gaze model predicts that our trials vary in difficulty: participants should be more imprecise in locating the target the further out it lands.
-If our data matches the pattern of this model prediction, this speaks for the gaze model.
-
-However, participants who are overall very imprecise in locating the target might be less likely to use the agent's gaze as a cue at all.
-To accommodate this, we designed two models that represent alternatives about how participants solve the TANGO when ignoring the agent's gaze.
-One alternative model estimates how likely a participant engages in random guessing.
-This behaves like a coin toss, sampling from a uniform distribution over all possible coordinates (i.e., 0 - 1920).
-The other alternative model estimates how likely a participant shows a center bias.
-This is implemented as sampling from a Normal distribution with the center of the screen as the mean and one target width as the standard deviation.
-Partipants' clicks could be drawn toward the center since the agent and the starting point of the balloon are located there.
 
 With our modeling framework, we can formalize whether a participant (A) uses the available gaze information at all and (B) how accurately they are in using this gaze information to locate the target.
 Regarding developmental change, we hypothesize that a dual process could explain the development of gaze understanding: The older children are, the more likely they are to use gaze as a cue, and the more precise they become at using it to locate the target.
@@ -416,17 +404,70 @@ Since developmental change was minimal in our adult sample (see Lifespan study) 
 
 ## Procedure
 
-We applied exactly the same procedure as in the first study, employing the continuous version of the TANGO [@prein2022tango].
+We applied exactly the same procedure as in the first study, employing the continuous version of the TANGO [@prein2023tango].
 Children were tested in a quiet room in their kindergarten, while an experimenter guided the child through the study on a tablet.
 Adults participated online.
 
 ## Analysis
 
-We compare the three models via BayesFactors computed based on the marginal log-likelihood of the data under each model.
-The models make different predictions about how participants' clicks will be distributed for different target locations.
+Our goal was to describe the inferential process by which participants locate the target.
+We compared three computational cognitive models: (1) a gaze model, (2) a random guessing model, and (3) a center bias model.
+All cognitive models and model comparisons were implemented in WebPPL [@goodman2014design].
+
+The gaze model assumes participants use the agent's gaze as a cue to locate the target.[^2]
+Participants are assumed to observe the current location of the pupil and estimate the center of the agent's eyeball.
+Connecting these two point estimates as a line yields a gaze vector: the unique vector that extends from the center of the agent's eyeball through the center of the pupil to the attentional focal point.
+This inferential process involves some uncertainty about the true center of the eyeball.
+Participants are assumed to sample gaze vectors from a Normal distribution centered around the true gaze vector.
+They are assumed to do this independently for the left and right eye and then integrate the information to estimate the target's location.
+
+[^2]: This model mirrors the logic of the TANGO programming code.
+    In the online experiment, we read out the center point coordinates of the target and the agent's eyeball (i.e., the SVG coordinates).
+    We then calculate a line between these two points: this is our gaze vector.
+    Now, knowing the eyeball radius, we calculate the point of intersection at which the gaze vector meets the eyeball boundary.
+    Finally, the agent's pupil moves from the center of the eyeball along the gaze vector to the intersection point.
+    This way, the agent is animated to "look at" the target.
+    In the gaze model, we assume participants go through these steps in reverse order.
+
+Now, individuals can differ in how wide their distribution around the true gaze vector is.
+The model's inferential component, α, estimates the standard deviation of the distribution for each individual participant.
+With higher standard deviations (i.e., increased α), participants are expected to show decreasing precision in estimating the target location.
+The model assumes that the sensitivity to the available gaze information changes with age.
+
+The geometry of sampling from a distribution around the gaze vector leads to an interesting, testable group-level prediction.
+As the pupil location varies, a fixed amount of uncertainty around the gaze vector corresponds to a varying degree of uncertainty in the estimated target location.
+When the agent directs their gaze toward the very left or right side, the distribution around the gaze vector from which participants sample is comparatively wider than when the agent gazes centrally to the ground in front of them.
+For illustrative purposes, imagine a similar phenomenon: pointing a torch light to the ground.
+When one directs the torchlight straight onto the ground, the light beam is clearly defined and smaller than when one points the torchlight further away from oneself.
+Therefore, our gaze model predicts that our trials vary in difficulty: participants should be more imprecise in locating the target the further out it lands.
+If our data matches the pattern of this model prediction, this can act as evidence for the gaze model.
+Therefore, our gaze model provides a quantitative theory of gaze understanding, with testable model predictions.
+
+To gauge the plausibility of our gaze model, we implemented two models that represent alternatives about how participants solve the TANGO.
+Participants who are overall very imprecise in locating the target might be less likely to use the agent's gaze as a cue at all.
+The alternative models, therefore, do not assume that participants make use of the gaze cue.
+The first alternative model estimates how likely a participant engages in random guessing.
+This behaves like a coin toss, sampling from a uniform distribution over all possible coordinates (i.e., 0 - 1920).
+The second alternative model estimates how likely a participant shows a center bias: Participants' clicks could be drawn toward the screen center since the agent and the starting point of the balloon are located there.
+This bias is implemented as sampling from a Normal distribution, with the center of the screen as the mean and one target width as the standard deviation.
+
+Our three proposed models make different predictions about how participants' clicks will be distributed for different target locations.
 We visualize and evaluate these differences using correlations between the model predictions and the data.
+Furthermore, we evaluated these probabilistic models based on the marginal likelihood of the data under each model.
+The pairwise ratio of marginal likelihoods for two models is also known as the Bayes Factor.
+This factor quantifies the quality of a model's predictions by averaging over the possible values of the model's parameters weighted by the prior probabilities of those parameter values.
+It can be used to estimate how much more likely the data under one model are compared to the other.
+Bayes Factors implicitly consider model complexity (i.e., Bayesian Occam's razor): models with more parameters often have a broader prior distribution over parameters, which might weaken potential gains in predictive accuracy.
+Details on models, including code to run the models, information about priors for parameter estimation, and Markov chain Monte Carlo settings, can be found in the associated online repository.
 
 ## Results
+
+When we compared the gaze model to the two competitor models, we found little support for the two alternatives.
+Comparing the models using marginal likelihood of the data under each model, the data were XXX [TODO] more likely under the gaze model compared to the random clicking or center bias model.
+
+For the gaze model, we found a high similarity between the model predictions and the observed data across the entire age range.
+The developmental trajectory that we observed in the data closely resembled the predictions of the model.
+The model explained XXX% [TODO] of the variance in the data.
 
 (ref:figlab3) **Gaze funnel**
 
@@ -436,21 +477,28 @@ knitr::include_graphics("../figures/gazefunnel_combined.png")
 
 ## Discussion
 
+Our findings from Study 1 showed individual differences and a developmental change in gaze understanding across the lifespan.
+To answer what develops with age and how participants differ from one another, we presented a formal cognitive model of gaze understanding.
+Participants are modeled to observe all available gaze information, integrate it from both the agent's eyes, and consequently arrive at the attentional focus of the agent: the target location.
+We assume that children become increasingly sensitive to gaze cues but that the inference process remains the same.
+By conducting model comparisons, we could rule out that participants' responses can be explained by random guessing or a center bias.
+
 A big advantage of using a computational modeling framework is that it can disentangle where people's errors come from.
 Our computational model can explain what varies between precise and imprecise individuals.
 There are two sources of errors: (1) do you actually use the eye gaze information?
 and (2) how accurate are you at estimating the focus point when you do pay attention to the agent's eyes?
 This way, we can track developmental changes in gaze understanding in a more fine-tuned way.
 
-In addition, our model was able to recover "signature patterns" in the data.
-Both the model predictions and the observed data show that precision levels drop as the agent's gaze moves further away from the center.
-Future research could use this signature in the data as evidence of whether diverse communities employ the same mechanism to solve the task.
+In addition, we observed differences in performance depending on where the agent looks.
+The observed data showed that precision levels dropped as the agent's gaze moved further away from the center.
+Our gaze model predictions recovered this "signature pattern" in the data.
+Future research could use this signature in the data as evidence of whether diverse communities employ the same inferential mechanism to solve the task, speaking for a shared cognitive architecture.
 
 A limitation of our model is that we cannot disentangle how much of the participants' uncertainty comes from a noisy estimate of the agent's attentional focus and how much is due to imprecise clicking (e.g., wanting to click somewhere but experiencing motor issues at aiming, adding random noise to the click).
 Initially, our proposed gaze model consisted of three components: (1) a perceptual component, whereby the participant produces a noisy observation of the agent's eye angle, (2) an inferential component, whereby the participant estimates the agent's point of attention based on the above perceptual component, and (3) a motor component, whereby the participant samples a click location from a distribution centered around the above estimate of the agent's attentional focus.
 Simulation studies suggested it was difficult to disentangle the independent noise terms from these three components, so we simplified the gaze model to include only the inferential component.
 
-# Components of gaze understanding
+# Study 3: Components of gaze understanding
 
 Our computational cognitive model assumes that the ability to engage in vector estimation is a crucial component of mastering gaze understanding.
 In this study, we sought to experimentally isolate the physical vector estimation component.
@@ -531,11 +579,11 @@ In an exploratory analysis, we investigated if gaze understanding was more stron
 
 ### Gaze understanding
 
-As in the two previously reported studies, we presented children with the continuous version of the TANGO [@prein2022tango].
+As in the two previously reported studies, we presented children with the continuous version of the TANGO [@prein2023tango].
 To accentuate the social aspect of the gaze understanding task, we exchanged the animal agents (used in the previous two studies) with human faces, which were modeled after the local population in appearance (already created for another project on cross-cultural similarities in gaze understanding (<https://osf.io/tdsvc>)).
-This further highlighted the contrast (i.e., social vs. non-social context) to the non-social vector estimation task.[^1]
+This further highlighted the contrast (i.e., social vs. non-social context) to the non-social vector estimation task.[^3]
 
-[^1]: In an exploratory analysis, we compared children's imprecision levels in the TANGO task with animal vs. human agents.
+[^3]: In an exploratory analysis, we compared children's imprecision levels in the TANGO task with animal vs. human agents.
     Based on a GLMM analysis, we conclude that there was no evidence of a stable effect of stimulus choice (human vs. animal).
     See Supplements for further detail.
 
@@ -590,7 +638,7 @@ This is in line with our computational cognitive framework that assumes vector c
 However, physical vector estimation alone did not suffice to explain gaze understanding.
 In addition, perspective-taking proved to be a relevant social-cognitive ability.
 
-In previous work, we could establish that the TANGO is suited as an individual differences measure [@prein2022tango].
+In previous work, we could establish that the TANGO is suited as an individual differences measure [@prein2023tango].
 Capturing meaningful variability in performance is a crucial task feature when we are interested in revealing the relationship between different cognitive abilities.
 Importantly, the tasks we used to measure ToM abilities were not designed to capture individual differences: they relied on an aggregate score of dichotomous measures.
 These sum scores can only capture limited variance, which may obscure potential correlations.
