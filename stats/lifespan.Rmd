@@ -54,6 +54,17 @@ write.csv(lifespan_sample, "../saves/lifespan_sample.csv", quote = F, row.names 
 saveRDS(lifespan_sample, "../saves/lifespan_sample.rds")
 ```
 
+```{r variation}
+lifespan_data %>% 
+  group_by(age_group) %>%
+  summarise(
+    imprecision_mean = mean(click_dist_balloons, na.rm = T) %>% round(2),
+    imprecision_sd = sd(click_dist_balloons, na.rm = T) %>% round(2),
+    imprecision_min = min(click_dist_balloons, na.rm = T),
+    imprecision_max = max(click_dist_balloons, na.rm = T),
+  )
+```
+
 # MODEL COMPARISON FOR DEVELOPMENTAL TRAJECTORY
 
 ```{r models, message=FALSE, warning=FALSE}
@@ -170,7 +181,11 @@ saveRDS(mcomparison, "../saves/lifespan_mcomparison.rds")
 nd <- mdata %>% 
   select(-c(mean_imprecision))
 
-pred <- fitted(mgaussianprocess, newdata = nd, re_formula = NA) %>% as_tibble() %>% bind_cols(nd) 
+pred <- fitted(mgaussianprocess, newdata = nd, re_formula = NA) %>% 
+  as_tibble() %>% 
+  bind_cols(nd)
+
+pred <- pred %>% clean_names()
 
 write.csv(pred, "../saves/lifespan_mgpdraws.csv", quote = F, row.names = F)
 saveRDS(pred, "../saves/lifespan_mgpdraws.rds")
@@ -213,53 +228,33 @@ saveRDS(cps, "../saves/lifespan_ibeast_cps.rds")
 ```
 
 # PLOT
-
 ```{r plot}
-ggplot() +
+# mgaussianprocess <- readRDS("../saves/lifespan_mgaussianprocess.rds")
+# cps <- readRDS("../saves/lifespan_ibeast_cps.rds")
 
-  geom_jitter(
-    data = mdata, 
-    aes(x = age, y = mean_imprecision), 
-    col = "darkgrey", alpha = 0.75
-  ) + 
+# https://cran.r-project.org/web/packages/tidybayes/vignettes/tidy-brms.html
+mdata %>%
+  add_epred_draws(mgaussianprocess, ndraws = 100) %>%
   
-  geom_smooth(
-    data = pred, 
-    aes(x = age, y = Estimate, ymin = Q2.5, ymax = Q97.5), 
-    stat = "identity", size = 1, alpha = 0.15, fill = "#006C66", col = "#006C66",
-  ) + 
+  ggplot(aes(x = age, y = mean_imprecision)) +
   
-  geom_vline(xintercept = cps$cp, linetype = "dashed", alpha = 0.75, size = 1) +
-  # geom_vline(xintercept = cps$lowerCrI, linetype = "dotted", alpha = 0.5, size = 1) +
-  # geom_vline(xintercept = cps$upperCrI, linetype = "dotted", alpha = 0.5, size = 1) +
-
-  scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) + 
+  geom_jitter(data = mdata, aes(x = age, y = mean_imprecision), alpha = 0.5, color = "darkgrey") + 
+  
+  geom_line(aes(y = .epred, group=.draw), alpha = .075, color = "blue") +
+  
+  geom_smooth(data = pred, aes(x = age, y = estimate), stat = "identity", col = "black", size = 0.75) + 
+  
+  geom_vline(xintercept = cps$cp, linetype = "dashed", alpha = 0.9, size = 0.75) + 
+  
+  scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) +
   scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
+  
+  # ## to zoom in
+  # coord_cartesian(xlim = c(3, 10)) +
+  # scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 1)) +
   
   labs(x = "Age in years", y = "Average imprecision in target width")
 
-
-# ZOOM IN
-ggplot() +
-
-  geom_jitter(
-    data = mdata, 
-    aes(x = age, y = mean_imprecision), 
-    col = "darkgrey", alpha = 0.75
-  ) + 
-  
-  geom_smooth(
-    data = pred, 
-    aes(x = age, y = Estimate, ymin = Q2.5, ymax = Q97.5), 
-    stat = "identity", size = 1, alpha = 0.15, fill = "#006C66", col = "#006C66",
-  ) + 
-  
-  geom_vline(xintercept = cps$cp, linetype = "dashed", alpha = 0.75, size = 1) + 
-
-  scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 0.5)) + 
-  scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
-  
-  coord_cartesian(xlim = c(3, 10), ) +
-
-  labs(x = "Age in years", y = "Average imprecision in target width")
+# ggsave("../figures/lifespan.png", width = 7, height = 4)
+# ggsave("../figures/lifespan.pdf", width = 7, height = 4)
 ```
