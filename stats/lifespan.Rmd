@@ -16,6 +16,8 @@ library(tidyboot) # for bootstrapped CIs
 library(brms) # modeling
 library(cmdstanr) # modeling
 library(Rbeast) # Bayesian change point analysis
+library(janitor) # clean_names
+
 check_cmdstan_toolchain(fix = TRUE, quiet = TRUE)
 
 options(scipen = 999)
@@ -83,6 +85,10 @@ mlinear <- brm(mean_imprecision ~ age_centered,
 mlinear
 
 pp_check(mlinear) 
+
+
+conditional_effects(mlinear, ndraws = 200, spaghetti = TRUE) %>% 
+  plot(points = T, yaxp = c(0,4,1))
 
 write.csv(mlinear, "../saves/lifespan_mlinear.csv", quote = F, row.names = F)
 saveRDS(mlinear, "../saves/lifespan_mlinear.rds")
@@ -233,7 +239,7 @@ saveRDS(cps, "../saves/lifespan_ibeast_cps.rds")
 # cps <- readRDS("../saves/lifespan_ibeast_cps.rds")
 
 # https://cran.r-project.org/web/packages/tidybayes/vignettes/tidy-brms.html
-mdata %>%
+lifespan_plot <- mdata %>%
   add_epred_draws(mgaussianprocess, ndraws = 100) %>%
   
   ggplot(aes(x = age, y = mean_imprecision)) +
@@ -254,6 +260,10 @@ mdata %>%
   # scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 1)) +
   
   labs(x = "Age in years", y = "Average imprecision in target width")
+
+lifespan_plot
+
+saveRDS(lifespan_plot, "../saves/lifespan_plot.rds")
 
 # ggsave("../figures/lifespan.png", width = 7, height = 4)
 # ggsave("../figures/lifespan.pdf", width = 7, height = 4)
