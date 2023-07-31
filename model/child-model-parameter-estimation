@@ -1,0 +1,226 @@
+// example call: 
+//time webppl model-inf-kids-dev-prior-model-comp.wppl --require webppl-json --require webppl-sample-writer 1
+
+// get number of chain from call
+var chain = last(process.argv)
+
+// helper functions
+// loop over all entries in a list
+var foreach = function(fn, lst) {
+    var foreach_ = function(i) {
+        if (i < lst.length) {
+            fn(lst[i]);
+            foreach_(i + 1);
+        }
+    };
+    foreach_(0);
+};
+// multiply corresponding values from two lists
+var multiply = function(x, y) { return x * y; };
+// get unique values in a column in a data frame
+var levels = function(df, label) {
+    return _.uniq(_.map(df, label));
+}
+
+// read in data
+var data = json.read('model_data/child_model_paper_data.json');
+
+// extract subject IDs
+var subjects = levels(data, "subjID")
+
+// compute coordinates
+// true coordinates in pixels
+var coordinates = _.range(0, 1920)
+// to reduce computational complexity, we bin coordinates into bins. Distributions are computed for binned coordinates and later expanded to the full range.
+// maximum of coordinates in pixels
+var maxCoord = 1920
+// number of pixels per bin
+var granularity = 20
+// create list of coordinates representing the bins
+var granCoord = maxCoord / granularity
+var cords = _.range(0, granCoord)
+var sampleCoord = map(function(x) {
+    return x * granularity;
+}, cords)
+
+
+// model 
+
+var model = function() {
+
+    // prior distributions for parameters
+    
+    // gaze inference sd for each child is sampled from an age-sensitive hyper parameter, hence there are priors to define the age trajectory
+    // intercept for gaze inference sd
+    var infInt = gaussianDrift({ mu: 0, sigma: 1, width: 0.1 })
+    // slope for gaze inference sd
+    var infSlope = gaussianDrift({ mu: 0, sigma: 1, width: 0.1 })
+    // sd to define distribution around age-sensitive value
+    var sdInfSigma = uniformDrift({ a: 0, b: 1, width: 0.1 })
+
+
+    // we assume a non-uniform prior over possible target locations. We assume it to be centered around the middle. We allow the width (sd of prior) to change with age, hence there is an intercept and prior to define the prior sd for each age
+    // intercept for prior sd
+    var priorSdInt = gaussianDrift({ mu: 400, sigma: 100, width: 10 })
+    // slope for prior sd
+    var priorSdSlope = uniformDrift({ a: 0, b: 500, width: 10 })
+
+
+    // here we loop through all subjects individually to compute subject-specific parameters
+    foreach(function(subjID) {
+
+        // filter out subject-specific data
+        var idData = _.filter(data, { subjID: subjID })
+
+        // extract subject's age
+        var age = idData[0].agecentered
+
+        // compute age-sensitive prior for inference sd
+        var sdInfAge = infInt + infSlope * age
+        // sample subject-specific value around age-sensitive value
+        var sdInfSamp = gaussianDrift({ mu: sdInfAge, sigma: sdInfSigma, width: 0.1 })
+        // exponentiate inference sd to avoid negative values
+        var sdInfId = Math.exp(sdInfSamp)
+
+        // computer age-sensitive sd for prior over coordinates
+        var priorSdAge = priorSdInt + priorSdSlope * age
+
+        // define gaze estiamtion on a trial (row) level
+        foreach(function(row) {
+
+            // define trial via the data
+            // y-coordinate of the balloon after landing
+            var targetCenterY = row.targetCenterY
+            
+            // x-coordinate of the center of the left eye
+            var eyeCenterLX = row.eyeCenterLeftX
+             // y-coordinate of the center of the left eye
+            var eyeCenterLY = row.eyeCenterLeftY
+             // x-coordinate of the center of the right eye
+            var eyeCenterRX = row.eyeCenterRightX
+             // y-coordinate of the center of the right eye
+            var eyeCenterRY = row.eyeCenterRightY
+            
+            // x-coordinate of the pupil of the left eye
+            var pupilLX = row.pupilFinalLeftX
+            // y-coordinate of the pupil of the left eye
+            var pupilLY = row.pupilFinalLeftY
+            // x-coordinate of the pupil of the right eye
+            var pupilRX = row.pupilFinalRightX
+            // y-coordinate of the pupil of the right eye
+            var pupilRY = row.pupilFinalRightY
+
+            // location where the participant clicked, rounded to the next integer
+            var click = Math.round(row.clickScaledX)
+
+            // compute the true gaze angle relative to a vertical line through the eye-center
+            // left eye
+            var tAlphaL = eyeCenterLX > pupilLX ?
+                Math.atan(Math.abs(eyeCenterLX - pupilLX) / (eyeCenterLY - pupilLY)) :
+                (-Math.atan(Math.abs(eyeCenterLX - pupilLX) / (eyeCenterLY - pupilLY)))
+            // right eye
+            var tAlphaR = eyeCenterRX > pupilRX ?
+                Math.atan(Math.abs(eyeCenterRX - pupilRX) / (eyeCenterRY - pupilRY)) :
+                (-Math.atan(Math.abs(eyeCenterRX - pupilRX) / (eyeCenterRY - pupilRY)))
+
+            // compute trial-specific probability distributions for possible locations for left and right eye based on subject's sd inference parameter
+            // each location is defined by an angel relative to a vertical line through the eye center
+            // left eye
+            var lDist = map(function(coord) {
+                // compute the angle for a bin (coordiante)
+                var betaL = eyeCenterLX > coord ?
+                    Math.atan(Math.abs(eyeCenterLX - coord) / (eyeCenterLY - targetCenterY)) :
+                    (-Math.atan(Math.abs(eyeCenterLX - coord) / (eyeCenterLY - targetCenterY)))
+                // compute probability for each bin-angle based on a normal distribution around the true gaze angle
+                var betaLDist = Gaussian({ mu: tAlphaL, sigma: sdInfId }).score(betaL)
+                // return distribution     
+                return betaLDist
+            }, sampleCoord)
+
+            // right eye
+            var rDist = map(function(coord) {
+                // compute the angle for a bin (coordiante)
+                var betaR = eyeCenterRX > coord ?
+                    Math.atan(Math.abs(eyeCenterRX - coord) / (eyeCenterRY - targetCenterY)) :
+                    (-Math.atan(Math.abs(eyeCenterRX - coord) / (eyeCenterRY - targetCenterY)))
+                // compute probability for each bin-angle based on a normal distribution around the true gaze angle
+                var betaRDist = Gaussian({ mu: tAlphaR, sigma: sdInfId }).score(betaR)
+                // return distribution 
+                return betaRDist
+            }, sampleCoord)
+
+            // normalize distribution for left eye
+            var lNormDist = map(function(x) {
+                var lNormDist = Math.exp(x - util.logsumexp(lDist))
+                return lNormDist
+            }, lDist)
+            
+            // normalize distribution for right eye
+            var rNormDist = map(function(x) {
+                var rNormDist = Math.exp(x - util.logsumexp(rDist))
+                return rNormDist
+            }, rDist)
+            // combine distributions for both eyes to get gaze distribution
+            var xDist = map2(multiply, lNormDist, rNormDist)
+            
+            // compute prior distribution over bins 
+            var priorDist = map(function(coord) {
+                var dist = Gaussian({ mu: 960, sigma: priorSdAge }).score(coord)
+                return dist
+            }, sampleCoord)
+
+            // normalize prior distribution
+            var priorNormDist = map(function(x) {
+                var priorNormDist = Math.exp(x - util.logsumexp(priorDist))
+                return priorNormDist
+            }, priorDist)
+
+            // integrate gaze and prior distributions 
+            var gazePriorDist = map2(multiply, xDist, priorNormDist)
+
+            // revert binning, i.e. repeat each value in the distribution 20 times
+            var xCoordDist = map(function(x) {
+                return repeat(granularity, function() { return x; })
+            }, gazePriorDist)
+
+            // probability dstribution over pixel coordinates for the trial
+            var gazePred = Categorical({ ps: xCoordDist.flat(), vs: coordinates })
+
+            // update parameters based on the likelihood of the click given the distribution
+            observe(gazePred, click)
+
+        // loop over all rows in subject-specific data set
+        }, idData)
+
+        // save subject-specific parameters
+        query.add([chain, "inference", "sd", "id", subjID], sdInfId)
+
+    // loop over all subjects
+    }, subjects)
+
+    // save hyper-parameters
+    query.add([chain, "inference", "sigma", "global", "NA"], sdInfSigma)
+    query.add([chain, "inference", "intercept", "global", "NA"], infInt)
+    query.add([chain, "inference", "slope", "global", "NA"], infSlope)
+    query.add([chain, "priorSd", "slope", "global", "NA"], priorSdSlope)
+    query.add([chain, "priorSd", "intercept", "global", "NA"], priorSdInt)
+
+    return query
+
+}
+
+// define header for spreadsheet to be returned
+var header = "iteration,chain,parameter,type,scope,id,value,score"
+// define output file and write samples
+var output_file = 'output/child_gaze_model_dev_prior_hedge_exp_granularity' + granularity + '_chain' + chain + '.csv'
+var callback = webpplSampleWriter.streamQueryCSV(output_file, header);
+// run the model
+var output = Infer({
+    model,
+    samples: 10000,
+    burn: 50000,
+    lag: 4,
+    method: 'MCMC',
+    verbose: T,
+    callbacks: [callback]
+});
