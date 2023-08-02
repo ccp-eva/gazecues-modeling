@@ -12,6 +12,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r load_packages, message=FALSE, warning=FALSE, include=FALSE}
 library(tidyverse) # data handling etc.
 library(tidyboot) # for bootstrap CIs
+library(coda) # HPDinterval
+library(ggpubr) # stat_cor
+library(ggdist) # stat_pointinterval
+library(matrixStats) # logSumExp
+library(ggridges) # for geom_density_ridges
+library(ggthemes) # themes for plotting
+library(cowplot) # ggdraw, draw_image, plot_grid
 
 options(scipen = 999)
 theme_set(theme_classic())
@@ -20,14 +27,35 @@ theme_set(theme_classic())
 set.seed(42)
 ```
 
+```{r functions}
+estimate_mode <- function(s) {
+  d <- density(s)
+  return(d$x[which.max(d$y)])
+}
+
+hdi_upper<- function(s){
+  m <- HPDinterval(mcmc(s))
+  return(m["var1","upper"])
+}
+
+hdi_lower<- function(s){
+  m <- HPDinterval(mcmc(s))
+  return(m["var1","lower"])
+}
+```
+
 ```{r load_data}
-gaze_data_kids <- readRDS("../data/tango-model-kids.rds")
-gaze_data_adults <- readRDS("../data/tango-model-adults.rds") %>% mutate(age_group = 18)
-gaze_data <- full_join(gaze_data_kids, gaze_data_adults)
+tango_kids <- readRDS("../data/tango-model-kids.rds")
+tango_adults <- readRDS("../data/tango-model-adults.rds") %>% mutate(age_group = 18)
+tango <- full_join(tango_kids, tango_adults)
+
+# careful, this takes a while... 
+model_kids <- readRDS("../data/gazemodel_kids.rds")
+model_kids_dev_prior <- readRDS("../data/gazemodel_kids_dev_prior.rds")
 ```
 
 ```{r sample}
-gazemodel_sample_kids <- gaze_data_kids %>% 
+gazemodel_sample_kids <- tango_kids %>% 
   group_by(age_group) %>%
   mutate(female = ifelse(gender == "f", 1, 0)) %>% 
   summarise(
@@ -41,7 +69,7 @@ gazemodel_sample_kids <- gaze_data_kids %>%
 
 gazemodel_sample_kids
 
-gazemodel_sample_adults <- gaze_data_adults %>% 
+gazemodel_sample_adults <- tango_adults %>% 
   mutate(female = ifelse(gender == "f", 1, 0)) %>% 
   summarise(
     n_total = n_distinct(subj_id), 
@@ -59,28 +87,12 @@ write.csv(gazemodel_sample, "../saves/gazemodel_sample.csv", quote = F, row.name
 saveRDS(gazemodel_sample, "../saves/gazemodel_sample.rds")
 ```
 
-```{r plot}
-dev_plot <- gaze_data_kids %>% 
-  group_by(subj_id, age, age_group) %>%
-  summarise(mean = mean(click_dist_balloons, na.rm = TRUE)) %>% 
-  ggplot(., aes(x = age, y = mean)) +
-  geom_point(color = "darkgrey", alpha = 0.5) +
-  geom_smooth(method = "lm", size = 1, se = T, color = "#006c66", fill = "#006c66") + 
-  scale_x_continuous(limits = c(3, 5), breaks = seq(3, 5, 0.5)) +
-  scale_y_continuous(limits = c(0, 5), breaks = seq(0, 5, 1)) +
-  labs(x = "Age in years", y = "Average imprecision in target widths") 
-
-dev_plot 
-
-# ggsave("../figures/dev_plot.png", width = 8, height = 4, scale = 1.2)
-```
-
-```{r gazefunnel}
-target_position_imprecision <- gaze_data %>%
+```{r data_gazefunnel}
+target_position_imprecision <- tango %>%
   group_by(age_group, target_position) %>%
   tidyboot_mean(column = click_dist_balloons, na.rm = TRUE)
 
-target_position_imprecision_ind <- gaze_data %>%
+target_position_imprecision_ind <- tango %>%
   group_by(subj_id, age_group, target_position) %>%
   summarize(mean = mean(click_dist_balloons, na.rm = TRUE))
 
@@ -95,7 +107,339 @@ gazefunnel <- ggplot() +
 
 gazefunnel
 
-ggsave("../figures/gazefunnel.png", width = 6, height = 4, scale = 1.2)
-saveRDS(gazefunnel, "../saves/gazefunnel.rds")
+# saveRDS(gazefunnel, "../saves/gazemodel_funnel.rds")
+# ggsave("../figures/gazemodel_funnel.png", width = 6, height = 4, scale = 1.2)
+```
+
+# CHILDREN
+
+## Inference 
+
+```{r dev_traj_inf}
+inf_map_devp <- model_kids_dev_prior %>%
+  filter(scope == "global", 
+         parameter == "inference", 
+         type != "sigma") %>%
+  group_by(type) %>%
+  summarise(mode = estimate_mode(value)) %>%
+  pivot_wider(names_from = "type", values_from = "mode") %>%
+  expand_grid(age = seq(0, 3, 0.1)) %>%
+  mutate(sd = exp(intercept + slope * age))
+
+inf_samp_devp <- model_kids_dev_prior%>%
+  filter(scope == "global", 
+         parameter == "inference", 
+         type != "sigma") %>%
+  pivot_wider(names_from = "type", values_from = "value") %>%
+  sample_n(1000) %>%
+  expand_grid(age = seq(0, 3, 0.1)) %>%
+  mutate(sd = exp(intercept + slope * age))
+
+
+id_devp <- model_kids_dev_prior%>%
+  filter(scope == "id", 
+         type == "sd") %>%
+  group_by(id) %>%
+  summarise(mode = estimate_mode(value),
+            lci = hdi_lower(value), 
+            uci = hdi_upper(value)) %>%
+  left_join(tango_kids %>% 
+              select(subj_id, age, age_group) %>% 
+              rename(id = subj_id) %>% 
+              distinct(id, .keep_all = T)) %>%
+  ungroup()
+
+dev_plot <- ggplot() +
+  geom_point(data = id_devp, aes(x = age, y = mode), alpha = 0.75, color = "darkgrey") +
+  geom_line(data = inf_samp_devp, aes(x = age + 3, y = sd, group = paste(chain,iteration)), col = "blue", alpha = .01) +
+  geom_line(data = inf_map_devp, aes(x = age+3, y = sd), col = "black", linewidth = 1.25) +
+  scale_x_continuous(limits = c(3, 6), breaks = seq(3, 6, 0.5)) + 
+  scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, 0.25)) +
+  coord_cartesian(ylim = c(0, 3)) +
+  labs(x = "Age", y = "Inference parameter")
+
+dev_plot
+saveRDS(dev_plot, file = "../saves/gazemodel_dev_plot.rds")
+
+# ggsave("../figures/gazemodel_dev.png", width = 8, height = 5, scale = 1, bg = "white")
+# ggsave("../figures/gazemodel_dev.pdf", width = 8, height = 5, scale = 1, bg = "white")
+```
+
+## Inference parameters individuals
+
+```{r id_inf}
+# prepare data
+id_inf <- model_kids_dev_prior %>%
+  filter(scope == "id", parameter == "inference") %>% 
+  group_by(id) %>% 
+  mutate(mean = mean(value, na.rm = T))
+
+idinf_plot <- id_inf %>% 
+  slice_sample(n = 2000) %>% # for faster debugging
+  full_join((tango_kids %>% select(subj_id, age, age_group)), by = join_by(id == subj_id)) %>% 
+  ggplot(aes(x = value, y = reorder(id, mean), fill = age)) +
+  geom_density_ridges(bandwidth = .05, rel_min_height = .01, size = .25, scale = 3, alpha = .5) + 
+  scale_fill_viridis_c(direction = -1, alpha = 0.9, limits = c(3, 6), breaks = seq(3, 6, 0.5)) +
+  scale_x_continuous(breaks = seq(0, 7, 0.5)) +
+  coord_cartesian(xlim = c(0, 7)) +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank()) + 
+  labs(x = "Inference parameter", y = "Participants (ordered by mean)", fill = "Age")
+
+idinf_plot
+saveRDS(idinf_plot, "../saves/supplements_gazemodel_idinf_plot.rds")
+
+ggsave("../figures/supplements_gazemodel_indinference.png", width = 5, height = 5)
+ggsave("../figures/supplements_gazemodel_indinference.pdf", width = 5, height = 5)
+```
+
+```{r faceted_inf, message=FALSE, warning=FALSE}
+faceted_inf <- model_kids_dev_prior %>%
+  filter(scope == "id", parameter == "inference") %>%
+  mutate(id = vctrs::vec_group_id(id)) %>% 
+  ggplot() + 
+  geom_density(aes(x = value, fill = factor(chain)), alpha = .5) +
+  stat_pointinterval(aes(x = value)) +
+  facet_wrap(~ id, nrow = 6, scales = "free") +
+  scale_fill_viridis_d() +
+  scale_x_continuous(limits = c(0, 3)) + 
+  scale_y_continuous(limits = function(x){c(0, max(0.1, x))}) +
+  labs(x = "Inference parameter value", y = "", fill = "Model chains") +
+  theme_minimal()
+
+faceted_inf
+saveRDS(faceted_inf, "../saves/supplements_gazemodel_facetedinference.rds")
+
+ggsave("../figures/supplements_gazemodel_facetedinference.png", width = 10, height = 6, scale = 1.4, bg = "white")
+ggsave("../figures/supplements_gazemodel_facetedinference.pdf", width = 10, height = 6, scale = 1.4, bg = "white")
+```
+
+## Recover U pattern
+
+```{r get_click_prior}
+get_click_prior <- function(sdTol, eyeCenterLY, eyeCenterLX, eyeCenterRY, eyeCenterRX, targetCenterY, targetCenterX, pupilLX, pupilRX, priorInt, priorSlope, age){
+
+  if(eyeCenterLX > pupilLX) {
+    tAlphaL = atan(abs(eyeCenterLX-targetCenterX)/(eyeCenterLY-targetCenterY))
+  } else {
+    tAlphaL = -atan(abs(eyeCenterLX-targetCenterX)/(eyeCenterLY-targetCenterY))
+  }
+  
+  #noisyAlphaL = rnorm(1,tAlphaL, sdPer)
+  
+  if(eyeCenterRX > pupilRX) {
+    tAlphaR = atan(abs(eyeCenterRX-targetCenterX)/(eyeCenterRY-targetCenterY))
+  } else {
+    tAlphaR = -atan(abs(eyeCenterRX-targetCenterX)/(eyeCenterRY-targetCenterY))
+  }
+  
+  #noisyAlphaR = rnorm(1,tAlphaR, sdPer)
+
+  bRDist = c()
+  
+  bLDist = c()
+  
+  for (x in 1:1920){
+    
+  if(eyeCenterLX > x) {
+    betaL = atan(abs(eyeCenterLX-x)/(eyeCenterLY-targetCenterY))
+  } else {
+    betaL = -atan(abs(eyeCenterLX-x)/(eyeCenterLY-targetCenterY))
+  }
+    betaLDist = dnorm(betaL,tAlphaL,sdTol, log = T)
+    
+  if(eyeCenterRX > x) {
+    betaR = atan(abs(eyeCenterRX-x)/(eyeCenterRY-targetCenterY))
+  } else {
+    betaR = -atan(abs(eyeCenterRX-x)/(eyeCenterRY-targetCenterY))
+  }
+    betaRDist = dnorm(betaR,tAlphaR,sdTol, log = T)
+    
+    #betaDist = betaLDist + betaRDist
+    
+    #bDist[x] <- exp(betaDist)
+    bRDist[x] <- betaRDist
+    
+    bLDist[x] <- betaLDist
+    
+  }
+  
+  xRDist = exp(bRDist-logSumExp(bRDist))
+  
+  xLDist = exp(bLDist-logSumExp(bLDist))
+  
+  priorSD = priorInt + priorSlope * age
+  
+  xDist = (xRDist * xLDist) * dnorm(seq(1:1920), mean = 960, sd = priorSD)
+  
+  dist = xDist / sum(xDist)
+  
+  click = sample(1:1920, prob = xDist, size = 1)-1
+  
+  return(click)
+}
+```
+
+```{r u_pattern}
+ind_sd <- model_kids_dev_prior %>%
+  filter(scope == "id", type == "sd") %>%
+  group_by(id) %>%
+  summarise(sdTol = estimate_mode(value)) %>%
+  left_join(tango_kids %>% rename(id = subj_id,
+                          eyeCenterLY = eye_center_left_y,
+                          eyeCenterLX = eye_center_left_x, 
+                          eyeCenterRY = eye_center_right_y,
+                          eyeCenterRX = eye_center_right_x,
+                          pupilLX = pupil_final_left_x,
+                          pupilRX = pupil_final_right_x,
+                          targetCenterX = target_center_x,
+                          targetCenterY = target_center_y) %>%
+              mutate(clickDist = abs(click_dist_from_target_center_x)) %>%
+              select(id, age, age_group, trial_nr, eyeCenterLX, eyeCenterLY, eyeCenterRX, eyeCenterRY, pupilLX, pupilRX, targetCenterY, targetCenterX, clickDist))
+
+ind_sd_long <- ind_sd %>% slice(rep(1:n(), each = 100)) 
+
+priorMode <- model_kids_dev_prior %>%
+  filter(scope == "global", 
+         parameter == "priorSd", 
+         type != "sigma") %>%
+  group_by(type) %>%
+  summarise(mode = estimate_mode(value))
+
+# careful, this runs a while...
+gen_model_clicks <- ind_sd_long %>%
+  rowwise() %>%
+  mutate(modelClick = get_click_prior(
+          sdTol = sdTol,
+          eyeCenterLY = eyeCenterLY,
+          eyeCenterLX = eyeCenterLX, 
+          eyeCenterRY = eyeCenterRY,
+          eyeCenterRX = eyeCenterRX,
+          targetCenterX = targetCenterX,
+          pupilLX = pupilLX,
+          pupilRX = pupilRX,
+          targetCenterY = targetCenterY,
+          priorInt = priorMode %>% filter(type == "intercept") %>% pull(mode),
+          priorSlope = priorMode %>% filter(type == "slope") %>% pull(mode),
+          age = age
+          ))
+
+recover_plotdata <- gen_model_clicks %>%
+  mutate(
+    modelClickDist = abs(modelClick - targetCenterX),
+    targetBin = cut(targetCenterX, 
+                    breaks=seq(from = 0, to = 1920, by =192),
+                    labels=as.character(1:10))
+  ) %>%
+  group_by(age_group, targetBin) %>%
+  summarise(
+    data_mean = mean(clickDist), 
+    model_mean = mean(modelClickDist)
+  )
+
+saveRDS(recover_plotdata, "../saves/gazemodel_recoverU_plotdata.rds")
+# recover_plotdata <- readRDS("../saves/gazemodel_recoverU_plotdata.rds")
+
+u_plot <- recover_plotdata %>%
+  pivot_longer(cols = c(data_mean, model_mean), names_to = "source", values_to = "imprecision") %>%
+  mutate(
+    age_group = factor(age_group, levels = c(3, 4, 5), labels = c("3-year-olds", "4-year-olds", "5-year-olds")), 
+    imprecision = imprecision / 160,
+  ) %>% 
+  ggplot(aes(x = targetBin, y = imprecision, col = source)) +
+  geom_point(alpha = 0.8) +
+  facet_grid(~ age_group) +
+  scale_y_continuous(limits = c(0, 5.2), breaks = seq(0, 5, 0.5)) +
+  scale_color_manual(values = c("darkgrey", "darkblue"), labels = c("Data", "Model estimate")) +
+  labs(x = "Target position", y = "Imprecision in target width", color = "Source") + 
+  theme_few() +
+  theme(
+    legend.position = c(0.84 , 0.8), # c(0,0) bottom left, c(1,1) top-right
+    legend.background = element_rect(color = "darkgrey", size = 0.1), 
+    legend.text = element_text(size = 8),
+    strip.text = element_text(face = "bold", size = 12)
+  )
+
+u_plot
+saveRDS(u_plot, "../saves/gazemodel_u_plot.rds")
+ggsave("../figures/gazemodel_Uplot.png", width = 8, height = 5, scale = 1, bg = "white")
+ggsave("../figures/gazemodel_Uplot.pdf", width = 8, height = 5, scale = 1, bg = "white")
+```
+
+```{r imprecision_bin_plot}
+imprecision_bin_plot <- recover_plotdata %>% 
+  mutate(
+    model_mean = model_mean / 160, 
+    data_mean = data_mean / 160,
+  ) %>% 
+  ggplot(., aes(x = model_mean, y = data_mean)) +
+  geom_point(aes(col = targetBin)) +
+  stat_cor(method = "pearson", label.x = 0.2, label.y = 4.9, aes(label = paste(..r.label..)), size = 4, r.accuracy = 0.01, cor.coef.name = "r") +
+  geom_abline(intercept = 0, slope = 1, linetype = 3) +
+  scale_color_brewer(palette="BrBG") +
+  labs(x = "Model estimated imprecision", y = "Data mean imprecision", color = "Target bin") + 
+  scale_x_continuous(limits = c(0, 5.2), breaks = seq(0, 5, 1)) + 
+  scale_y_continuous(limits = c(0, 5.2), breaks = seq(0, 5, 1)) 
+
+saveRDS(imprecision_bin_plot, "../saves/gazemodel_imprecision_bin_plot.rds")
+ggsave("../figures/gazemodel_imprecision_bin_plot.png", width = 8, height = 5, scale = 1, bg = "white")
+ggsave("../figures/gazemodel_imprecision_bin_plot.pdf", width = 8, height = 5, scale = 1, bg = "white")
+```
+
+## Data recovery
+
+```{r model_vs_data}
+comparison_model_data_devp <- model_kids_dev_prior %>%
+  filter(scope == "id", type == "sd") %>%
+  group_by(id) %>%
+  summarise(model_mode = estimate_mode(value)) %>%
+  left_join(
+    tango_kids %>% 
+      group_by(subj_id, age, age_group) %>%
+      summarise(data_mean = mean(click_dist_balloons)) %>%
+      rename(id = subj_id)
+  )
+
+model_vs_data_plot <- ggplot(comparison_model_data_devp, aes(x = model_mode, y = data_mean)) +
+  geom_point(aes(col = age)) +
+  stat_cor(method = "pearson", label.x = 0.05, label.y = 4.9, aes(label = paste(..r.label..)), size = 4, r.accuracy = 0.01, cor.coef.name = "r") +
+  geom_smooth(method = "lm", col = "darkgrey", alpha = 0.25) +
+  scale_color_viridis_c(direction = -1, alpha = 0.9, limits = c(3, 6), breaks = seq(3, 6, 0.5)) +
+  labs(x = "Model estimated mode", y = "Data imprecision mean", color = "Age") + 
+  scale_x_continuous(limits = c(0, 2.1), breaks = seq(0, 2, 0.5)) + 
+  scale_y_continuous(limits = c(0, 5), breaks = seq(0, 5, 1)) 
+
+model_vs_data_plot
+saveRDS(model_vs_data_plot, file = "../saves/gazemodel_model_vs_data.rds")
+ggsave("../figures/gazemodel_model_vs_data.png", width = 8, height = 5, scale = 1, bg = "white")
+ggsave("../figures/gazemodel_model_vs_data.pdf", width = 8, height = 5, scale = 1, bg = "white")
+```
+
+# Plot 
+
+```{r arrange_plot}
+setup_png <- ggdraw() + draw_image("../figures/gazemodel_setup.png")
+ulogic_png <- ggdraw() + draw_image("../figures/gazemodel_Ulogic.png")
+
+gazemodel_plot <- ggarrange(
+  setup_png,
+  dev_plot, 
+  NULL, 
+  model_vs_data_plot, 
+  
+  ulogic_png, 
+  u_plot, 
+  NULL, 
+  imprecision_bin_plot, 
+  
+  ncol = 4, 
+  nrow = 2, 
+  widths = c(9, 12, 1, 11), 
+  labels = c("A", "B", "", "C", "D", "E", "", "F")
+)
+
+gazemodel_plot
+saveRDS(gazemodel_plot, "../saves/gazemodel_plot.rds")
+ggsave("../figures/gazemodel_plot.png", width = 10, height = 5, scale = 1.4, bg = "white")
+ggsave("../figures/gazemodel_plot.pdf", width = 10, height = 5, scale = 1.4, bg = "white")
 ```
 

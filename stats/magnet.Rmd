@@ -19,6 +19,7 @@ library(corrplot) # corr plot
 library(apaTables) # as name says
 library(cocor) # compare correlations
 library(magrittr) # extract list elements
+library(cowplot) # ggdraw, draw_image, plot_grid
 
 options(scipen = 999)
 theme_set(theme_classic())
@@ -118,7 +119,7 @@ cor_ci <- cor_matrix %>%
   filter(Correlation != "ToM x Perspective-taking") %>% 
   mutate(Correlation = fct_relevel(Correlation, "Magnet x Perspective-taking", "Magnet x ToM", "Tango x Perspective-taking", "Tango x ToM", "Tango x Magnet")) %>%
   ggplot(., aes(x=Correlation, y=r, ymin=lower, ymax=upper)) +
-  geom_pointrange(color = "#005555", size = 0.8, linewidth = 1) +
+  geom_pointrange(color = "black", size = 0.8, linewidth = 1) +
   scale_y_continuous(limits = c(-1, 1), breaks = seq(-1, 1, 0.25)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   xlab("") +
@@ -230,16 +231,18 @@ saveRDS(magnet_draws, "../saves/magnet_draws.rds")
 ```
 
 ```{r modelplot}
+magnet_draws <- readRDS("../saves/magnet_draws.rds")
+
 modelplot <- magnet_draws %>% 
   mutate(
     includes_zero = ifelse(predictor == "Age (scaled)", TRUE, FALSE)
   ) %>%
   ggplot(., aes(x = estimate, y = predictor, fill = includes_zero)) +
- tidybayes::stat_halfeye(.width = c(.95, .8), scale = 1, slab_color = "#006c66", slab_alpha = 0.5) +
-    labs(x = "Posterior estimate when predicting TANGO mean", y = "") +
+ tidybayes::stat_halfeye(.width = c(.95, .8), scale = 1, slab_color = "darkgrey", slab_alpha = 0.9) +
+    labs(x = "Posterior estimate TANGO mean", y = "") +
   guides(fill = "none")+
   geom_vline(xintercept = 0, linetype = "dashed") +
-  scale_fill_manual(values = c("#006c66", "#EBECEC")) +
+  scale_fill_manual(values = c("darkgrey", "#EBECEC")) +
   coord_cartesian(expand = TRUE, xlim = c(-0.6, 0.4), ylim = c(1.5, 3.5)) +
   theme_classic()
 
@@ -247,18 +250,6 @@ modelplot
 
 saveRDS(modelplot, file = "../saves/magnet_modelplot.rds")
 # ggsave("../figures/modelplot.png", width = 10, height = 6, scale = 0.7, bg = "white")
-```
-
-```{r arrange_plot}
-arrangedplot <- ggarrange(
-  cor_ci, 
-  modelplot, 
-  ncol = 2, 
-  labels = c("A", "B")
-)
-
-saveRDS(arrangedplot, file = "../saves/magnet_arrangedplot.rds")
-ggsave("../figures/magnet_arrangedplot.png", width = 6, height = 2, scale = 1.75, bg = "white")
 ```
 
 ```{r williamstest}
@@ -271,7 +262,7 @@ williams_tom <- cocor.dep.groups.overlap(
                          return.htest = T) %>% 
                        extract2("williams1959")
 
-saveRDS(williams_tom, "../saves/williams_tom.rds")
+saveRDS(williams_tom, "../saves/magnet_williams_tom.rds")
 
 williams_perspective <- cocor.dep.groups.overlap(
                          r.jk = cor_matrix$r[cor_matrix$Correlation == "Tango x Perspective-taking"], 
@@ -282,6 +273,47 @@ williams_perspective <- cocor.dep.groups.overlap(
                          return.htest = T) %>% 
                        extract2("williams1959")
 
-saveRDS(williams_perspective, "../saves/williams_perspective.rds")
+saveRDS(williams_perspective, "../saves/magnet_williams_perspective.rds")
 ```
 
+```{r arrange_plot}
+procedure_png <- ggdraw() + draw_image("../figures/procedure.png")
+cor_ci <- readRDS(file = "../saves/magnet_cor_ci.rds")
+modelplot <- readRDS(file = "../saves/magnet_modelplot.rds")
+
+magnet_plot <- ggarrange(NULL, 
+          procedure_png, 
+          cor_ci, 
+          modelplot, 
+          NULL, 
+          ncol = 5, 
+          labels = c("A", "", "B", "C", ""),
+          widths = c(1, 16, 18, 13, 1.5)
+          )
+
+saveRDS(magnet_plot, file = "../saves/magnet_plot.rds")
+ggsave("../figures/magnet_plot.png", width = 10, height = 2, scale = 1.4, bg = "white")
+ggsave("../figures/magnet_plot.pdf", width = 10, height = 2, scale = 1.4, bg = "white")
+
+# alternative positioning: procedure on top, cor left below, model right below
+# ggarrange(procedure_png, 
+#           NULL, 
+#           
+#           ggarrange(
+#             cor_ci, 
+#             modelplot, 
+#             NULL, 
+#             ncol = 3, 
+#             labels = c("B", "C", ""), 
+#             widths = c(12, 10, 2)
+#           ), 
+#           
+#           nrow = 3,
+#           heights = c(11, 1, 9), 
+#           labels = c("A", ""), 
+#           align = "h"
+#           )
+# 
+# # saveRDS(magnet_plot, file = "../saves/magnet_plot.rds")
+# ggsave("../figures/magnet_plot2.png", width = 8, height = 5, scale = 1.2, bg = "white")
+```

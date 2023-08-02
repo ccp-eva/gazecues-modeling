@@ -17,6 +17,7 @@ library(brms) # modeling
 library(cmdstanr) # modeling
 library(Rbeast) # Bayesian change point analysis
 library(janitor) # clean_names
+library(ggpubr) # ggarrange
 
 check_cmdstan_toolchain(fix = TRUE, quiet = TRUE)
 
@@ -57,7 +58,15 @@ saveRDS(lifespan_sample, "../saves/lifespan_sample.rds")
 ```
 
 ```{r variation}
-lifespan_data %>% 
+lifespan_variation_all <- lifespan_data %>% 
+  summarise(
+    imprecision_mean = mean(click_dist_balloons, na.rm = T) %>% round(2),
+    imprecision_sd = sd(click_dist_balloons, na.rm = T) %>% round(2),
+    imprecision_min = min(click_dist_balloons, na.rm = T),
+    imprecision_max = max(click_dist_balloons, na.rm = T),
+  )
+
+lifespan_variation_agegroups <- lifespan_data %>% 
   group_by(age_group) %>%
   summarise(
     imprecision_mean = mean(click_dist_balloons, na.rm = T) %>% round(2),
@@ -65,6 +74,14 @@ lifespan_data %>%
     imprecision_min = min(click_dist_balloons, na.rm = T),
     imprecision_max = max(click_dist_balloons, na.rm = T),
   )
+
+lifespan_variation_all
+write.csv(lifespan_variation_all, "../saves/lifespan_variation_all.csv", quote = F, row.names = F)
+saveRDS(lifespan_variation_all, "../saves/lifespan_variation_all.rds")
+
+lifespan_variation_agegroups
+write.csv(lifespan_variation_agegroups, "../saves/lifespan_variation_agegroups.csv", quote = F, row.names = F)
+saveRDS(lifespan_variation_agegroups, "../saves/lifespan_variation_agegroups.rds")
 ```
 
 # MODEL COMPARISON FOR DEVELOPMENTAL TRAJECTORY
@@ -206,8 +223,8 @@ y <- mdata %>% arrange(age) %>% pull(mean_imprecision)
 ## irregular time intervals
 ibeast <- beast.irreg(y = y, time = x, season = "none", 
             torder.minmax = c(0, 0), # for constant
-            tcp.minmax = c(0, 5), # we assume 3, allow some room for exploration
-            tseg.min = 10, 
+            # tcp.minmax = c(0, 5), # let the beast decide on its own how many changepoints
+            tseg.min = 10, # half of nr data points for decade in adult sample
             mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
             ci = TRUE)
 
@@ -234,37 +251,145 @@ saveRDS(cps, "../saves/lifespan_ibeast_cps.rds")
 ```
 
 # PLOT
+
 ```{r plot}
-# mgaussianprocess <- readRDS("../saves/lifespan_mgaussianprocess.rds")
-# cps <- readRDS("../saves/lifespan_ibeast_cps.rds")
+mgaussianprocess <- readRDS("../saves/lifespan_mgaussianprocess.rds")
+cps <- readRDS("../saves/lifespan_ibeast_cps.rds")
 
 # https://cran.r-project.org/web/packages/tidybayes/vignettes/tidy-brms.html
 lifespan_plot <- mdata %>%
   add_epred_draws(mgaussianprocess, ndraws = 100) %>%
-  
   ggplot(aes(x = age, y = mean_imprecision)) +
   
+  # raw data points
   geom_jitter(data = mdata, aes(x = age, y = mean_imprecision), alpha = 0.5, color = "darkgrey") + 
   
+  # model predictions spaghetti lines
   geom_line(aes(y = .epred, group=.draw), alpha = .075, color = "blue") +
+  # mean model prediction
+  stat_lineribbon(aes(y = .epred), .width = 0, color = "black", fill = "black") +
   
-  geom_smooth(data = pred, aes(x = age, y = estimate), stat = "identity", col = "black", size = 0.75) + 
-  
+  # change points from beast
   geom_vline(xintercept = cps$cp, linetype = "dashed", alpha = 0.9, size = 0.75) + 
   
   scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 5)) +
   scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
-  
-  # ## to zoom in
-  # coord_cartesian(xlim = c(3, 10)) +
-  # scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 1)) +
-  
   labs(x = "Age in years", y = "Average imprecision in target width")
 
 lifespan_plot
 
 saveRDS(lifespan_plot, "../saves/lifespan_plot.rds")
 
-# ggsave("../figures/lifespan.png", width = 7, height = 4)
-# ggsave("../figures/lifespan.pdf", width = 7, height = 4)
+ggsave("../figures/lifespan_all.png", width = 7, height = 4)
+ggsave("../figures/lifespan_all.pdf", width = 7, height = 4)
 ```
+
+```{r zoomed_plot}
+# https://cran.r-project.org/web/packages/tidybayes/vignettes/tidy-brms.html
+lifespan_plot_zoom <- mdata %>%
+  add_epred_draws(mgaussianprocess, ndraws = 100) %>%
+  ggplot(aes(x = age, y = mean_imprecision)) +
+  
+  # raw data points
+  geom_jitter(data = mdata, aes(x = age, y = mean_imprecision), alpha = 0.5, color = "darkgrey") + 
+  
+  # model predictions spaghetti lines
+  geom_line(aes(y = .epred, group=.draw), alpha = .075, color = "blue") +
+  # mean model prediction
+  stat_lineribbon(aes(y = .epred), .width = 0, color = "black", fill = "black") +
+  
+  # change points from beast
+  geom_vline(xintercept = cps$cp, linetype = "dashed", alpha = 0.9, size = 0.75) + 
+  
+ 
+  coord_cartesian(xlim = c(3, 10)) +
+  scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 0.5)) +
+  
+  scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) + 
+  labs(x = "Age in years", y = "Average imprecision in target width")
+
+lifespan_plot_zoom
+
+saveRDS(lifespan_plot_zoom, "../saves/lifespan_plot_zoom.rds")
+
+# ggsave("../figures/lifespan_zoom.png", width = 7, height = 4)
+# ggsave("../figures/lifespan_zoom.pdf", width = 7, height = 4)
+```
+
+```{r arrange_plot}
+arranged <- ggarrange(
+  lifespan_plot, 
+  lifespan_plot_zoom, 
+  widths = c(2, 1.5), 
+  labels = c("A", "B")
+)
+
+arranged
+
+ggsave("../figures/lifespan_plot.png", width = 10, height = 3, scale = 1.2)
+ggsave("../figures/lifespan_plot.pdf", width = 10, height = 3, scale = 1.2)
+```
+
+```{r try_ggbreak}
+library(ggbreak)
+
+lifespan_cut <- mdata %>%
+  add_epred_draws(mgaussianprocess, ndraws = 100) %>%
+  ggplot(aes(x = age, y = mean_imprecision)) +
+
+  # raw data points
+  geom_jitter(data = mdata, aes(x = age, y = mean_imprecision), alpha = 0.5, color = "darkgrey") + 
+  
+  scale_x_cut(breaks = c(18), scales = "free", space = 0.001) +
+
+  # model predictions spaghetti lines
+  geom_line(aes(y = .epred, group=.draw), alpha = .075, color = "blue") +
+  # mean model prediction
+  stat_lineribbon(aes(y = .epred), .width = 0, color = "black", show.legend = F) +
+  
+  # change points from beast
+  geom_vline(xintercept = cps$cp, linetype = "dashed", alpha = 0.9, size = 0.75) +
+  
+  scale_x_continuous(limits = c(3, 80), breaks = c(3:17, 20, 30, 40, 50, 60, 70, 80)) +
+  scale_y_continuous(limits = c(0, 4), breaks = seq(0, 4, 0.5)) +
+
+  labs(x = "Age", y = "Mean imprecision", xdist = "", ydist = "")
+
+lifespan_cut
+```
+
+```{r try_ggh4x}
+library(ggh4x)
+
+mdata %>%
+  mutate(my_facet = age > 20.00) %>% 
+  add_epred_draws(mgaussianprocess, ndraws = 100) %>%
+  
+  ggplot(aes(x = age, y = mean_imprecision)) +
+
+    # raw data points
+  geom_jitter(data = mdata, aes(x = age, y = mean_imprecision), alpha = 0.5, color = "darkgrey") + 
+  
+    # model predictions spaghetti lines
+  geom_line(aes(y = .epred, group=.draw), alpha = .075, color = "blue") +
+  # mean model prediction
+  stat_lineribbon(aes(y = .epred), .width = 0, color = "black", show.legend = F) +
+  
+  # for gap in x axis
+  facet_grid(~ my_facet, scales = "free_x") +
+  theme(strip.text.x = element_blank()) + 
+  
+  ggh4x::facetted_pos_scales(x = list(
+    my_facet == FALSE ~ scale_x_continuous(limits = c(3, 20), breaks = seq(3, 19, 1)),
+    my_facet == TRUE ~ scale_x_continuous(limits = c(20, 80), breaks = seq(20, 80, 10))
+)) + 
+
+  geom_vline(data = data.frame(xint=cps$cp[1:4], my_facet = FALSE), aes(xintercept = xint), linetype = "dotted") +
+  geom_vline(data = data.frame(xint=cps$cp[5:6], my_facet = TRUE), aes(xintercept = xint), linetype = "dotted") +
+  
+  labs(x = "Age in years", y = "Average imprecision in target width") + 
+  
+  # get rid of space between facets
+  theme(panel.spacing = unit(0.1, "lines"))
+```
+

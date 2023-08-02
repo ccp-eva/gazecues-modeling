@@ -51,8 +51,8 @@ mgp_triallevel <- brm(imprecision ~ gp(age_centered, k=50, c=5/4, scale=TRUE) + 
 
 mgp_triallevel <- mgp_triallevel %>% add_criterion(c("loo","waic"))
 
-write.csv(mgp_triallevel, "../saves/mgp_triallevel.csv", quote = F, row.names = F)
-saveRDS(mgp_triallevel, "../saves/mgp_triallevel.rds")
+write.csv(mgp_triallevel, "../saves/lifespan_mgp_triallevel.csv", quote = F, row.names = F)
+saveRDS(mgp_triallevel, "../saves/lifespan_mgp_triallevel.rds")
 ```
 
 ```{r plot_triallevel}
@@ -83,8 +83,8 @@ mgp_aggregated <- brm(mean_imprecision ~ gp(age_centered, k=50, c=5/4, scale=TRU
 
 mgp_aggregated <- mgp_aggregated %>% add_criterion(c("loo","waic"))
 
-write.csv(mgp_aggregated, "../saves/mgp_aggregated.csv", quote = F, row.names = F)
-saveRDS(mgp_aggregated, "../saves/mgp_aggregated.rds")
+write.csv(mgp_aggregated, "../saves/lifespan_mgp_aggregated.csv", quote = F, row.names = F)
+saveRDS(mgp_aggregated, "../saves/lifespan_mgp_aggregated.rds")
 ```
 
 ```{r plot_aggregated}

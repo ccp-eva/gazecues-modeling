@@ -51,6 +51,34 @@ set.seed(42)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
+# Lifespan
+## Participants
+```{r lifespan_sample, include = T, out.width = "100%"}
+lifespan_sample <- readRDS("../saves/lifespan_sample.rds")
+
+lifespan_table <- lifespan_sample %>% 
+  mutate(
+    n = str_glue_data(., "{n_total} ({n_females} female)"), 
+    `Age range` = str_glue_data(., "{age_min} - {age_max}"), 
+  ) %>% 
+  rename(
+    `Age group` = age_group,
+    `Age SD` = age_sd, 
+    `Age mean` = age_mean
+  ) %>% 
+  select(`Age group`, n, `Age mean`, `Age range`, `Age SD`)
+
+apa_table(lifespan_table)
+```
+
+# Computational cognitive model 
+## Imprecision by target position
+
+(ref:figlab1) **Gaze funnel for adult sample with higher trial number**.
+```{r fig1, include = T, out.width = "100%", fig.align = "center", fig.cap = "(ref:figlab1)"}
+knitr::include_graphics("../figures/gazefunnel_adults.pdf")
+```
+
 # Components of gaze understanding
 ## Theory of mind battery 
 
