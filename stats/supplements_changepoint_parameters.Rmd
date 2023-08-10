@@ -45,58 +45,65 @@ y <- mdata %>% arrange(age) %>% pull(mean_imprecision)
 ### BEASTs
 
 ```{r run_beasts, echo=T, message=FALSE, warning=FALSE, results=FALSE}
+# this is the one we report in our paper: 
+b0 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0), 
+            tseg.min = 10, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
+            ci = TRUE)
+
 b1 <- beast.irreg(y = y, time = x, season = "none", 
             torder.minmax = c(0, 0), 
             tcp.minmax = c(0, 5),
             tseg.min = 10, 
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
             ci = TRUE)
 
 b2 <- beast.irreg(y = y, time = x, season = "none", 
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
             ci = TRUE)
 
 b3 <- beast.irreg(y = y, time = x, season = "none", 
             torder.minmax = c(0, 0),
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
             ci = TRUE)
 
 b4 <- beast.irreg(y = y, time = x, season = "none", 
             torder.minmax = c(0, 0),
             tcp.minmax = c(0, 10), 
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
             ci = TRUE)
 
 b5 <- beast.irreg(y = y, time = x, season = "none", 
             torder.minmax = c(0, 0),
             tcp.minmax = c(0, 10), 
             tseg.min = 50, 
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
             ci = TRUE)
 
 b6 <- beast.irreg(y = y, time = x, season = "none", 
             torder.minmax = c(0, 0),
             tcp.minmax = c(0, 10), 
             tseg.min = 100, 
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
             ci = TRUE)
 
 b7 <- beast.irreg(y = y, time = x, season = "none", 
             torder.minmax = c(0, 0),
             tcp.minmax = c(0, 3), 
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
             ci = TRUE)
 
 b8 <- beast.irreg(y = y, time = x, season = "none", 
             torder.minmax = c(0, 0),
             tcp.minmax = c(0, 20), 
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
             ci = TRUE)
 
 b9 <- beast.irreg(y = y, time = x, season = "none", 
             torder.minmax = c(0, 0),
             tcp.minmax = c(0, 100), 
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42,
             ci = TRUE)
 
 
@@ -104,7 +111,14 @@ b10 <- beast.irreg(y = y, time = x, season = "none",
             torder.minmax = c(0, 0),
             tcp.minmax = c(0, 100), 
             tseg.min = 100, 
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
+            ci = TRUE)
+
+b11 <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0),
+            tcp.minmax = c(0, 72), # as max nr, since 719 datapoints, 10 tseg.min
+            tseg.min = 10, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
             ci = TRUE)
 ```
 
@@ -118,9 +132,9 @@ showBeast <- function(beast) {
 ```
 
 ```{r actually_printbeasts}
-beasts <- list(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10)
+beasts <- list(b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11)
 
-counter = 1
+counter = 0
 
 for (i in beasts) {
   print("")
@@ -133,7 +147,7 @@ for (i in beasts) {
 }
 ```
 
-### Searching for reasonable minimum nr between change points 
+### To judge nr of data points between change points 
 
 ```{r}
 mdata <- mdata %>% 
@@ -158,28 +172,61 @@ mean_n_per_3y <- mdata %>%
   summarize(mean_n_per_3y = mean(n_per_bin) %>% round(2)) %>% 
   pull(mean_n_per_3y)
 
-mean_age_diff * mean_n_per_3y * 3
+mean_age_diff
+# [1] 0.11 corresponds to mean age difference between consecutive points on the x-axis
 
-3/mean_age_diff
+mean_n_per_3y
+# [1] 27.65 data points correspond to 3 years of development
 ```
 
-```{r final_beast, message=FALSE, warning=FALSE}
-bfinal <- beast.irreg(y = y, time = x, season = "none", 
-            torder.minmax = c(0, 0), 
-            tcp.minmax = c(0, 5),
-            tseg.min = mean_age_diff * mean_n_per_3y * 3, 
-            mcmc.chains = 4, mcmc.burnin = 1000, mcmc.samples = 10000, 
-            ci = TRUE)
+```{r}
+b11
+
+plot(b11)
+
+str(b11)
+
+# Y: a vector of length N; the estimated trend component.It is the Bayesian model averaging of all the individual sampled trend.
+b11$trend$Y
+
+plot(b11, vars = c('t', 'y'))
+
+plot(b11$time, b11$trend$Y, type = 'l') # #directly plot output: the fitted trend
+
+plot(b11$time, b11$trend$cpOccPr) # #directly plot output: trend chgpt occurrence prob
 ```
 
-```{r final_beast}
-showBeast(bfinal)
+```{r}
+est <- tibble(age = x, data = y, model = b11$trend$Y)
+cps <- b11$trend$cp[1:b11$trend$ncp_median]
 
-# pull out all relevant change points
-cps <- tibble(
-          cp = bfinal$trend$cp[1:bfinal$trend$ncp_median], 
-          lowerCrI = bfinal$trend$cpCI[1:bfinal$trend$ncp_median,1], 
-          upperCrI = bfinal$trend$cpCI[1:bfinal$trend$ncp_median,2]
-       )
+ggplot(data = est, aes(data, model)) + 
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  stat_cor() +
+  scale_x_continuous(limits = c(0, 3), breaks = seq(0, 3, 0.5)) +
+  scale_y_continuous(limits = c(0, 3), breaks = seq(0, 3, 0.5))
+
+n_distinct(est$model)
+
+est %>% 
+  pivot_longer(cols = c(data, model), names_to = "source") %>% 
+  ggplot(aes(x = age, y = value, color = as.factor(source))) + 
+  geom_point(alpha = 0.5) +
+  geom_vline(xintercept = cps, linetype = "dashed", alpha = 0.9, size = 0.75) +
+  scale_color_manual(values = c("darkblue", "orange")) +
+  scale_x_continuous(limits = c(3, 80), breaks = seq(0, 80, 5)) +
+  scale_y_continuous(limits = c(0, 2.5), breaks = seq(0, 2.5, 0.5)) + 
+  labs(x = "Age", y = "Mean imprecision", color = "Source")
+
+est %>% 
+  pivot_longer(cols = c(data, model), names_to = "source") %>% 
+  filter(source == "model", age >= 20) %>%
+  ggplot(aes(x = age, y = value)) + 
+  geom_point() +
+  geom_vline(xintercept = cps, linetype = "dashed", alpha = 0.9, size = 0.75) +
+  scale_x_continuous(limits = c(20, 80), breaks = seq(0, 80, 5)) +
+  scale_y_continuous(limits = c(0.5, 1), breaks = seq(0.5, 1, 0.5)) +
+  labs(x = "Age", y = "Mean imprecision")
 ```
 
