@@ -71,6 +71,17 @@ magnet_data %>%
   scale_x_continuous(limits = c(0, 3.75), breaks = seq(0, 4, 0.5)) +
   scale_y_continuous(limits = c(0, 3.75), breaks = seq(0, 4, 0.5)) +
   labs(x = "Magnet mean", y = "Tango mean")
+
+magnet_data %>% 
+  group_by(subj_id) %>% 
+  mutate(tom_other = sum(desires, knowledge, content, explicit)) %>% 
+  ggplot(., aes(x = tom_other, y = perspective_aggregate)) + 
+  geom_smooth(method = "lm", size = 1, alpha = 0.25, col = "darkgrey") +
+  geom_jitter(color = "#005555", width = 0.05, height = 0.05) +
+  stat_cor(method = "pearson", label.x = 0, label.y = 1.1, aes(label = paste(..r.label..)), size = 5, r.accuracy = 0.01, cor.coef.name = "r") + 
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, 1)) +
+  scale_y_continuous(limits = c(0, 2), breaks = seq(0, 2, 1)) +
+  labs(x = "ToM excl. perspective-taking", y = "Perspective-taking")
 ```
 
 ```{r corrplot}

@@ -179,36 +179,47 @@ mean_n_per_3y
 # [1] 27.65 data points correspond to 3 years of development
 ```
 
-```{r}
-b11
+```{r luke}
+library(tidyverse)
+library(Rbeast) # Bayesian change point analysis
+set.seed(42)
 
-plot(b11)
+lifespan_data <- readRDS("../data/tango-lifespan.rds")
 
-str(b11)
+mdata <- lifespan_data %>% 
+  group_by(subj_id, age, age_centered) %>% 
+  summarize(mean_imprecision = mean(click_dist_balloons, na.rm = TRUE))
+
+x <- mdata %>% arrange(age) %>% pull(age)
+y <- mdata %>% arrange(age) %>% pull(mean_imprecision)
+
+ibeast <- beast.irreg(y = y, time = x, season = "none", 
+            torder.minmax = c(0, 0),
+            tcp.minmax = c(0, 72), # as max nr, since 719 datapoints, 10 tseg.min
+            tseg.min = 10, 
+            mcmc.chains = 4, mcmc.burnin = 1000,  mcmc.samples = 10000, mcmc.seed = 42, 
+            ci = TRUE)
 
 # Y: a vector of length N; the estimated trend component.It is the Bayesian model averaging of all the individual sampled trend.
-b11$trend$Y
+ibeast$trend$Y
 
-plot(b11, vars = c('t', 'y'))
+# plotting with Rbeast plot function
+plot(ibeast)
 
-plot(b11$time, b11$trend$Y, type = 'l') # #directly plot output: the fitted trend
+plot(ibeast, vars = c('t', 'y')) # plot time vs predicted values
+plot(ibeast$time, ibeast$trend$Y, type = 'l') # directly plot output: the fitted trend line
+plot(ibeast$time, ibeast$trend$cpOccPr) # directly plot output: trend chgpt occurrence prob
 
-plot(b11$time, b11$trend$cpOccPr) # #directly plot output: trend chgpt occurrence prob
-```
+# create imprecision as observed in data and as predicted by cp analysis
+est <- tibble(age = x, data = y, model = ibeast$trend$Y)
+cps <- ibeast$trend$cp[1:ibeast$trend$ncp_median]
 
-```{r}
-est <- tibble(age = x, data = y, model = b11$trend$Y)
-cps <- b11$trend$cp[1:b11$trend$ncp_median]
-
-ggplot(data = est, aes(data, model)) + 
-  geom_point() +
-  geom_smooth(method = "lm") + 
-  stat_cor() +
-  scale_x_continuous(limits = c(0, 3), breaks = seq(0, 3, 0.5)) +
-  scale_y_continuous(limits = c(0, 3), breaks = seq(0, 3, 0.5))
-
+# check how many distinct fitted values
+# => here question: 
+# I'd assume that we need as many distinct
 n_distinct(est$model)
 
+# plot raw data and fitted values from cp analysis
 est %>% 
   pivot_longer(cols = c(data, model), names_to = "source") %>% 
   ggplot(aes(x = age, y = value, color = as.factor(source))) + 
@@ -218,15 +229,5 @@ est %>%
   scale_x_continuous(limits = c(3, 80), breaks = seq(0, 80, 5)) +
   scale_y_continuous(limits = c(0, 2.5), breaks = seq(0, 2.5, 0.5)) + 
   labs(x = "Age", y = "Mean imprecision", color = "Source")
-
-est %>% 
-  pivot_longer(cols = c(data, model), names_to = "source") %>% 
-  filter(source == "model", age >= 20) %>%
-  ggplot(aes(x = age, y = value)) + 
-  geom_point() +
-  geom_vline(xintercept = cps, linetype = "dashed", alpha = 0.9, size = 0.75) +
-  scale_x_continuous(limits = c(20, 80), breaks = seq(0, 80, 5)) +
-  scale_y_continuous(limits = c(0.5, 1), breaks = seq(0.5, 1, 0.5)) +
-  labs(x = "Age", y = "Mean imprecision")
 ```
 
