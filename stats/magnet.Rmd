@@ -125,6 +125,19 @@ write.csv(cor_matrix, "../saves/magnet_cormatrix.csv", quote = F, row.names = F)
 saveRDS(cor_matrix, "../saves/magnet_cormatrix.rds")
 ```
 
+```{r explorative}
+tango_tom_excl_perspective <- magnet_data %>% 
+  group_by(subj_id) %>% 
+  mutate(
+    tom_excl_perspective = sum(desires, knowledge, content, explicit)
+  ) %>% 
+  ungroup() %>% 
+  select(tango_mean, tom_excl_perspective) %>% 
+  corr.test(method = "spearman")
+
+tango_tom_excl_perspective$ci
+```
+
 ```{r plot_cor_ci}
 cor_ci <- cor_matrix %>% 
   filter(Correlation != "ToM x Perspective-taking") %>% 
