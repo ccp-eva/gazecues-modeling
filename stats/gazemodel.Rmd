@@ -53,6 +53,22 @@ tango <- full_join(tango_kids, tango_adults)
 # careful, this takes a while... 
 model_kids <- readRDS("../data/gazemodel-kids.rds")
 model_kids_dev_prior <- readRDS("../data/gazemodel-kids-dev-prior.rds")
+
+model_adults_ind <- readRDS("../data/gazemodel-adults-ind.rds") %>% 
+  rename("mode" = sdTol) %>% 
+  mutate(
+    age_group = 18, 
+    age = 18,
+    id = str_replace_all(id, "gafo_prolific_modelvalidation_vp", "gp1-")
+  )
+
+model_adults_bins <- readRDS("../data/gazemodel-adults-bins.rds") %>% 
+  mutate(
+    age_group = 18, 
+    # transform into target width units
+    data_mean = data_mean / 160, 
+    model_mean = model_mean / 160,
+  )
 ```
 
 ```{r sample}
@@ -112,12 +128,9 @@ gazefunnel
 # ggsave("../figures/gazemodel_funnel.png", width = 6, height = 4, scale = 1.2)
 ```
 
-# CHILDREN
+# Inference 
 
-## Inference 
-
-```{r plot2B}
-# (plot 2A is model logic, png)
+```{r plot3A}
 # developmental trajectory model inference parameter
 inf_map_devp <- model_kids_dev_prior %>%
   filter(scope == "global", 
@@ -152,11 +165,25 @@ id_devp <- model_kids_dev_prior %>%
               distinct(id, .keep_all = T)) %>%
   ungroup()
 
+model_adults_sd <- model_adults_ind %>% 
+  summarize(
+    mean_mode = mean(mode), 
+    lci = hdi_lower(mode), 
+    uci = hdi_upper(mode)
+  )
+
 dev_plot <- ggplot() +
+  
+  # children
   geom_point(data = id_devp, aes(x = age, y = mode), alpha = 0.75, color = "darkgrey") +
   geom_line(data = inf_samp_devp, aes(x = age + 3, y = sd, group = paste(chain,iteration)), col = "blue", alpha = .01) +
   geom_line(data = inf_map_devp, aes(x = age + 3, y = sd), col = "black", linewidth = 1.25) +
-  scale_x_continuous(limits = c(3, 6), breaks = seq(3, 6, 0.5)) + 
+  
+  # adults 
+  geom_jitter(data = model_adults_ind, aes(x = 6.5, y = mode), alpha = 0.5, color = "darkgrey",  width = .1) + 
+  geom_pointrange(data = model_adults_sd %>% head(1), aes(x = 6.5, y = mean_mode, ymin = lci, ymax = uci), size = 0.5) + 
+  
+  scale_x_continuous(limits = c(3, 6.7), breaks = seq(3, 6.5, 0.5), labels = c("3.0", "3.5", "4.0", "4.5", "5.0", "5.5", "6.0", "Adults")) + 
   scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, 0.25)) +
   coord_cartesian(ylim = c(0, 3)) +
   labs(x = "Age in years", y = expression(paste("Mode model parameter (", italic("\U03C3"[v]), ")")))
@@ -169,7 +196,7 @@ saveRDS(dev_plot, file = "../saves/gazemodel_dev_plot.rds")
 
 ## Correlation model vs data individual level / age
 
-```{r plot2C}
+```{r plot3B}
 comparison_model_data_devp <- model_kids_dev_prior %>%
   filter(scope == "id", type == "sd") %>%
   group_by(id) %>%
@@ -181,23 +208,49 @@ comparison_model_data_devp <- model_kids_dev_prior %>%
       rename(id = subj_id)
   )
 
-model_vs_data_plot <- ggplot(comparison_model_data_devp, aes(x = model_mode, y = data_mean)) +
+comparison_model_data_adults <- tango_adults %>% 
+  group_by(subj_id) %>% 
+  summarize(
+    data_mean = mean(click_dist_balloons)
+  ) %>% 
+  left_join(model_adults_ind %>% select(-lci, -uci) %>% rename("model_mode" = mode, "subj_id" = id))
+
+comparison_model_data <- full_join(comparison_model_data_devp, comparison_model_data_adults) %>% 
+  mutate(sample = ifelse(age < 18, "children", "adults"))
+
+model_vs_data_plot <- ggplot(comparison_model_data, aes(x = model_mode, y = data_mean, group = sample)) +
   geom_point(aes(col = age)) +
-  stat_cor(method = "pearson", label.x = 0.05, label.y = 4.9, aes(label = paste(..r.label..)), size = 4, r.accuracy = 0.01, cor.coef.name = "r") +
+  stat_cor(data = comparison_model_data %>% filter(sample == "children"), aes(label = paste(..r.label..)), method = "pearson", size = 4, r.accuracy = 0.01, cor.coef.name = "r", label.x = 0, label.y = 4.5) +
+  
+  stat_cor(data = comparison_model_data %>% filter(sample == "adults"), aes(label = paste(..r.label..)), method = "pearson", size = 4, r.accuracy = 0.01, cor.coef.name = "r", label.x = 0, label.y = 2.25) +
+  
   geom_smooth(method = "lm", col = "darkgrey", alpha = 0.25) +
-  scale_color_viridis_c(direction = -1, alpha = 0.9, limits = c(3, 6), breaks = seq(3, 6, 0.5)) +
+  
   labs(x = expression(paste("Mode model parameter (", italic("\U03C3"[v]), ")")), y = "Mean data imprecision", color = "Age") + 
-  scale_x_continuous(limits = c(0, 2.1), breaks = seq(0, 2, 0.5)) + 
-  scale_y_continuous(limits = c(0, 5), breaks = seq(0, 5, 1)) 
+  
+  scale_x_continuous(limits = c(0, NA), n.breaks = 7) +
+  scale_y_continuous(limits = c(0, NA), n.breaks = 5) +
+  scale_color_viridis_c(direction = -1, alpha = 0.9, limits = c(3, 6), breaks = seq(3, 6, 0.5)) +
+  theme_few() +
+  theme(
+    legend.position = c(0.37, 0.3),
+    strip.text = element_text(face = "bold", size = 10), 
+    legend.title = element_text(size = 8),
+    legend.text = element_text(size = 8), 
+    legend.box.background = element_rect(), 
+    legend.key.height = unit(0.5, "cm"),
+  ) +
+  facet_wrap(~ factor(sample, levels = c("children", "adults"), labels = c("Child sample", "Adult sample")), scales = "free")
 
 model_vs_data_plot
+
 saveRDS(model_vs_data_plot, file = "../saves/gazemodel_model_vs_data.rds")
 
 # ggsave("../figures/gazemodel_model_vs_data.png", width = 8, height = 5, scale = 1, bg = "white")
 # ggsave("../figures/gazemodel_model_vs_data.pdf", width = 8, height = 5, scale = 1, bg = "white")
 ```
 
-## Inference parameters individuals
+# Inference parameters individuals
 
 ```{r id_inf}
 # prepare data
@@ -245,7 +298,7 @@ ggsave("../figures/supplements_gazemodel_facetedinference.png", width = 10, heig
 ggsave("../figures/supplements_gazemodel_facetedinference.pdf", width = 10, height = 6, scale = 1.4, bg = "white")
 ```
 
-## Recover U pattern
+# Recover U pattern
 
 ```{r get_click_prior}
 get_click_prior <- function(sdTol, eyeCenterLY, eyeCenterLX, eyeCenterRY, eyeCenterRX, targetCenterY, targetCenterX, pupilLX, pupilRX, priorInt, priorSlope, age){
@@ -311,8 +364,7 @@ get_click_prior <- function(sdTol, eyeCenterLY, eyeCenterLX, eyeCenterRY, eyeCen
 }
 ```
 
-```{r plot2E}
-# (plot 2D is model geometry logic, png)
+```{r plot3C}
 # u pattern recovery
 ind_sd <- model_kids_dev_prior %>%
   filter(scope == "id", type == "sd") %>%
@@ -333,14 +385,19 @@ ind_sd <- model_kids_dev_prior %>%
 ind_sd_long <- ind_sd %>% slice(rep(1:n(), each = 100))
 
 # saveRDS(ind_sd_long, file = "../saves/gazemodel_ind_sd_long.rds")
+# ind_sd_long <- readRDS("../saves/gazemodel_ind_sd_long.rds")
 
-# priorMode <- model_kids_dev_prior %>%
-#   filter(scope == "global",
-#          parameter == "priorSd",
-#          type != "sigma") %>%
-#   group_by(type) %>%
-#   summarise(mode = estimate_mode(value))
-#
+priorMode <- model_kids_dev_prior %>%
+  filter(scope == "global",
+         parameter == "priorSd",
+         type != "sigma") %>%
+  group_by(type) %>%
+  summarise(
+    mode = estimate_mode(value), 
+    lci = hdi_lower(value), 
+    uci = hdi_upper(value))
+
+saveRDS(priorMode, file = "../saves/gazemodel_prior.rds")
 
 # # careful, this runs a while... (ca. 30-45 min for me)
 
@@ -377,10 +434,13 @@ ind_sd_long <- ind_sd %>% slice(rep(1:n(), each = 100))
 # saveRDS(modelpred_gaze, "../saves/gazemodel_modelpred_gaze.rds")
 modelpred_gaze <- readRDS("../saves/gazemodel_modelpred_gaze.rds")
     
-u_plot <- modelpred_gaze %>%
+u_data <- full_join(modelpred_gaze, model_adults_bins)
+saveRDS(u_data, "../saves/gazemodel_u_data.rds")
+
+u_plot <- u_data %>%
   pivot_longer(cols = c(data_mean, model_mean), names_to = "source", values_to = "imprecision") %>%
   mutate(
-    age_group = factor(age_group, levels = c(3, 4, 5), labels = c("3-year-olds", "4-year-olds", "5-year-olds")), 
+    age_group = factor(age_group, levels = c(3, 4, 5, 18), labels = c("3-year-olds", "4-year-olds", "5-year-olds", "Adults")), 
   ) %>% 
   ggplot(aes(x = targetBin, y = imprecision, col = source)) +
   geom_point(alpha = 0.8) +
@@ -390,13 +450,13 @@ u_plot <- modelpred_gaze %>%
   labs(x = "Target bin", y = "Imprecision", color = "Source") + 
   theme_few() +
   theme(
-    legend.position = c(0.84 , 0.8), # c(0,0) bottom left, c(1,1) top-right
-    strip.text = element_text(face = "bold", size = 12), 
-    legend.title = element_text(size = 6),
-    legend.text = element_text(size = 6), 
+    legend.position = c(0.881, 0.7), # c(0,0) bottom left, c(1,1) top-right
+    strip.text = element_text(face = "bold", size = 10), 
+    legend.title = element_text(size = 8),
+    legend.text = element_text(size = 8), 
     legend.box.background = element_rect(), 
-    legend.key.height = unit(0, "cm"),
-    legend.key.width = unit(-1.5, "cm"),
+    legend.key.height = unit(0.4, "cm"),
+    legend.key.width = unit(-1.2, "cm"),
     plot.margin = margin(0.2, 0, 0.1, 0.2, "cm") # t r b l
   )
 
@@ -423,6 +483,7 @@ saveRDS(modelpred_gaze_plot, "../saves/gazemodel_modelpred_gaze_plot.rds")
 # ggsave("../figures/gazemodel_modelpred_gaze_plot.png", width = 8, height = 5, scale = 1, bg = "white")
 # ggsave("../figures/gazemodel_modelpred_gaze_plot.pdf", width = 8, height = 5, scale = 1, bg = "white")
 ```
+
 # Alternative models click generation
 
 ## Center bias model
@@ -568,7 +629,7 @@ saveRDS(modelpred_random_plot, "../saves/gazemodel_modelpred_random_plot.rds")
 
 ## Combine plots of predictions from 3 models
 
-```{r plot2F}
+```{r plot3D}
 modelpred_gaze_plot <- readRDS("../saves/gazemodel_modelpred_gaze_plot.rds")
 modelpred_center_plot <- readRDS("../saves/gazemodel_modelpred_center_plot.rds")
 modelpred_random_plot <- readRDS("../saves/gazemodel_modelpred_random_plot.rds")
@@ -576,14 +637,14 @@ modelpred_random_plot <- readRDS("../saves/gazemodel_modelpred_random_plot.rds")
 corr_model_pred_plot <- ggarrange(
   
   modelpred_gaze_plot + 
-    theme(legend.position = c(0.85, 0.2), 
-          legend.title = element_text(size = 6),
-          legend.text = element_text(size = 6), 
+    theme(legend.position = c(0.85, 0.3), 
+          legend.title = element_text(size = 8),
+          legend.text = element_text(size = 8), 
           legend.box.background = element_rect(), 
-          legend.key.height = unit(0, "cm"),
+          legend.key.height = unit(0.3, "cm"),
           legend.key.width = unit(-1.5, "cm"),
-          plot.margin = margin(0.2, 0, 0.1, 0.2, "cm") # t r b l
-         ), 
+          plot.margin = margin(0.2, -2, 0.1, 0.2, "cm") # t r b l
+         ),
   
   ggarrange(
     modelpred_center_plot + 
@@ -632,35 +693,39 @@ gazemodel_plot <- ggarrange(
   
   ncol = 3, 
   nrow = 2, 
-  widths = c(11, 1, 12), 
+  widths = c(13, 1, 12), 
   labels = c("A", "", "B", "C", "", "D")
 )
 
 gazemodel_plot
 saveRDS(gazemodel_plot, "../saves/gazemodel_plot.rds")
-ggsave("../figures/gazemodel_plot.png", width = 8, height = 5, scale = 1.3, bg = "white")
-ggsave("../figures/gazemodel_plot.pdf", width = 8, height = 5, scale = 1.3, bg = "white", device = cairo_pdf) 
+ggsave("../figures/gazemodel_plot.png", width = 8, height = 5, scale = 1.5, bg = "white")
+ggsave("../figures/gazemodel_plot.pdf", width = 8, height = 5, scale = 1.4, bg = "white", device = cairo_pdf)
 # add cairo_pdf to enable greek symbols in pdf saving
 ```
 
 
 ```{r results_table}
 # create tibble for reading out stats results in rmd manuscript
-corr_gazemodel_param <- comparison_model_data_devp %>% select(model_mode, data_mean) %>% corr.test(method = "pearson")
+corr_gazemodel_param_children <- comparison_model_data_devp %>% select(model_mode, data_mean) %>% corr.test(method = "pearson")
 
+corr_gazemodel_param_adults <- comparison_model_data_adults %>% select(model_mode, data_mean) %>% corr.test(method = "pearson")
+
+# this is children only 
 corr_gazemodel_pred <- modelpred_gaze %>% ungroup() %>% select(model_mean, data_mean) %>% corr.test(method = "pearson")
 corr_centermodel_pred <- modelpred_center %>% ungroup() %>% select(model_mean, data_mean) %>% corr.test(method = "pearson")
 corr_randommodel_pred <- modelpred_random %>% ungroup() %>% select(model_mean, data_mean) %>% corr.test(method = "pearson")
 
-corrs <- rbind(corr_gazemodel_param$ci, corr_gazemodel_pred$ci, corr_centermodel_pred$ci, corr_randommodel_pred$ci) %>% 
+corrs <- rbind(corr_gazemodel_param_children$ci, corr_gazemodel_param_adults$ci, corr_gazemodel_pred$ci, corr_centermodel_pred$ci, corr_randommodel_pred$ci) %>% 
   rownames_to_column(var = "corr") %>% 
   mutate(
     corr = recode(
             corr,
-            `mdl_m-dt_mn` = "gazemodel_param", 
-            `mdl_m-dt_mn1` = "gazemodel_pred", 
-            `mdl_m-dt_mn2` = "centermodel_pred", 
-            `mdl_m-dt_mn3` = "randommodel_pred", 
+            `mdl_m-dt_mn` = "gazemodel_param_kids", 
+            `mdl_m-dt_mn1` = "gazemodel_param_adults", 
+            `mdl_m-dt_mn2` = "gazemodel_pred_kids", 
+            `mdl_m-dt_mn3` = "centermodel_pred_kids", 
+            `mdl_m-dt_mn4` = "randommodel_pred_kids", 
            )
   ) %>% 
   mutate(across(where(is.numeric), round, 2))
@@ -675,6 +740,7 @@ saveRDS(corrs, file = "../saves/gazemodel_correlations.rds")
 modelcomparison_kids_bf <- readRDS("../data/gazemodel-kids-comparison-bf.rds")
 modelcomparison_kids_samples <- readRDS("../data/gazemodel-kids-comparison-samples.rds")
 ```
+
 ```{r mcomparison}
 # same as reading in modelcomparison_kids_bf
 modelcomparison_kids_samples %>%

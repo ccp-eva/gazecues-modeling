@@ -5,19 +5,21 @@ author:
   
   - name          : "Julia Prein"
     affiliation   : "1"
-  - name          : "Manuel Bohn"
-    affiliation   : "1,2"
   - name          : "Luke Maurits"
     affiliation   : "1"
   - name          : "Annika Werwach"
     affiliation   : "1"
   - name          : "Daniel B. M. Haun"
-    affiliation   : "1"
+    affiliation   : "1,*"
+  - name          : "Manuel Bohn"
+    affiliation   : "1,2,*"
 affiliation:
   - id            : "1"
     institution   : "Department of Comparative Cultural Psychology, Max Planck Institute for Evolutionary Anthropology, Leipzig, Germany"
   - id            : "2"
-    institution   : "Institute of Psychology, Leuphana University Lüneburg, Germany"  
+    institution   : "Institute of Psychology, Leuphana University Lüneburg, Germany"
+  - id            : "*"
+    institution   : "shared last authorship"  
 floatsintext      : yes
 bibliography      : ["../../references.bib"]
 figurelist        : no
@@ -28,20 +30,26 @@ mask              : no
 draft             : no
 documentclass     : "apa7"
 classoption       : "man"
-output            : papaja::apa6_word
+output            : papaja::apa6_pdf
 header-includes:
   - \usepackage{setspace}
+  - \usepackage{float}
   - \captionsetup[figure]{font={stretch=1}}
 editor_options: 
   markdown: 
     wrap: sentence
 ---
 
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
 ```{r setup, include = FALSE}
 library("papaja")
 library("tidyverse")
 library("ggpubr")
 library("kableExtra")
+library("brms")
 theme_set(theme_classic())
 ```
 
@@ -51,7 +59,7 @@ set.seed(42)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
-# Lifespan
+# Study 1: Lifespan
 ## Participants
 ```{r lifespan_sample, include = T, out.width = "100%"}
 lifespan_sample <- readRDS("../saves/lifespan_sample.rds")
@@ -68,19 +76,51 @@ lifespan_table <- lifespan_sample %>%
   ) %>% 
   select(`Age group`, n, `Age mean`, `Age range`, `Age SD`)
 
-apa_table(lifespan_table)
+knitr::kable(lifespan_table, format = "latex", booktabs = TRUE) %>% 
+  kable_styling(latex_options = c("scale_down", "HOLD_position"))
 ```
 
-# Computational cognitive model 
-## Imprecision by target position
+## Analysis
+### Model structures
+In the paper, we reported the following model structures: linear model: `mean_imprecision ~ age_centered`; quadratic model in `R: mean_imprecision ~ 1 + age_centered + I(age_centered^2)`; cubic model: `mean_imprecision ~ 1 + age_centered + I(age_centered^2) + I(age_centered^3);` Gaussian process model: `mean_imprecision ~ gp(age_centered, k=50, c=5/4, scale=TRUE)`. Note the additional parameters in the Gaussian process model. With the default settings, the underlying Gaussian process maths would get solved exactly. By providing the arguments `k` and `c`, we use an approximation process. The higher the value of k, the better the approximation: we have used `k=50` for faster processing speed and better diagnostics. `brms` suggests 5/4 as a value for `c`. Adding `scale=TRUE` is supposed to improve sampling speed and convergence. 
 
-(ref:figlab1) **Gaze funnel for adult sample with higher trial number**.
+Originally, we fitted the models on a trial-by-trial basis with the following structure in `R: performance ~ age + symmetricPosition + trialNr + (1 + symmetricPosition + trialNr | subjID)`. However, the Gaussian Process model was computationally heavy. Therefore, we simplified the model structure, aggregated data on a subject level, and included only age as an effect. We then visually compared the model predictions of the original and the simplified models with each other. As you can see in Figure \@ref(fig:fig1), results of the two models did not differ notably. 
+
+(ref:figlab1) **Comparison between models on a trial- or subject-level**. Grey dots show data of each trial. Solid lines show the mean predicted developmental trajectory for both models. Line color denotes model structure (yellow: trial-level; black: aggregated on subject-level). 
 ```{r fig1, include = T, out.width = "100%", fig.align = "center", fig.cap = "(ref:figlab1)"}
+knitr::include_graphics("../figures/supplements_lifespan_modelstructure.pdf")
+```
+
+### Changepoint analysis
+In our Bayesian changepoint analysis, we restricted the model to a constant mean (i.e., a flat line with zero degree polynomial) within each segment, and to have minimally 10 data points between two change points (i.e., corresponding to half of the data points we collected per adult decade) to avoid "overreactions" to individual outlying data points. In a supplementary analysis, we assessed how different parameter settings effected of our changepoint analysis. We changed the number of allowed change points, the minimum number of data points between change points, and the polynomial order. When the model had more explorative room, for example, by a greater number of change points, smaller minimum number of data points between change points, higher polynomial order, the model outputs showed more fine-grained change points. The exact location of the change points varied slightly. Overall, the interpretation stayed the same as the one we reported in the paper. While early childhood was characterized by much change, adults showed a relatively stable level of imprecision. There was a minor change in that elderly adults became slightly more imprecise again. If you are interested into the details, please have a look at the file `supplements_changepoint_parameters.html`, which you can find in the GitHub repository in the `stats` folder. 
+
+# Study 2: Computational cognitive model 
+## Analysis
+### Gaze model prediction
+Our gaze model predicts that TANGO trials vary in their difficulty, resulting in a U-shaped pattern: Participants' imprecision should increase, the further out the target lands (towards the very left/right sides). Since the task is presented on a screen, there is a natural border towards one side. Imagine the target lands to the very right side. Participants' imprecision cannot click further right because the screen ends; all their uncertainty about the target location faces the inner, left-hand side now. Therefore, the predicted U-shaped pattern should decrease again towards the screen borders. For previous reliability analyses [@prein2023tango], we had increased the trial number for an adult sample (N = 70; each 30 trials). Interestingly, here we found the expected shape in the data: the U-pattern decreased again towards the screen ends (Figure \@ref(fig:fig2)). 
+
+(ref:figlab2) **Gaze funnel for adult sample with higher trial number**.
+```{r fig2, include = T, out.width = "100%", fig.align = "center", fig.cap = "(ref:figlab2)"}
 knitr::include_graphics("../figures/gazefunnel_adults.pdf")
 ```
 
-# Components of gaze understanding
-## Theory of mind battery 
+## Inference parameter estimates per individual
+As can be seen in Figure \@ref(fig:fig3) and Figure \@ref(fig:fig4), the gaze model estimated the inference parameter for each individual. Across individuals, the inference parameter varied in the estimated magnitude and level of uncertainty. In general, estimates for more precise individuals (i.e., smaller inference parameter value) showed decreased levels of uncertainty. 
+
+(ref:figlab3) **Gaze model estimates faceted by individual**.
+```{r fig3, include = T, out.width = "100%", fig.align = "center", fig.cap = "(ref:figlab3)"}
+knitr::include_graphics("../figures/supplements_gazemodel_facetedinference.pdf")
+```
+
+(ref:figlab4) **Gaze model estimates ordered by descending inference parameter value**.
+```{r fig4, include = T, out.width = "100%", fig.align = "center", fig.cap = "(ref:figlab4)"}
+knitr::include_graphics("../figures/supplements_gazemodel_indinference.pdf")
+```
+
+\newpage
+
+# Study 3: Components of gaze understanding
+## Procedure Theory of mind battery 
 
 |     |     |     |     |
 | --- | --- | --- | --- |
@@ -92,9 +132,17 @@ knitr::include_graphics("../figures/gazefunnel_adults.pdf")
 | Perspective-Taking Level 2 | Flavell et al., 1981 | Picture of a turtle is placed horizontally on the table between the child and experimenter, so that it appeared upside down (or right side up) from the child’s side and right side up (or upside down) from the experimenter’s. The child’s task is to indicate in which of these two orientations it appeared to the experimenter (“standing on its feet” or “lying on its back”). | Picture of a turtle |
 | Perspective-Taking Level 2 | Flavell et al., 1981 | Children are shown a horizontally placed picture of a worm lying between a red blanket and a blue blanket. The child was then asked if the worm appeared to the experimenter, seated opposite, to be lying on the red blanket or on the blue blanket. | Picture of a worm between two blankets |
 
-\newpage
+## Analysis
+### Animal vs. human faces
 
-## Model comparison
+```{r animal_human}
+mstimuli <- readRDS("../saves/supplements_magnet_mstimuli.rds")
+```
+
+In Study 1 and Study 2, we presented the TANGO [@prein2023tango] with animal characters. For Study 3, we exchanged the animals with human faces, modelled in appearance after the local population. We decided to do so in order to enhance the social context of this task and to make it more comparable to the Theory of Mind task battery (where there is live interaction with the experimenter). To ensure the change from animal to human faces did not notably change children's responses, we conducted an exploratory analysis. We conducted a GLMM analysis with the following model structure in `R: click ~ age_scaled + stimuli + symmetric_position + trial_nr + (1 + symmetric_position + trial_nr | subj_id)`; where `stimuli` denoted either human or animal faces. The estimate for the fixed effect of `stimuli` was small and the 95% CrI included zero: $\beta$ = `r fixef(mstimuli)["stimulihumans", "Estimate"]`; 95% CrI [`r fixef(mstimuli)["stimulihumans", "Q2.5"]`; `r fixef(mstimuli)["stimulihumans", "Q97.5"]`]). Therefore, we concluded that the animal vs. human version of the TANGO did not differ substantially. 
+
+### Model comparisons
+To identify which (social-)cognitive components were needed to best explain the TANGO score, we compared GLMMs that predicted the mean imprecision in gaze understanding by age + the respective task score: imprecision in non-social vector estimation, the ToM aggregate score, and/ or the aggregate of the two perspective-taking tasks (subset of ToM battery). For example, the model notation in `R: tango_mean ~ age_centered + magnet_scaled + perspective_scaled`). The model including the non-social vector estimation task (magnet) and the two perspective-taking tasks won, as indicated by the model comparison results below. 
 
 ```{r magnet_modelcomparison}
 magnet_modelcomparison <- readRDS("../saves/magnet_modelresults.rds") %>%
@@ -104,7 +152,6 @@ magnet_modelcomparison <- readRDS("../saves/magnet_modelresults.rds") %>%
 knitr::kable(magnet_modelcomparison, format = "latex", booktabs = TRUE) %>% 
   kable_styling(latex_options = c("scale_down", "HOLD_position"))
 ```
-
 
 # References
 
