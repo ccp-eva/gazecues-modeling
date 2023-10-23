@@ -233,16 +233,16 @@ print(ibeast)
 plot(ibeast)
 
 # how many changepoints?
-ibeast$trend$ncp_median
+ibeast$trend$ncp_mode
 
 # location of changepoints
 ibeast$trend$cp
 
 # pull out all relevant change points
 cps <- tibble(
-          cp = ibeast$trend$cp[1:ibeast$trend$ncp_median], 
-          lowerCrI = ibeast$trend$cpCI[1:ibeast$trend$ncp_median,1], 
-          upperCrI = ibeast$trend$cpCI[1:ibeast$trend$ncp_median,2]
+          cp = ibeast$trend$cp[1:ibeast$trend$ncp_mode], 
+          lowerCrI = ibeast$trend$cpCI[1:ibeast$trend$ncp_mode,1], 
+          upperCrI = ibeast$trend$cpCI[1:ibeast$trend$ncp_mode,2]
        )
 
 saveRDS(ibeast, "../saves/lifespan_ibeast.rds")

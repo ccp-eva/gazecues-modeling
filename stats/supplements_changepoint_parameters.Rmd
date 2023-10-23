@@ -212,7 +212,7 @@ plot(ibeast$time, ibeast$trend$cpOccPr) # directly plot output: trend chgpt occu
 
 # create imprecision as observed in data and as predicted by cp analysis
 est <- tibble(age = x, data = y, model = ibeast$trend$Y)
-cps <- ibeast$trend$cp[1:ibeast$trend$ncp_median]
+cps <- ibeast$trend$cp[1:ibeast$trend$ncp_mode]
 
 # check how many distinct fitted values
 # => here question: 
