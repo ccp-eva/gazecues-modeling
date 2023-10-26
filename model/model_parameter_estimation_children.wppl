@@ -1,5 +1,5 @@
 // example call: 
-//time webppl model-inf-kids-dev-prior-model-comp.wppl --require webppl-json --require webppl-sample-writer 1
+//time webppl model_parameter_estimation_children.wppl --require webppl-json --require webppl-sample-writer 1
 
 // get number of chain from call
 var chain = last(process.argv)
@@ -23,7 +23,7 @@ var levels = function(df, label) {
 }
 
 // read in data
-var data = json.read('model_data/child_model_paper_data.json');
+var data = json.read('model_data/model_data_children.json');
 
 // extract subject IDs
 var subjects = levels(data, "subjID")

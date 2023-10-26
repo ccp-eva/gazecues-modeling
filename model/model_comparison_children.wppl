@@ -1,4 +1,4 @@
-// example call: time webppl model-inf-adults-prior-model-comp.wppl --require webppl-json --require webppl-sample-writer 1
+// example call: time webppl model_comparison_children.wppl --require webppl-json --require webppl-sample-writer 1
 
 var chain = last(process.argv)
 
@@ -33,9 +33,7 @@ var deg2rad = function(x) {
 
 // data
 
-var data = json.read('model_data/gafo_prolific_modelvalidation.json');
-
-//var trialTypes = levels(data, "trialType")
+var data = json.read('model_data/model_data_children.json');
 
 var subjects = levels(data, "subjID")
 
@@ -47,9 +45,6 @@ var granCoord = maxCoord / granularity
 
 var cords = _.range(0, granCoord)
 
-// center bias
-//var centerBias = json.read('model_data/centerBias_hedge.json');
-
 var sampleCoord = map(function(x) {
     return x * granularity;
 }, cords)
@@ -58,66 +53,28 @@ var coordinates = _.range(0, 1920)
 
 var model = function() {
 
-    // var infInt = uniformDrift({ a: -2, b: 1, width: 0.1 })
-    // var infSlope = uniformDrift({ a: -2, b: 1, width: 0.1 })
-    // var sdInfSigma = uniformDrift({ a: 0, b: 0.25, width: 0.1 })
+    var infInt = gaussianDrift({ mu: 0, sigma: 1, width: 0.1 })
+    var infSlope = gaussianDrift({ mu: 0, sigma: 1, width: 0.1 })
+    var sdInfSigma = uniformDrift({ a: 0, b: 1, width: 0.1 })
 
-    // var guessInt = uniformDrift({ a: -2, b: 2, width: 0.1 })
-    // var guessSlope = uniformDrift({ a: -2, b: 1, width: 0.1 })
-    // var guessSigma = uniformDrift({ a: 0, b: 0.25, width: 0.1 })
-
-    // var biasInt = uniformDrift({ a: -2, b: 2, width: 0.1 })
-    // var biasSlope = uniformDrift({ a: -2, b: 2, width: 0.1 })
-    // var biasSigma = uniformDrift({ a: 0, b: 0.25, width: 0.1 })
-    var sdInf = gaussianDrift({ mu: -1, sigma: 1, width: 0.1 })
-    var infSigma = uniformDrift({ a: 0, b: 1, width: 0.1 })
-
-    var priorSd = gaussianDrift({ mu: 400, sigma: 100, width: 10 })
-
-
+    var priorSdInt = gaussianDrift({ mu: 400, sigma: 100, width: 10 })
+    var priorSdSlope = uniformDrift({ a: 0, b: 500, width: 10 })
 
     var sampLog = map(function(subjID) {
 
-        //var guess = uniformDrift({a: 0, b:1, width: 0.1})
-
         var idData = _.filter(data, { subjID: subjID })
 
-        //var biasLoc = uniformDrift({ a: 0, b: 1920, width: 20 })
+        var age = idData[0].agecentered
 
-        //display(age)
-
-        // var sdInfAge = infInt + infSlope * age
-        // var sdInfSamp = gaussianDrift({ mu: sdInfAge, sigma: sdInfSigma, width: 0.1 })
-        // var sdInfId = logistic(sdInfSamp)
-
-        // var guessAge = guessInt + guessSlope * age
-        // var guessId = gaussianDrift({ mu: guessAge, sigma: guessSigma, width: 0.1 })
-        // var guess = logistic(guessId)
-
-        // var biasAge = biasInt + biasSlope * age
-        // var biasId = gaussianDrift({ mu: biasAge, sigma: biasSigma, width: 0.1 })
-        // var bias = logistic(biasId)
-
-        var sdInfSamp = gaussianDrift({ mu: sdInf, sigma: infSigma, width: 0.1 })
+        var sdInfAge = infInt + infSlope * age
+        var sdInfSamp = gaussianDrift({ mu: sdInfAge, sigma: sdInfSigma, width: 0.1 })
         var sdInfId = Math.exp(sdInfSamp)
 
-        // var biasId = gaussianDrift({ mu: biasAge, sigma: biasSigma, width: 0.1 })
-        // var bias = logistic(biasId)
-
-
-
-
-        //display(idData)
+        var priorSdAge = priorSdInt + priorSdSlope * age
 
         var subLog = map(function(row) {
 
-
-
-            //var click = row.clickScaledX
             var click = Math.round(row.clickScaledX)
-                //display(click)
-            //var targetPosition = row.targetPosition
-            //var targetCenterX = row.targetCenterX
             var targetCenterY = row.targetCenterY
             var eyeCenterLX = row.eyeCenterLeftX
             var eyeCenterLY = row.eyeCenterLeftY
@@ -136,20 +93,12 @@ var model = function() {
                 Math.atan(Math.abs(eyeCenterRX - pupilRX) / (eyeCenterRY - pupilRY)) :
                 (-Math.atan(Math.abs(eyeCenterRX - pupilRX) / (eyeCenterRY - pupilRY)))
 
-            //var  noisyAlphaL = gaussian(tAlphaL, sdPer)
-
-            //var  noisyAlphaR = gaussian(tAlphaR, sdPer)
-
-
-            //display([tAlphaL,tAlphaR])
-
             var lDist = map(function(coord) {
 
                 var betaL = eyeCenterLX > coord ?
                     Math.atan(Math.abs(eyeCenterLX - coord) / (eyeCenterLY - targetCenterY)) :
                     (-Math.atan(Math.abs(eyeCenterLX - coord) / (eyeCenterLY - targetCenterY)))
 
-                //var betaLDist = Gaussian({mu:noisyAlphaL,sigma:sdInf}).score(betaL)
                 var betaLDist = Gaussian({ mu: tAlphaL, sigma: sdInfId }).score(betaL)
 
                 return betaLDist
@@ -162,7 +111,6 @@ var model = function() {
                     Math.atan(Math.abs(eyeCenterRX - coord) / (eyeCenterRY - targetCenterY)) :
                     (-Math.atan(Math.abs(eyeCenterRX - coord) / (eyeCenterRY - targetCenterY)))
 
-                //var betaRDist = Gaussian({mu:noisyAlphaR,sigma:sdInf}).score(betaR)
                 var betaRDist = Gaussian({ mu: tAlphaR, sigma: sdInfId }).score(betaR)
 
                 return betaRDist
@@ -183,32 +131,24 @@ var model = function() {
 
             var xDist = map2(multiply, lNormDist, rNormDist)
 
-            //display(xDist)
-
             // Construct prior distribution
 
             var priorDist = map(function(coord) {
 
-                var dist = Gaussian({ mu: 960, sigma: priorSd }).score(coord)
+                var dist = Gaussian({ mu: 960, sigma: priorSdAge }).score(coord)
 
                 return dist
 
             }, sampleCoord)
-
-            //display(priorDist)
 
             var priorNormDist = map(function(x) {
                 var priorNormDist = Math.exp(x - util.logsumexp(priorDist))
                 return priorNormDist
             }, priorDist)
 
-            //display(priorNormDist)
-
             // multiply prior by gaze distribution
 
             var gazePriorDist = map2(multiply, xDist, priorNormDist)
-
-            //display(gazePriorDist)
 
             //expand gaze distribution
 
@@ -216,10 +156,9 @@ var model = function() {
                 return repeat(granularity, function() { return x; })
             }, gazePriorDist)
 
-            //display(xCoordDist.flat())
 
             var gazePred = Categorical({ ps: xCoordDist.flat(), vs: coordinates })
-  
+
             var logInf = gazePred.score(click)
           
 
@@ -280,12 +219,12 @@ var model = function() {
 
 var header = "iteration,chain,model,loglike,score"
 
-var output_file = 'output/adult_gaze_model_prior_hedge_model_comparison_chain' + chain + '.csv'
+var output_file = 'output/child_gaze_model_dev_prior_hedge_model_comparison_chain' + chain + '.csv'
 var callback = webpplSampleWriter.streamQueryCSV(output_file, header);
 
 var output = Infer({
     model,
-    samples: 100000,
+    samples: 500000,
     burn: 50000,
     lag: 0,
     method: 'MCMC',

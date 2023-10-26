@@ -1,4 +1,4 @@
-// example call: time webppl model-inf-adults-prior.wppl --require webppl-json --require webppl-sample-writer 1
+// example call: time webppl model_comparison_adults.wppl --require webppl-json --require webppl-sample-writer 1
 
 var chain = last(process.argv)
 
@@ -33,9 +33,7 @@ var deg2rad = function(x) {
 
 // data
 
-var data = json.read('model_data/gafo_prolific_modelvalidation.json');
-
-//var trialTypes = levels(data, "trialType")
+var data = json.read('model_data/model_data_adults.json');
 
 var subjects = levels(data, "subjID")
 
@@ -47,9 +45,6 @@ var granCoord = maxCoord / granularity
 
 var cords = _.range(0, granCoord)
 
-// center bias
-//var centerBias = json.read('model_data/centerBias_hedge.json');
-
 var sampleCoord = map(function(x) {
     return x * granularity;
 }, cords)
@@ -58,65 +53,21 @@ var coordinates = _.range(0, 1920)
 
 var model = function() {
 
-    // var infInt = uniformDrift({ a: -2, b: 1, width: 0.1 })
-    // var infSlope = uniformDrift({ a: -2, b: 1, width: 0.1 })
-    // var sdInfSigma = uniformDrift({ a: 0, b: 0.25, width: 0.1 })
-
-    // var guessInt = uniformDrift({ a: -2, b: 2, width: 0.1 })
-    // var guessSlope = uniformDrift({ a: -2, b: 1, width: 0.1 })
-    // var guessSigma = uniformDrift({ a: 0, b: 0.25, width: 0.1 })
-
-    // var biasInt = uniformDrift({ a: -2, b: 2, width: 0.1 })
-    // var biasSlope = uniformDrift({ a: -2, b: 2, width: 0.1 })
-    // var biasSigma = uniformDrift({ a: 0, b: 0.25, width: 0.1 })
     var sdInf = gaussianDrift({ mu: -1, sigma: 1, width: 0.1 })
     var infSigma = uniformDrift({ a: 0, b: 1, width: 0.1 })
 
     var priorSd = gaussianDrift({ mu: 400, sigma: 100, width: 10 })
 
-
-
-    foreach(function(subjID) {
-
-        //var guess = uniformDrift({a: 0, b:1, width: 0.1})
+    var sampLog = map(function(subjID) {
 
         var idData = _.filter(data, { subjID: subjID })
-
-        //var biasLoc = uniformDrift({ a: 0, b: 1920, width: 20 })
-
-        //display(age)
-
-        // var sdInfAge = infInt + infSlope * age
-        // var sdInfSamp = gaussianDrift({ mu: sdInfAge, sigma: sdInfSigma, width: 0.1 })
-        // var sdInfId = logistic(sdInfSamp)
-
-        // var guessAge = guessInt + guessSlope * age
-        // var guessId = gaussianDrift({ mu: guessAge, sigma: guessSigma, width: 0.1 })
-        // var guess = logistic(guessId)
-
-        // var biasAge = biasInt + biasSlope * age
-        // var biasId = gaussianDrift({ mu: biasAge, sigma: biasSigma, width: 0.1 })
-        // var bias = logistic(biasId)
 
         var sdInfSamp = gaussianDrift({ mu: sdInf, sigma: infSigma, width: 0.1 })
         var sdInfId = Math.exp(sdInfSamp)
 
-        // var biasId = gaussianDrift({ mu: biasAge, sigma: biasSigma, width: 0.1 })
-        // var bias = logistic(biasId)
+        var subLog = map(function(row) {
 
-
-
-
-        //display(idData)
-
-        foreach(function(row) {
-
-
-            //var click = row.clickScaledX
             var click = Math.round(row.clickScaledX)
-                //display(click)
-            //var targetPosition = row.targetPosition
-            //var targetCenterX = row.targetCenterX
             var targetCenterY = row.targetCenterY
             var eyeCenterLX = row.eyeCenterLeftX
             var eyeCenterLY = row.eyeCenterLeftY
@@ -135,20 +86,12 @@ var model = function() {
                 Math.atan(Math.abs(eyeCenterRX - pupilRX) / (eyeCenterRY - pupilRY)) :
                 (-Math.atan(Math.abs(eyeCenterRX - pupilRX) / (eyeCenterRY - pupilRY)))
 
-            //var  noisyAlphaL = gaussian(tAlphaL, sdPer)
-
-            //var  noisyAlphaR = gaussian(tAlphaR, sdPer)
-
-
-            //display([tAlphaL,tAlphaR])
-
             var lDist = map(function(coord) {
 
                 var betaL = eyeCenterLX > coord ?
                     Math.atan(Math.abs(eyeCenterLX - coord) / (eyeCenterLY - targetCenterY)) :
                     (-Math.atan(Math.abs(eyeCenterLX - coord) / (eyeCenterLY - targetCenterY)))
 
-                //var betaLDist = Gaussian({mu:noisyAlphaL,sigma:sdInf}).score(betaL)
                 var betaLDist = Gaussian({ mu: tAlphaL, sigma: sdInfId }).score(betaL)
 
                 return betaLDist
@@ -161,7 +104,6 @@ var model = function() {
                     Math.atan(Math.abs(eyeCenterRX - coord) / (eyeCenterRY - targetCenterY)) :
                     (-Math.atan(Math.abs(eyeCenterRX - coord) / (eyeCenterRY - targetCenterY)))
 
-                //var betaRDist = Gaussian({mu:noisyAlphaR,sigma:sdInf}).score(betaR)
                 var betaRDist = Gaussian({ mu: tAlphaR, sigma: sdInfId }).score(betaR)
 
                 return betaRDist
@@ -182,8 +124,6 @@ var model = function() {
 
             var xDist = map2(multiply, lNormDist, rNormDist)
 
-            //display(xDist)
-
             // Construct prior distribution
 
             var priorDist = map(function(coord) {
@@ -194,20 +134,16 @@ var model = function() {
 
             }, sampleCoord)
 
-            //display(priorDist)
 
             var priorNormDist = map(function(x) {
                 var priorNormDist = Math.exp(x - util.logsumexp(priorDist))
                 return priorNormDist
             }, priorDist)
 
-            //display(priorNormDist)
-
             // multiply prior by gaze distribution
 
             var gazePriorDist = map2(multiply, xDist, priorNormDist)
 
-            //display(gazePriorDist)
 
             //expand gaze distribution
 
@@ -215,58 +151,76 @@ var model = function() {
                 return repeat(granularity, function() { return x; })
             }, gazePriorDist)
 
-            //display(xCoordDist.flat())
-
             var gazePred = Categorical({ ps: xCoordDist.flat(), vs: coordinates })
+  
+            var logInf = gazePred.score(click)
           
-            // var pred = flip(guess) ? flip(bias) ? Categorical({ ps: centerBias, vs: coordinates }) : Uniform({ a: 0, b: 1920 }) : gazePred
 
-            //var pred = flip(bias) ? Gaussian({ mu: biasLoc, sigma: 100 }) : gazePred
+            // guessing model
 
-            observe(gazePred, click)
+            var guessPred = Uniform({ a: 0, b: 1920 })
 
-            //var predSample = sample(pred)
+            var logGuess = guessPred.score(click)
 
-            //query.add(["inference","prediction",targetPosition,targetCenterX], sample(pred))
-            //display(guess)
+            // center bias model
 
-            //},testData)
+            var centerPred = Gaussian({ mu: 960, sigma: 160 })
+
+            var logCenter = centerPred.score(click) 
+
+
+            return { logGuess: logGuess, logInf: logInf, logCenter: logCenter }
+
         }, idData)
 
-        //query.add(["sd","perceptual"], sdPer)
-        query.add([chain, "inference", "sd", "id", subjID], sdInfId)
-        //query.add([chain, "guessing ", "guess", "id", subjID], bias)
-            //query.add([chain, "bias ", "bias", "id", subjID], bias)
-            //query.add(["sd","motor",], sdMot)
+        var subLogGuess = []
+        var subLogInf = []
+        var subLogCenter = []
+
+        foreach(function(number) {
+            subLogGuess.push(number.logGuess);
+            subLogInf.push(number.logInf)
+            subLogCenter.push(number.logCenter)
+        }, subLog)
+
+
+        return { 
+            subLogGuess: sum(subLogGuess), 
+            subLogInf: sum(subLogInf), 
+            subLogCenter: sum(subLogCenter) }
 
     }, subjects)
 
 
-    query.add([chain, "inference", "sigma", "global", "NA"], infSigma)
-    query.add([chain, "inference", "sd", "global", "NA"], sdInf)
+    var sampLogGuess = []
+    var sampLogInf = []
+    var sampLogCenter = []
 
-    // query.add([chain, "guessing", "sigma", "global", "NA"], guessSigma)
-    // query.add([chain, "guessing", "intercept", "global", "NA"], guessInt)
-    // query.add([chain, "guessing", "slope", "global", "NA"], guessSlope)
+    foreach(function(number) {
+        sampLogGuess.push(number.subLogGuess);
+        sampLogInf.push(number.subLogInf)
+        sampLogCenter.push(number.subLogCenter)
+    }, sampLog)
 
-    query.add([chain, "priorSd", "prior", "global", "NA"], priorSd)
-    //query.add([chain, "bias", "slope", "global", "NA"], biasSlope)
+    query.add([chain, "guess"], sum(sampLogGuess))
+    query.add([chain, "inf"], sum(sampLogInf))
+    query.add([chain, "center"], sum(sampLogCenter))
 
 
     return query
 
 }
 
-var header = "iteration,chain,parameter,type,scope,id,value,score"
+var header = "iteration,chain,model,loglike,score"
 
-var output_file = 'output/adult_gaze_model_prior_hedge_exp_granularity' + granularity + '_chain' + chain + '.csv'
+var output_file = 'output/adult_gaze_model_prior_hedge_model_comparison_chain' + chain + '.csv'
 var callback = webpplSampleWriter.streamQueryCSV(output_file, header);
 
 var output = Infer({
     model,
-    samples: 50000,
-    burn: 100000,
-    lag: 2,
+    samples: 100000,
+    burn: 50000,
+    lag: 0,
     method: 'MCMC',
     verbose: T,
     callbacks: [callback]
