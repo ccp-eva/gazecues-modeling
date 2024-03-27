@@ -50,6 +50,16 @@ write.csv(magnet_sample, "../saves/magnet_sample.csv", quote = F, row.names = F)
 saveRDS(magnet_sample, "../saves/magnet_sample.rds")
 ```
 
+```{r descriptives_table}
+magnet_descriptives <- magnet_data %>% 
+  select(-c(subj_id, gender, age_group, age, age_centered)) %>%
+  describe() %>% 
+  select(n, mean, sd, median, min, max)
+
+magnet_descriptives
+saveRDS(magnet_descriptives, "../saves/magnet_descriptives.rds")
+```
+
 ```{r scatterplots}
 # doesnt make a difference whether we exclude outlier / "imprecise" kids
 magnet_data %>% 
@@ -136,6 +146,17 @@ tango_tom_excl_perspective <- magnet_data %>%
   corr.test(method = "spearman")
 
 tango_tom_excl_perspective$ci
+
+tom_perspective <- magnet_data %>% 
+  group_by(subj_id) %>% 
+  mutate(
+    tom_excl_perspective = sum(desires, knowledge, content, explicit)
+  ) %>% 
+  ungroup() %>% 
+  select(perspective_aggregate, tom_excl_perspective) %>% 
+  corr.test(method = "spearman")
+
+tom_perspective$ci
 ```
 
 ```{r plot_cor_ci}
@@ -155,6 +176,29 @@ cor_ci
 saveRDS(cor_ci, file = "../saves/magnet_cor_ci.rds")
 # ggsave("../figures/magnet_cor_ci.png", width = 5, height = 3)
 ```
+
+```{r cor_triallevel}
+tango_trials <- read_csv("../data/magnet-tango-data.csv")
+magnet_trials <- read_csv("../data/magnet-tablet-data.csv")
+
+trials_bins <- tango_trials %>% 
+  group_by(subj_id, target_position) %>%
+  summarise(click_dist_tango = mean(click_dist_balloons, na.rm = T)) %>% 
+
+  full_join(magnet_trials %>% 
+      rename(target_position = magnet_bin) %>%
+      group_by(subj_id, target_position) %>%
+      summarise(click_dist_magnet = mean(click_dist_magnets, na.rm = T)))
+
+trials_bins
+
+trials_bins_cor <- corr.test(trials_bins$click_dist_tango, trials_bins$click_dist_magnet, method = "pearson", use = "pairwise.complete.obs")
+
+trials_bins_cor$ci
+
+trials_bins_cov <- cov(trials_bins$click_dist_tango, trials_bins$click_dist_magnet, method = "pearson", use = "pairwise.complete.obs")
+```
+
 
 ```{r check_tango_distribution}
 ggplot(magnet_data, aes(x = tango_mean)) + 
@@ -235,9 +279,11 @@ model_results <- mcomparison %>%
 
 write.csv(model_results, "../saves/magnet_modelresults.csv", quote = F, row.names = F)
 saveRDS(model_results, "../saves/magnet_modelresults.rds")
+model_results <- readRDS("../saves/magnet_modelresults.rds")
 
 write.csv(mmagnet_perspective, "../saves/magnet_winningmodel.csv", quote = F, row.names = F)
 saveRDS(mmagnet_perspective, "../saves/magnet_winningmodel.rds")
+mmagnet_perspective <- readRDS("../saves/magnet_winningmodel.rds")
 ```
 
 ```{r magnet_draws}

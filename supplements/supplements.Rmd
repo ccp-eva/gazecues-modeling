@@ -1,10 +1,10 @@
 ---
-title             : "Supplements for the manuscript  'Variation in gaze understanding across the life span: A process-level perspective'"
+title             : "Supplements for the manuscript  'Variation in gaze following across the life span: A process-level perspective'"
 shorttitle        : "Supplements"
 author: 
   
   - name          : "Julia Prein"
-    affiliation   : "1"
+    affiliation   : "1,2"
   - name          : "Luke Maurits"
     affiliation   : "1"
   - name          : "Annika Werwach"
@@ -118,6 +118,19 @@ knitr::include_graphics("../figures/supplements_gazemodel_indinference.pdf")
 ```
 
 \newpage
+
+## Simulations
+
+In the manuscript, we have described the gaze model and two alternatives: random guessing and a center bias. Here, we consider two more alternatives. Let us consider a model that assumes participants can infer the agent’s focus without any noise (for example, by tracing the line of sight). A model like this would assume that participants follow gaze without any uncertainty. Therefore, no U curve would be predicted. 
+Furthermore, let us assume another model in that participants still show no inferential noise, but they vary in their amount of motor noise, so how accurately participants then click at the corresponding location. A model like this would assume equal variance across the target locations, so we would not expect a U-shape here. 
+
+Please note that our random guessing model acts like 100% noise: the predictions of a participant’s click on a trial level range uniformly from 0 to 1920 (the whole screen range). The mean comes down to the center, namely 960. However, as you can see in the figure below, the U shape is weaker compared to the other models (Figure 1A). Most importantly, note that this is only the case when you average across all the trials. When you look at the individual trial-by-trial level, the models are defined by different data-generating processes, and therefore, their predictions differ, too (Figure 5C). In our correlational plots (Figure 5B), we see that the gaze model is clearly favored. This highlights the benefit that we gain through the modeling approach: even though a certain (U) pattern in the data could be elicited from several different models, we can disentangle which process is most likely causing this pattern. 
+
+(ref:figlab5) **Predictions of alternative models across target positions.** A: Predicted U-pattern across target positions by the different models. Note that this is averaged across trials and displays imprecision, i.e., the absolute distance between the target center and the click. B: Correlation between the predicted imprecision and the observed imprecision, by target position and age group. C: Predicted click coordinates (cf. not imprecision) by target position across the different models. 
+
+```{r fig5, include = T, out.width = "100%", fig.align = "center", fig.cap = "(ref:figlab5)"}
+knitr::include_graphics("../figures/gazemodel_simulated_u.png")
+```
 
 # Study 3: Components of gaze understanding
 ## Procedure Theory of mind battery 

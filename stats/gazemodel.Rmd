@@ -189,6 +189,7 @@ dev_plot <- ggplot() +
   labs(x = "Age in years", y = expression(paste("Mode model parameter (", italic("\U03C3"[v]), ")")))
 
 saveRDS(dev_plot, file = "../saves/gazemodel_dev_plot.rds")
+dev_plot <- readRDS("../saves/gazemodel_dev_plot.rds")
 
 # ggsave("../figures/gazemodel_dev.png", width = 8, height = 5, scale = 1, bg = "white")
 # ggsave("../figures/gazemodel_dev.pdf", width = 8, height = 5, scale = 1, bg = "white")
@@ -245,7 +246,7 @@ model_vs_data_plot <- ggplot(comparison_model_data, aes(x = model_mode, y = data
 model_vs_data_plot
 
 saveRDS(model_vs_data_plot, file = "../saves/gazemodel_model_vs_data.rds")
-
+model_vs_data_plot <- readRDS("../saves/gazemodel_model_vs_data.rds")
 # ggsave("../figures/gazemodel_model_vs_data.png", width = 8, height = 5, scale = 1, bg = "white")
 # ggsave("../figures/gazemodel_model_vs_data.pdf", width = 8, height = 5, scale = 1, bg = "white")
 ```
@@ -293,6 +294,7 @@ faceted_inf <- model_kids_dev_prior %>%
 
 faceted_inf
 saveRDS(faceted_inf, "../saves/supplements_gazemodel_facetedinference.rds")
+faceted_inf <- readRDS("../saves/supplements_gazemodel_facetedinference.rds")
 
 ggsave("../figures/supplements_gazemodel_facetedinference.png", width = 10, height = 6, scale = 1.4, bg = "white")
 ggsave("../figures/supplements_gazemodel_facetedinference.pdf", width = 10, height = 6, scale = 1.4, bg = "white")
@@ -317,7 +319,7 @@ get_click_prior <- function(sdTol, eyeCenterLY, eyeCenterLX, eyeCenterRY, eyeCen
     tAlphaR = -atan(abs(eyeCenterRX-targetCenterX)/(eyeCenterRY-targetCenterY))
   }
   
-  #noisyAlphaR = rnorm(1,tAlphaR, sdPer)
+  #noisyAlphaR = rnorm(1,tAlphaR, sdPer) 
 
   bRDist = c()
   
@@ -384,7 +386,7 @@ ind_sd <- model_kids_dev_prior %>%
 
 ind_sd_long <- ind_sd %>% slice(rep(1:n(), each = 100))
 
-# saveRDS(ind_sd_long, file = "../saves/gazemodel_ind_sd_long.rds")
+saveRDS(ind_sd_long, file = "../saves/gazemodel_ind_sd_long.rds")
 # ind_sd_long <- readRDS("../saves/gazemodel_ind_sd_long.rds")
 
 priorMode <- model_kids_dev_prior %>%
@@ -398,44 +400,49 @@ priorMode <- model_kids_dev_prior %>%
     uci = hdi_upper(value))
 
 saveRDS(priorMode, file = "../saves/gazemodel_prior.rds")
+# priorMode <- readRDS("../saves/gazemodel_prior.rds")
 
 # # careful, this runs a while... (ca. 30-45 min for me)
 
-# gen_model_clicks <- ind_sd_long %>%
-#   rowwise() %>%
-#   mutate(modelClick = get_click_prior(
-#           sdTol = sdTol,
-#           eyeCenterLY = eyeCenterLY,
-#           eyeCenterLX = eyeCenterLX, 
-#           eyeCenterRY = eyeCenterRY,
-#           eyeCenterRX = eyeCenterRX,
-#           targetCenterX = targetCenterX,
-#           pupilLX = pupilLX,
-#           pupilRX = pupilRX,
-#           targetCenterY = targetCenterY,
-#           priorInt = priorMode %>% filter(type == "intercept") %>% pull(mode),
-#           priorSlope = priorMode %>% filter(type == "slope") %>% pull(mode),
-#           age = age
-#           ))
-# 
-# modelpred_gaze <- gen_model_clicks %>%
-#   mutate(
-#     modelClickDist = abs(modelClick - targetCenterX),
-#     targetBin = cut(targetCenterX, 
-#                     breaks = seq(from = 0, to = 1920, by = 192),
-#                     labels = as.character(1:10))
-#   ) %>%
-#   group_by(age_group, targetBin) %>%
-#   summarise(
-#     data_mean = mean(clickDist) / 160, 
-#     model_mean = mean(modelClickDist) / 160,
-#   )
+gen_model_clicks <- ind_sd_long %>%
+  rowwise() %>%
+  mutate(modelClick = get_click_prior(
+          sdTol = sdTol,
+          eyeCenterLY = eyeCenterLY,
+          eyeCenterLX = eyeCenterLX,
+          eyeCenterRY = eyeCenterRY,
+          eyeCenterRX = eyeCenterRX,
+          targetCenterX = targetCenterX,
+          pupilLX = pupilLX,
+          pupilRX = pupilRX,
+          targetCenterY = targetCenterY,
+          priorInt = priorMode %>% filter(type == "intercept") %>% pull(mode),
+          priorSlope = priorMode %>% filter(type == "slope") %>% pull(mode),
+          age = age
+          ))
 
-# saveRDS(modelpred_gaze, "../saves/gazemodel_modelpred_gaze.rds")
+saveRDS(gen_model_clicks, file = "../saves/gazemodel_gen_model_clicks.rds")
+# gen_model_clicks <- readRDS("../saves/gazemodel_gen_model_clicks.rds")
+
+modelpred_gaze <- gen_model_clicks %>%
+  mutate(
+    modelClickDist = abs(modelClick - targetCenterX),
+    targetBin = cut(targetCenterX,
+                    breaks = seq(from = 0, to = 1920, by = 192),
+                    labels = as.character(1:10))
+  ) %>%
+  group_by(age_group, targetBin) %>%
+  summarise(
+    data_mean = mean(clickDist) / 160,
+    model_mean = mean(modelClickDist) / 160,
+  )
+
+saveRDS(modelpred_gaze, "../saves/gazemodel_modelpred_gaze.rds")
 modelpred_gaze <- readRDS("../saves/gazemodel_modelpred_gaze.rds")
     
 u_data <- full_join(modelpred_gaze, model_adults_bins)
 saveRDS(u_data, "../saves/gazemodel_u_data.rds")
+# u_data <- readRDS("../saves/gazemodel_u_data.rds")
 
 u_plot <- u_data %>%
   pivot_longer(cols = c(data_mean, model_mean), names_to = "source", values_to = "imprecision") %>%
@@ -462,6 +469,8 @@ u_plot <- u_data %>%
 
 u_plot
 saveRDS(u_plot, "../saves/gazemodel_u_plot.rds")
+u_plot <- readRDS("../saves/gazemodel_u_plot.rds")
+
 # ggsave("../figures/gazemodel_Uplot.png", width = 8, height = 5, scale = 1, bg = "white")
 # ggsave("../figures/gazemodel_Uplot.pdf", width = 8, height = 5, scale = 1, bg = "white")
 ```
@@ -470,11 +479,11 @@ saveRDS(u_plot, "../saves/gazemodel_u_plot.rds")
 # correlation model predicted imprecision vs data imprecision across target positions
 modelpred_gaze_plot <- modelpred_gaze %>% 
   ggplot(., aes(x = model_mean, y = data_mean)) +
-  geom_point(aes(col = targetBin)) +
+  geom_point(aes(col = targetBin, shape = as.factor(age_group))) +
   stat_cor(method = "pearson", label.x = 0.2, label.y = 4.9, aes(label = paste(..r.label..)), size = 4, r.accuracy = 0.01, cor.coef.name = "r") +
   geom_abline(intercept = 0, slope = 1, linetype = 3) +
   scale_color_brewer(palette="BrBG") +
-  labs(x = "Mean predicted imprecision", y = "Mean data imprecision", color = "Target bin") + 
+  labs(x = "Mean predicted imprecision", y = "Mean data imprecision", color = "Target bin", shape = "Age group") + 
   scale_x_continuous(limits = c(0, 5.5), breaks = seq(0, 5, 1)) + 
   scale_y_continuous(limits = c(0, 5.5), breaks = seq(0, 5, 1)) 
 
@@ -542,11 +551,11 @@ modelpred_center %>%
 # corr plot
 modelpred_center_plot <- modelpred_center %>% 
   ggplot(., aes(x = model_mean, y = data_mean)) +
-  geom_point(aes(col = targetBin), size = 0.8) +
+  geom_point(aes(col = targetBin, shape = as.factor(age_group)), size = 0.8) +
   stat_cor(method = "pearson", label.x = 0.2, label.y = 4.9, aes(label = paste(..r.label..)), size = 3, r.accuracy = 0.01, cor.coef.name = "r") +
   geom_abline(intercept = 0, slope = 1, linetype = 3) +
   scale_color_brewer(palette="BrBG") +
-  labs(x = "Mean predicted imprecision", y = "Mean data imprecision", color = "Target bin") + 
+  labs(x = "Mean predicted imprecision", y = "Mean data imprecision", color = "Target bin", shape = "Age group") + 
   scale_x_continuous(limits = c(0, 5.5), breaks = seq(0, 5, 1)) + 
   scale_y_continuous(limits = c(0, 5.5), breaks = seq(0, 5, 1)) 
 
@@ -613,11 +622,11 @@ modelpred_random %>%
 # corr plot
 modelpred_random_plot <- modelpred_random %>% 
   ggplot(., aes(x = model_mean, y = data_mean)) +
-  geom_point(aes(col = targetBin), size = 0.8) +
+  geom_point(aes(col = targetBin, shape = as.factor(age_group)), size = 0.8) +
   stat_cor(method = "pearson", label.x = 0.2, label.y = 4.9, aes(label = paste(..r.label..)), size = 3, r.accuracy = 0.01, cor.coef.name = "r") +
   geom_abline(intercept = 0, slope = 1, linetype = 3) +
   scale_color_brewer(palette="BrBG") +
-  labs(x = "Mean predicted imprecision", y = "Mean data imprecision", color = "Target bin") + 
+  labs(x = "Mean predicted imprecision", y = "Mean data imprecision", color = "Target bin", shape = "Age group") + 
   scale_x_continuous(limits = c(0, 5.5), breaks = seq(0, 5, 1)) + 
   scale_y_continuous(limits = c(0, 5.5), breaks = seq(0, 5, 1)) 
 
@@ -637,12 +646,12 @@ modelpred_random_plot <- readRDS("../saves/gazemodel_modelpred_random_plot.rds")
 corr_model_pred_plot <- ggarrange(
   
   modelpred_gaze_plot + 
-    theme(legend.position = c(0.85, 0.3), 
-          legend.title = element_text(size = 8),
-          legend.text = element_text(size = 8), 
+    theme(legend.position = c(0.85, 0.38), 
+          legend.title = element_text(size = 6),
+          legend.text = element_text(size = 6), 
           legend.box.background = element_rect(), 
-          legend.key.height = unit(0.3, "cm"),
-          legend.key.width = unit(-1.5, "cm"),
+          legend.key.height = unit(0.28, "cm"),
+          legend.key.width = unit(-1.8, "cm"),
           plot.margin = margin(0.2, -2, 0.1, 0.2, "cm") # t r b l
          ),
   
@@ -672,6 +681,22 @@ corr_model_pred_plot <- ggarrange(
 
 corr_model_pred_plot
 saveRDS(corr_model_pred_plot, file = "../saves/gazemodel_corr_model_pred_plot.rds")
+```
+
+```{r get_click_motornoise}
+get_click_motornoise <- function(targetCenterX){
+  xDist = dnorm(seq(1:1920), mean = targetCenterX, sd = 160)
+  
+  click = sample(1:1920, prob = xDist, size = 1)-1
+  
+  return(click)
+}
+```
+
+```{r get_click_linetracing}
+get_click_linetracing <- function(targetCenterX){
+  return(targetCenterX)
+}
 ```
 
 # Plot 
@@ -754,127 +779,289 @@ modelcomparison_kids_samples %>%
 # Headlight distribution for plots
 
 ```{r get_dist}
-# get_dist <- function(sdTol, eyeCenterLY, eyeCenterLX, eyeCenterRY, eyeCenterRX, targetCenterY, targetCenterX, pupilLX, pupilRX){
-# 
-#   if(eyeCenterLX > pupilLX) {
-#     tAlphaL = atan(abs(eyeCenterLX-targetCenterX)/(eyeCenterLY-targetCenterY))
-#   } else {
-#     tAlphaL = -atan(abs(eyeCenterLX-targetCenterX)/(eyeCenterLY-targetCenterY))
-#   }
-#   
-#   #noisyAlphaL = rnorm(1,tAlphaL, sdPer)
-#   
-#   if(eyeCenterRX > pupilRX) {
-#     tAlphaR = atan(abs(eyeCenterRX-targetCenterX)/(eyeCenterRY-targetCenterY))
-#   } else {
-#     tAlphaR = -atan(abs(eyeCenterRX-targetCenterX)/(eyeCenterRY-targetCenterY))
-#   }
-#   
-#   #noisyAlphaR = rnorm(1,tAlphaR, sdPer)
-# 
-#   bRDist = c()
-#   
-#   bLDist = c()
-#   
-#   for (x in 1:1920){
-#     
-#   if(eyeCenterLX > x) {
-#     betaL = atan(abs(eyeCenterLX-x)/(eyeCenterLY-targetCenterY))
-#   } else {
-#     betaL = -atan(abs(eyeCenterLX-x)/(eyeCenterLY-targetCenterY))
-#   }
-#     betaLDist = dnorm(betaL,tAlphaL,sdTol, log = T)
-#     
-#   if(eyeCenterRX > x) {
-#     betaR = atan(abs(eyeCenterRX-x)/(eyeCenterRY-targetCenterY))
-#   } else {
-#     betaR = -atan(abs(eyeCenterRX-x)/(eyeCenterRY-targetCenterY))
-#   }
-#     betaRDist = dnorm(betaR,tAlphaR,sdTol, log = T)
-#     
-#     #betaDist = betaLDist + betaRDist
-#     
-#     #bDist[x] <- exp(betaDist)
-#     bRDist[x] <- betaRDist
-#     
-#     bLDist[x] <- betaLDist
-#     
-#   }
-#   
-#   xRDist = exp(bRDist-logSumExp(bRDist))
-#   
-#   xLDist = exp(bLDist-logSumExp(bLDist))
-#   
-#   xDist = xRDist * xLDist
-#   
-#   dist = xDist / sum(xDist)
-#   
-#   # click = sample(1:1920, prob = xDist, size = 1)-1
-#   
-#   return(dist)
-# }
+get_dist <- function(sdTol, eyeCenterLY, eyeCenterLX, eyeCenterRY, eyeCenterRX, targetCenterY, targetCenterX, pupilLX, pupilRX){
+
+  if(eyeCenterLX > pupilLX) {
+    tAlphaL = atan(abs(eyeCenterLX-targetCenterX)/(eyeCenterLY-targetCenterY))
+  } else {
+    tAlphaL = -atan(abs(eyeCenterLX-targetCenterX)/(eyeCenterLY-targetCenterY))
+  }
+
+  #noisyAlphaL = rnorm(1,tAlphaL, sdPer)
+
+  if(eyeCenterRX > pupilRX) {
+    tAlphaR = atan(abs(eyeCenterRX-targetCenterX)/(eyeCenterRY-targetCenterY))
+  } else {
+    tAlphaR = -atan(abs(eyeCenterRX-targetCenterX)/(eyeCenterRY-targetCenterY))
+  }
+
+  #noisyAlphaR = rnorm(1,tAlphaR, sdPer)
+
+  bRDist = c()
+
+  bLDist = c()
+
+  for (x in 1:1920){
+
+  if(eyeCenterLX > x) {
+    betaL = atan(abs(eyeCenterLX-x)/(eyeCenterLY-targetCenterY))
+  } else {
+    betaL = -atan(abs(eyeCenterLX-x)/(eyeCenterLY-targetCenterY))
+  }
+    betaLDist = dnorm(betaL,tAlphaL,sdTol, log = T)
+
+  if(eyeCenterRX > x) {
+    betaR = atan(abs(eyeCenterRX-x)/(eyeCenterRY-targetCenterY))
+  } else {
+    betaR = -atan(abs(eyeCenterRX-x)/(eyeCenterRY-targetCenterY))
+  }
+    betaRDist = dnorm(betaR,tAlphaR,sdTol, log = T)
+
+    #betaDist = betaLDist + betaRDist
+
+    #bDist[x] <- exp(betaDist)
+    bRDist[x] <- betaRDist
+
+    bLDist[x] <- betaLDist
+
+  }
+
+  xRDist = exp(bRDist-logSumExp(bRDist))
+
+  xLDist = exp(bLDist-logSumExp(bLDist))
+
+  xDist = xRDist * xLDist
+
+  dist = xDist / sum(xDist)
+
+  # click = sample(1:1920, prob = xDist, size = 1)-1
+
+  return(dist)
+}
 ```
 
 ```{r headlight_dist}
-# headlight_df <- data.frame(
-#   coord = 1:1920,
-#   sdTol = "0.175"
-# )
-# 
-# for (i in c(960,1736)){
-#   
-#   probdist <-  get_dist(
-#     sdTol = 0.175,
-#     targetCenterX = i,
-#     eyeCenterLY = 937.8,
-#     eyeCenterLX = 872.12,
-#     eyeCenterRY = 937.8,
-#     eyeCenterRX = 1045.89,
-#     targetCenterY = 127.5,
-#     pupilLX = i-1,
-#     pupilRX = i-1)
-#   
-#     colname = as.character(i)
-#     
-#     headlight_df[, colname] <- probdist
-#   
-#   }
-# 
-# headlight_df %>%
-#   pivot_longer(names_to = "target_coordinate", values_to = "probability", cols = c(-coord, -sdTol)) %>%
-#   filter(target_coordinate == "960") %>%
-#   ggplot(aes(x = coord, y = probability, group = interaction(target_coordinate,sdTol))) +
-#   geom_density(stat = "identity", color = "blue", fill = "blue", alpha = .5) +
-#   ylim(0, 0.006) +
-#   scale_x_continuous(limits = c(0, 1920), breaks = seq(0, 1920, 480)) +
-#   guides(fill = F) + 
-#   # geom_vline(aes(xintercept = as.numeric(target_coordinate)), lty = 2, alpha = .25) +
-#   # labs(x = "Coordinate", y = "Probability") +
-#   # scale_fill_colorblind(name = "Inference SD") +
-#   theme_few() + 
-#   theme(
-#     panel.background = element_rect(fill = "transparent",colour = NA), # or theme_blank()
-#     panel.grid.minor = element_blank(), 
-#     panel.grid.major = element_blank(),
-#     plot.background = element_rect(fill = "transparent",colour = NA)
-# )
-# 
-# ggsave("../figures/gazemodel_headlight_dist_side.png", width = 15, height = 4, bg = "transparent")
-# 
-# ##  Standard normal dist
-# dnorm_one_sd <- function(x){
-#   norm_one_sd <- dnorm(x)
-#   # Have NA values outside interval x in [-1, 1]:
-#   norm_one_sd[x <= -1 | x >= 1] <- NA
-#   return(norm_one_sd)
-# }
-# 
-# ggplot(data.frame(x = c(-4, 4)), aes(x = x)) +
-#   stat_function(fun = dnorm, color = "darkgrey", linewidth = 2) + 
-#   stat_function(fun = dnorm_one_sd, geom = "area", fill = "blue", alpha = 0.5) +
-#   # geom_vline(aes(xintercept = 0), lty = 2, color = "blue") +
-#   theme_void()
-# 
-# ggsave("../figures/gazemodel_normal_dist.png", width = 10, height = 4)
+headlight_df <- data.frame(
+  coord = 1:1920,
+  sdTol = "0.175"
+)
+
+for (i in c(960,1736)){
+
+  probdist <-  get_dist(
+    sdTol = 0.175,
+    targetCenterX = i,
+    eyeCenterLY = 937.8,
+    eyeCenterLX = 872.12,
+    eyeCenterRY = 937.8,
+    eyeCenterRX = 1045.89,
+    targetCenterY = 127.5,
+    pupilLX = i-1,
+    pupilRX = i-1)
+
+    colname = as.character(i)
+
+    headlight_df[, colname] <- probdist
+
+  }
+
+headlight_df %>%
+  pivot_longer(names_to = "target_coordinate", values_to = "probability", cols = c(-coord, -sdTol)) %>%
+  filter(target_coordinate == "1736") %>%
+  ggplot(aes(x = coord, y = probability, group = interaction(target_coordinate,sdTol))) +
+  geom_density(stat = "identity", color = "blue", fill = "blue", alpha = .5) +
+  ylim(0, 0.006) +
+  scale_x_continuous(limits = c(0, 1920), breaks = seq(0, 1920, 480)) +
+  guides(fill = F) +
+  # geom_vline(aes(xintercept = as.numeric(target_coordinate)), lty = 2, alpha = .25) +
+  # labs(x = "Coordinate", y = "Probability") +
+  # scale_fill_colorblind(name = "Inference SD") +
+  theme_few() +
+  theme(
+    panel.background = element_rect(fill = "transparent",colour = NA), # or theme_blank()
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    plot.background = element_rect(fill = "transparent",colour = NA)
+)
+
+ggsave("../figures/gazemodel_headlight_dist_side.png", width = 15, height = 4, bg = "transparent")
+
+##  Standard normal dist
+dnorm_one_sd <- function(x){
+  norm_one_sd <- dnorm(x)
+  # Have NA values outside interval x in [-1, 1]:
+  norm_one_sd[x <= -1 | x >= 1] <- NA
+  return(norm_one_sd)
+}
+
+ggplot(data.frame(x = c(-4, 4)), aes(x = x)) +
+  stat_function(fun = dnorm, color = "darkgrey", linewidth = 2) +
+  stat_function(fun = dnorm_one_sd, geom = "area", fill = "blue", alpha = 0.5) +
+  # geom_vline(aes(xintercept = 0), lty = 2, color = "blue") +
+  theme_void()
+
+ggsave("../figures/gazemodel_normal_dist.png", width = 10, height = 4)
 ```
+
+# Simulated clicks from alternative models
+
+```{r simulated_data}
+simulated_data <- gen_model_clicks %>% 
+  ungroup() %>%
+  mutate(
+    model_dist = modelClick - targetCenterX,
+  ) %>%
+  rename(target_center_x = targetCenterX) %>%
+  group_by(id, trial_nr, target_center_x) %>% 
+  summarize(
+    gazemodel_click = mean(modelClick),
+    gazemodel_dist = mean(model_dist),
+  ) %>% 
+  mutate(
+    # line_click = target_center_x,
+    linetracing_click = get_click_linetracing(target_center_x),
+    linetracing_dist = linetracing_click - target_center_x, # = 0
+    
+    # motornoise_click = rnorm(n = n(), mean = target_center_x, sd = 160) %>% round(digits = 2),
+    motornoise_click = get_click_motornoise(target_center_x),
+    motornoise_dist = motornoise_click - target_center_x,
+
+    # random_click = runif(n = n(), min = 0, max = 1920) %>% round(digits = 2), 
+    random_click = get_click_random(),
+    random_dist = random_click - target_center_x,
+
+    # center_click = rnorm(n = n(), mean = 960, sd = 160) %>% round(digits = 2),
+    center_click = get_click_center(),
+    center_dist = center_click - target_center_x,
+  )
+
+simulated_data <- tango_kids %>% 
+  select(subj_id, age, age_group, trial_nr, target_position, target_center_x, click_scaled_x, click_dist_from_target_center_x) %>% 
+  rename(data_click = click_scaled_x, data_dist = click_dist_from_target_center_x) %>% 
+  full_join(simulated_data, by = c("subj_id" = "id", "trial_nr", "target_center_x"))
+
+simulated_wide <- simulated_data
+
+simulated_mean <- simulated_data %>% 
+    group_by(target_position) %>%
+  summarise(
+    data_click = mean(data_click), 
+    gazemodel_click = mean(gazemodel_click),
+    linetracing_click = mean(linetracing_click),
+    motornoise_click = mean(motornoise_click),
+    random_click = mean(random_click),
+    center_click = mean(center_click),
+    
+    data_dist = mean(abs(data_dist)), 
+    gazemodel_dist = mean(abs(gazemodel_dist)),
+    motornoise_dist = mean(abs(motornoise_dist)),
+    linetracing_dist = mean(abs(linetracing_dist)),
+    random_dist = mean(abs(random_dist)),
+    center_dist = mean(abs(center_dist)),
+  ) %>% 
+    pivot_longer(
+    cols = -target_position,
+    names_to = c("model", ".value"),
+    names_sep = "_"
+  ) %>% 
+  mutate(
+    model = factor(model, levels = c("data", "gazemodel", "linetracing", "motornoise", "random", "center"), labels = c("Data", "Gaze model", "Line-of-Sight", "LoS w. motor noise", "Random guessing", "Center bias")), 
+  )
+
+simulated_data <- simulated_data %>% 
+  pivot_longer(
+    cols = -c(subj_id, age, age_group, trial_nr, target_position, target_center_x),
+    names_to = c("model", ".value"),
+    names_sep = "_"
+  ) %>%
+  mutate(
+    model = factor(model, levels = c("data", "gazemodel", "linetracing", "motornoise", "random", "center"), labels = c("Data", "Gaze model", "Line-of-Sight", "LoS w. motor noise", "Random guessing", "Center bias")), 
+  )
+
+saveRDS(simulated_data, file = "../saves/gazemodel_simulated_data.rds")
+```
+
+```{r simulated_data_plot}
+sim_u <- simulated_mean %>% 
+  ggplot(aes(x = target_position, y = dist, col = model, group = model)) +
+  geom_point(alpha = 0.8, size = 1.5) +
+  geom_line(alpha = 0.2) +
+  scale_y_continuous(limits = c(0, 1920), breaks = seq(0, 1920, 320)) +
+  labs(x = "Target bin", y = "Imprecision", col = "Source") + 
+  scale_colour_viridis_d() +
+  theme_minimal()
+
+sim_cor <- simulated_wide %>% 
+  group_by(age_group, target_position) %>%
+  summarise(
+    data = mean(abs(data_dist)),
+    gazemodel = mean(abs(gazemodel_dist)),
+    linetracing = mean(abs(linetracing_dist)),
+    motornoise = mean(abs(motornoise_dist)),
+    random = mean(abs(random_dist)),
+    center = mean(abs(center_dist)),
+  ) %>% 
+  pivot_longer(cols = c(gazemodel, linetracing, motornoise, random, center), names_to = "model", values_to = "mean") %>% 
+  mutate(
+    model = factor(model, levels = c("gazemodel", "linetracing", "motornoise", "random", "center"), labels = c("Gaze model", "Line-of-Sight", "LoS w. motor noise", "Random guessing", "Center bias")), 
+  ) %>% 
+  ggplot(aes(x = mean, y = data)) +
+  geom_point(aes(color = target_position, shape = as.factor(age_group)), alpha = 0.8, size = 0.8) +
+  stat_cor(method = "pearson", label.x = 100, label.y = 960, aes(label = paste(..r.label..)), r.accuracy = 0.01, cor.coef.name = "r", size = 2.7, color = "black") +
+  geom_abline(intercept = 0, slope = 1, linetype = 3) +
+  labs(x = "Predicted imprecision", y = "Observed imprecision", color = "Target position", shape = "Age group") +
+  scale_color_brewer(palette="BrBG") +
+  scale_x_continuous(limits = c(0, 1000), breaks = seq(0, 960, 320)) +
+  scale_y_continuous(limits = c(0, 1000), breaks = seq(0, 960, 320)) +
+  facet_wrap(~model) + 
+  theme_minimal() +
+  theme(axis.title = element_text(size = 6), 
+        axis.text = element_text(size = 6), 
+        strip.text = element_text(size = 7), 
+        legend.title = element_text(size = 6),
+        legend.text = element_text(size = 6), 
+        legend.key.height = unit(0.3, "cm"),
+        legend.key.width = unit(-1.5, "cm"),
+        )
+sim_cor
+
+sim_click <- ggplot() +
+  geom_point(data = simulated_data, aes(x = target_position, y = click, col = model), alpha = 0.2, size = 0.75) +
+  geom_point(data = simulated_mean, aes(x = target_position, y = click, col = model), shape = 4, size = 2, stroke = 1.5) +
+  geom_line(data = simulated_mean, aes(x = target_position, y = click, col = model, group = model)) +
+  scale_y_continuous(limits = c(0, 1920), breaks = seq(0, 1920, 320)) +
+  labs(x = "Target bin", y = "Click coordinate", col = "Source") + 
+  scale_colour_viridis_d(guide = "none") +
+  theme_minimal() + 
+  facet_wrap(~ model, nrow = 1)
+
+sim_arranged <- ggarrange(
+  ggarrange(sim_u, sim_cor, ncol = 2, widths = c(1, 1), labels = c("A", "B")),
+  
+  sim_click,
+  
+  nrow = 2, 
+  labels = c("", "C")
+)
+
+sim_arranged
+
+ggsave("../figures/gazemodel_simulated_u.png", width = 9, height = 5, bg = "white")
+```
+
+```{r inward_clicks}
+tango_kids %>% 
+  mutate(
+    dist = ifelse(target_center_x < 960, click_scaled_x - target_center_x, target_center_x - click_scaled_x),
+  ) %>% 
+  ggplot(aes(x = dist, y = target_position)) +
+  geom_density_ridges() + 
+  geom_point(stat = "summary", fun = "mean", shape = 4, size = 2.5, position = position_nudge(y = 0.1)) +
+  geom_vline(xintercept = 0, lty = 2, alpha = .25) +
+  scale_x_continuous(limits = c(-960, 1920), breaks = seq(-960, 1920, 320)) +
+  labs(x = "Distance from target center (higher: inward)", y = "Target bin")
+
+ggsave("../figures/gazemodel_inward_clicks.png", width = 8, height = 5, bg = "white", scale = 1.1)
+```
+
 
