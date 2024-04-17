@@ -251,6 +251,34 @@ write.csv(cps, "../saves/lifespan_ibeast_cps.csv", quote = F, row.names = F)
 saveRDS(cps, "../saves/lifespan_ibeast_cps.rds")
 ```
 
+```{r changepoints_descr}
+cps <- readRDS("../saves/lifespan_ibeast_cps.rds") %>% 
+  arrange(cp)
+
+cps_descr <- mdata %>% 
+  mutate(
+   age_cp = case_when(
+     age < cps$cp[1] ~ "1",
+     age < cps$cp[2] ~ "2",
+     age < cps$cp[3] ~ "3",
+     age < cps$cp[4] ~ "4",
+     age < cps$cp[5] ~ "5",
+     age < cps$cp[6] ~ "6",
+     age > cps$cp[6] ~ "7",
+   ) 
+  ) %>% 
+  group_by(age_cp) %>%
+  summarize(
+    age_min = min(age, na.rm = T),
+    age_max = max(age, na.rm = T),
+    n = n(),
+    mean = mean(mean_imprecision, na.rm = T) %>% round(2),
+    sd = sd(mean_imprecision, na.rm = T) %>% round(2),
+  )
+
+saveRDS(cps_descr, "../saves/lifespan_cps_descr.rds")
+```
+
 # PLOT
 
 ```{r plot}
