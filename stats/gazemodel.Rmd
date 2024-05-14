@@ -741,7 +741,13 @@ corr_gazemodel_pred <- modelpred_gaze %>% ungroup() %>% select(model_mean, data_
 corr_centermodel_pred <- modelpred_center %>% ungroup() %>% select(model_mean, data_mean) %>% corr.test(method = "pearson")
 corr_randommodel_pred <- modelpred_random %>% ungroup() %>% select(model_mean, data_mean) %>% corr.test(method = "pearson")
 
-corrs <- rbind(corr_gazemodel_param_children$ci, corr_gazemodel_param_adults$ci, corr_gazemodel_pred$ci, corr_centermodel_pred$ci, corr_randommodel_pred$ci) %>% 
+corrs <- rbind(
+  cbind(corr_gazemodel_param_children$ci, n = corr_gazemodel_param_children$n), 
+  cbind(corr_gazemodel_param_adults$ci, n = corr_gazemodel_param_adults$n), 
+  cbind(corr_gazemodel_pred$ci, n = corr_gazemodel_pred$n), 
+  cbind(corr_centermodel_pred$ci, n = corr_centermodel_pred$n), 
+  cbind(corr_randommodel_pred$ci, n = corr_randommodel_pred$n)
+  ) %>% 
   rownames_to_column(var = "corr") %>% 
   mutate(
     corr = recode(
@@ -751,9 +757,9 @@ corrs <- rbind(corr_gazemodel_param_children$ci, corr_gazemodel_param_adults$ci,
             `mdl_m-dt_mn2` = "gazemodel_pred_kids", 
             `mdl_m-dt_mn3` = "centermodel_pred_kids", 
             `mdl_m-dt_mn4` = "randommodel_pred_kids", 
-           )
+           ), 
   ) %>% 
-  mutate(across(where(is.numeric), round, 2))
+  mutate(across(2:4, ~round(.x, 2))) 
 
 corrs
 saveRDS(corrs, file = "../saves/gazemodel_correlations.rds")
