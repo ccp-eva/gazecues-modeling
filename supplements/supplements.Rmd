@@ -30,7 +30,7 @@ figurelist        : yes
 tablelist         : yes
 footnotelist      : no
 linenumbers       : yes
-mask              : yes
+mask              : no
 draft             : no
 header-includes:
   - \usepackage{setspace}
